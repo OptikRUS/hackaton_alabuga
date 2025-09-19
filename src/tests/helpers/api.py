@@ -27,3 +27,9 @@ class APIHelper:
 
     def get_me(self) -> Response:
         return self.client.get("/users/me")
+
+    def create_mission_branch(self, name: str) -> Response:
+        return self.client.post(url="/missions/branches", json={"name": name})
+
+    def list_mission_branches(self) -> Response:
+        return self.client.get("/missions/branches")

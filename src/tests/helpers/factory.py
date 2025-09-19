@@ -1,3 +1,4 @@
+from src.core.missions.schemas import MissionBranch, MissionBranches
 from src.core.users.enums import UserRoleEnum
 from src.core.users.schemas import User
 
@@ -25,3 +26,11 @@ class FactoryHelper:
             exp=exp,
             mana=mana,
         )
+
+    @classmethod
+    def mission_branch(cls, branch_id: int = 0, name: str = "TEST") -> MissionBranch:
+        return MissionBranch(id=branch_id, name=name)
+
+    @classmethod
+    def mission_branches(cls, values: list[MissionBranch]) -> MissionBranches:
+        return MissionBranches(values=values if values else [cls.mission_branch()])

@@ -1,6 +1,7 @@
-from sqlalchemy import PrimaryKeyConstraint
+from sqlalchemy import PrimaryKeyConstraint, String, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
+from src.core.missions.schemas import MissionBranch
 from src.core.users.enums import UserRoleEnum
 from src.core.users.schemas import User
 
@@ -50,3 +51,18 @@ class UserModel(Base):
             first_name=self.first_name,
             last_name=self.last_name,
         )
+
+
+class MissionBranchModel(Base):
+    __tablename__ = "missions_branch"
+    __table_args__ = (UniqueConstraint("name", name="uq_missions_branch_name"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(255))
+
+    @classmethod
+    def from_schema(cls, branch: MissionBranch) -> "MissionBranchModel":
+        return cls(id=branch.id, name=branch.name)
+
+    def to_schema(self) -> MissionBranch:
+        return MissionBranch(id=self.id, name=self.name)
