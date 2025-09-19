@@ -1,0 +1,15 @@
+from dataclasses import dataclass
+
+from src.core.users.enums import UserRoleEnum
+
+
+@dataclass
+class User:
+    login: str
+    first_name: str
+    last_name: str
+    password: str
+    role: UserRoleEnum = UserRoleEnum.CANDIDATE
+    rank_id: int = 0
+    exp: int = 0
+    mana: int = 0
