@@ -5,6 +5,16 @@ from fastapi import Request, status
 from fastapi.responses import JSONResponse, Response
 
 from src.core.exceptions import BaseExceptionError, InvalidJWTTokenError
+from src.core.missions.exceptions import (
+    MissionBranchNameAlreadyExistError,
+    MissionBranchNotFoundError,
+    MissionNameAlreadyExistError,
+    MissionNotFoundError,
+)
+from src.core.tasks.exceptions import (
+    TaskNameAlreadyExistError,
+    TaskNotFoundError,
+)
 from src.core.users.exceptions import (
     UserAlreadyExistError,
     UserIncorrectCredentialsError,
@@ -42,4 +52,10 @@ exception_handlers: (
     UserNotFoundError: handler(status_code=status.HTTP_404_NOT_FOUND),
     UserAlreadyExistError: handler(status_code=status.HTTP_409_CONFLICT),
     UserIncorrectCredentialsError: handler(status_code=status.HTTP_401_UNAUTHORIZED),
+    MissionBranchNameAlreadyExistError: handler(status_code=status.HTTP_409_CONFLICT),
+    MissionBranchNotFoundError: handler(status_code=status.HTTP_404_NOT_FOUND),
+    MissionNameAlreadyExistError: handler(status_code=status.HTTP_409_CONFLICT),
+    MissionNotFoundError: handler(status_code=status.HTTP_404_NOT_FOUND),
+    TaskNameAlreadyExistError: handler(status_code=status.HTTP_409_CONFLICT),
+    TaskNotFoundError: handler(status_code=status.HTTP_404_NOT_FOUND),
 }

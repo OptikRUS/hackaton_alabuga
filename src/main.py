@@ -21,7 +21,7 @@ def start_service() -> None:
         app=create_app(lifespan=lifespan),
         host=settings.APP.ADDRESS,
         port=settings.APP.PORT,
-        access_log=False,
+        access_log=True,
     )
 
 
