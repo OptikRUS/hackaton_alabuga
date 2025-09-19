@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 
-from src.core.missions.schemas import MissionBranch, MissionBranches
+from src.core.missions.schemas import Mission, MissionBranch, MissionBranches, Missions
 from src.core.users.schemas import User
 
 
@@ -25,4 +25,30 @@ class MissionBranchStorage(metaclass=ABCMeta):
 
     @abstractmethod
     async def list_mission_branches(self) -> MissionBranches:
+        raise NotImplementedError
+
+
+class MissionStorage(metaclass=ABCMeta):
+    @abstractmethod
+    async def insert_mission(self, mission: Mission) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_mission_by_id(self, mission_id: int) -> Mission:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_mission_by_title(self, title: str) -> Mission:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def list_missions(self) -> Missions:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def update_mission(self, mission: Mission) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def delete_mission(self, mission_id: int) -> None:
         raise NotImplementedError
