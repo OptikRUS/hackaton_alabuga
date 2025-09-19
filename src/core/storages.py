@@ -14,7 +14,7 @@ class UserStorage(metaclass=ABCMeta):
         raise NotImplementedError
 
 
-class MissionBranchStorage(metaclass=ABCMeta):
+class MissionStorage(metaclass=ABCMeta):
     @abstractmethod
     async def insert_mission_branch(self, branch: MissionBranch) -> None:
         raise NotImplementedError
@@ -24,11 +24,13 @@ class MissionBranchStorage(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
+    async def get_mission_branch_by_id(self, branch_id: int) -> MissionBranch:
+        raise NotImplementedError
+
+    @abstractmethod
     async def list_mission_branches(self) -> MissionBranches:
         raise NotImplementedError
 
-
-class MissionStorage(metaclass=ABCMeta):
     @abstractmethod
     async def insert_mission(self, mission: Mission) -> None:
         raise NotImplementedError
@@ -51,4 +53,12 @@ class MissionStorage(metaclass=ABCMeta):
 
     @abstractmethod
     async def delete_mission(self, mission_id: int) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def update_mission_branch(self, branch: MissionBranch) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def delete_mission_branch(self, branch_id: int) -> None:
         raise NotImplementedError

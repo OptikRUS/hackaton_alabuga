@@ -11,14 +11,14 @@ from src.core.missions.exceptions import (
     MissionNotFoundError,
 )
 from src.core.missions.schemas import Mission, MissionBranch, MissionBranches, Missions
-from src.core.storages import MissionBranchStorage, MissionStorage, UserStorage
+from src.core.storages import MissionStorage, UserStorage
 from src.core.users.exceptions import UserAlreadyExistError, UserNotFoundError
 from src.core.users.schemas import User
 from src.storages.models import MissionBranchModel, MissionModel, UserModel
 
 
 @dataclass
-class DatabaseStorage(UserStorage, MissionBranchStorage, MissionStorage):
+class DatabaseStorage(UserStorage, MissionStorage):
     session: AsyncSession
 
     async def insert_user(self, user: User) -> None:
@@ -58,6 +58,13 @@ class DatabaseStorage(UserStorage, MissionBranchStorage, MissionStorage):
 
     async def get_mission_branch_by_name(self, name: str) -> MissionBranch:
         query = select(MissionBranchModel).where(MissionBranchModel.name == name)
+        branch = await self.session.scalar(query)
+        if branch is None:
+            raise MissionBranchNotFoundError
+        return branch.to_schema()
+
+    async def get_mission_branch_by_id(self, branch_id: int) -> MissionBranch:
+        query = select(MissionBranchModel).where(MissionBranchModel.id == branch_id)
         branch = await self.session.scalar(query)
         if branch is None:
             raise MissionBranchNotFoundError
@@ -123,5 +130,23 @@ class DatabaseStorage(UserStorage, MissionBranchStorage, MissionStorage):
         await self.session.execute(query)
 
     async def delete_mission(self, mission_id: int) -> None:
+        await self.get_mission_by_id(mission_id=mission_id)
         query = delete(MissionModel).where(MissionModel.id == mission_id)
+        await self.session.execute(query)
+
+    async def update_mission_branch(self, branch: MissionBranch) -> None:
+        await self.get_mission_branch_by_id(branch_id=branch.id)
+        query = (
+            update(MissionBranchModel)
+            .where(MissionBranchModel.id == branch.id)
+            .values({"name": branch.name})
+        )
+        try:
+            await self.session.execute(query)
+        except IntegrityError as error:
+            raise MissionBranchAlreadyExistError from error
+
+    async def delete_mission_branch(self, branch_id: int) -> None:
+        await self.get_mission_branch_by_id(branch_id=branch_id)
+        query = delete(MissionBranchModel).where(MissionBranchModel.id == branch_id)
         await self.session.execute(query)

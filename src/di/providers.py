@@ -10,14 +10,16 @@ from src.core.exceptions import InvalidJWTTokenError
 from src.core.missions.use_cases import (
     CreateMissionBranchUseCase,
     CreateMissionUseCase,
+    DeleteMissionBranchUseCase,
     DeleteMissionUseCase,
     GetMissionBranchesUseCase,
     GetMissionsUseCase,
     GetMissionUseCase,
+    UpdateMissionBranchUseCase,
     UpdateMissionUseCase,
 )
 from src.core.password import PasswordService
-from src.core.storages import MissionBranchStorage, MissionStorage, UserStorage
+from src.core.storages import MissionStorage, UserStorage
 from src.core.users.use_cases import CreateUserUseCase, GetUserUseCase, LoginUserUseCase
 from src.services.user_password_service import UserPasswordService
 from src.storages.database import async_session
@@ -54,13 +56,13 @@ class MissionProvider(Provider):
     @provide
     def build_create_mission_branch_use_case(
         self,
-        storage: MissionBranchStorage,
+        storage: MissionStorage,
     ) -> CreateMissionBranchUseCase:
         return CreateMissionBranchUseCase(storage=storage)
 
     @provide
     def build_get_mission_branches_use_case(
-        self, storage: MissionBranchStorage
+        self, storage: MissionStorage
     ) -> GetMissionBranchesUseCase:
         return GetMissionBranchesUseCase(storage=storage)
 
@@ -87,6 +89,20 @@ class MissionProvider(Provider):
     def build_delete_mission_use_case(self, storage: MissionStorage) -> DeleteMissionUseCase:
         return DeleteMissionUseCase(storage=storage)
 
+    @provide
+    def build_update_mission_branch_use_case(
+        self,
+        storage: MissionStorage,
+    ) -> UpdateMissionBranchUseCase:
+        return UpdateMissionBranchUseCase(storage=storage)
+
+    @provide
+    def build_delete_mission_branch_use_case(
+        self,
+        storage: MissionStorage,
+    ) -> DeleteMissionBranchUseCase:
+        return DeleteMissionBranchUseCase(storage=storage)
+
 
 class DatabaseProvider(Provider):
     scope = Scope.REQUEST
@@ -102,7 +118,7 @@ class DatabaseProvider(Provider):
         return DatabaseStorage(session=session)
 
     @provide
-    def get_mission_branch_storage(self, session: AsyncSession) -> MissionBranchStorage:
+    def get_mission_branch_storage(self, session: AsyncSession) -> MissionStorage:
         return DatabaseStorage(session=session)
 
     @provide

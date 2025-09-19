@@ -1,6 +1,7 @@
 from sqlalchemy import ForeignKey, PrimaryKeyConstraint, String, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
+from src.core.missions.enums import MissionCategoryEnum
 from src.core.missions.schemas import Mission, MissionBranch
 from src.core.users.enums import UserRoleEnum
 from src.core.users.schemas import User
@@ -105,5 +106,5 @@ class MissionModel(Base):
             reward_mana=self.reward_mana,
             rank_requirement=self.rank_requirement,
             branch_id=self.branch_id,
-            category=self.category,
+            category=MissionCategoryEnum(self.category),
         )

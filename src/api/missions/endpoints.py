@@ -5,6 +5,7 @@ from src.api.missions.schemas import (
     MissionBranchCreateRequest,
     MissionBranchesResponse,
     MissionBranchResponse,
+    MissionBranchUpdateRequest,
     MissionCreateRequest,
     MissionResponse,
     MissionsResponse,
@@ -13,10 +14,12 @@ from src.api.missions.schemas import (
 from src.core.missions.use_cases import (
     CreateMissionBranchUseCase,
     CreateMissionUseCase,
+    DeleteMissionBranchUseCase,
     DeleteMissionUseCase,
     GetMissionBranchesUseCase,
     GetMissionsUseCase,
     GetMissionUseCase,
+    UpdateMissionBranchUseCase,
     UpdateMissionUseCase,
 )
 
@@ -38,6 +41,24 @@ async def get_mission_branches(
 ) -> MissionBranchesResponse:
     branches = await use_case.execute()
     return MissionBranchesResponse.from_schema(branches=branches)
+
+
+@router.put(path="/missions/branches/{branch_id}", status_code=status.HTTP_200_OK)
+async def update_mission_branch(
+    branch_id: int,
+    body: MissionBranchUpdateRequest,
+    use_case: FromDishka[UpdateMissionBranchUseCase],
+) -> MissionBranchResponse:
+    branch = await use_case.execute(branch=body.to_schema(branch_id=branch_id))
+    return MissionBranchResponse.from_schema(branch=branch)
+
+
+@router.delete(path="/missions/branches/{branch_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_mission_branch(
+    branch_id: int,
+    use_case: FromDishka[DeleteMissionBranchUseCase],
+) -> None:
+    await use_case.execute(branch_id=branch_id)
 
 
 @router.post(path="/missions", status_code=status.HTTP_201_CREATED)

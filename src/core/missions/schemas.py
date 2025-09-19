@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from src.core.missions.enums import MissionCategoryEnum
+
 
 @dataclass
 class MissionBranch:
@@ -21,7 +23,7 @@ class Mission:
     reward_mana: int
     rank_requirement: int
     branch_id: int
-    category: str
+    category: MissionCategoryEnum
 
 
 @dataclass

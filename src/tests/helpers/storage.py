@@ -3,9 +3,9 @@ from dataclasses import dataclass
 from sqlalchemy import ScalarResult, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.missions.schemas import MissionBranch
+from src.core.missions.schemas import Mission, MissionBranch
 from src.core.users.schemas import User
-from src.storages.models import MissionBranchModel, UserModel
+from src.storages.models import MissionBranchModel, MissionModel, UserModel
 
 
 @dataclass(kw_only=True, slots=True)
@@ -40,4 +40,30 @@ class StorageHelper:
 
     async def get_branch_by_name(self, name: str) -> MissionBranchModel | None:
         query = select(MissionBranchModel).where(MissionBranchModel.name == name)
+        return await self.session.scalar(query)  # type: ignore[no-any-return]
+
+    async def insert_mission(self, mission: Mission) -> MissionModel | None:
+        query = (
+            insert(MissionModel)
+            .values(
+                {
+                    "title": mission.title,
+                    "description": mission.description,
+                    "reward_xp": mission.reward_xp,
+                    "reward_mana": mission.reward_mana,
+                    "rank_requirement": mission.rank_requirement,
+                    "branch_id": mission.branch_id,
+                    "category": mission.category,
+                },
+            )
+            .returning(MissionModel)
+        )
+        return await self.session.scalar(query)  # type: ignore[no-any-return]
+
+    async def get_mission_by_id(self, mission_id: int) -> MissionModel | None:
+        query = select(MissionModel).where(MissionModel.id == mission_id)
+        return await self.session.scalar(query)  # type: ignore[no-any-return]
+
+    async def get_mission_by_title(self, title: str) -> MissionModel | None:
+        query = select(MissionModel).where(MissionModel.title == title)
         return await self.session.scalar(query)  # type: ignore[no-any-return]

@@ -6,7 +6,17 @@ from fastapi.security import HTTPBearer
 
 from src.api.auth.schemas import JwtUser
 from src.core.exceptions import InvalidJWTTokenError
-from src.core.missions.use_cases import CreateMissionBranchUseCase, GetMissionBranchesUseCase
+from src.core.missions.use_cases import (
+    CreateMissionBranchUseCase,
+    CreateMissionUseCase,
+    DeleteMissionBranchUseCase,
+    DeleteMissionUseCase,
+    GetMissionBranchesUseCase,
+    GetMissionsUseCase,
+    GetMissionUseCase,
+    UpdateMissionBranchUseCase,
+    UpdateMissionUseCase,
+)
 from src.core.password import PasswordService
 from src.core.users.use_cases import CreateUserUseCase, GetUserUseCase, LoginUserUseCase
 from src.tests.mocks.user_password import UserPasswordServiceMock
@@ -32,12 +42,40 @@ class MissionProviderMock(Provider):
     scope: Scope = Scope.APP
 
     @provide
-    def override_create_mission_branch_use_cas(self) -> CreateMissionBranchUseCase:
+    def override_create_mission_branch_use_case(self) -> CreateMissionBranchUseCase:
         return AsyncMock(spec=CreateMissionBranchUseCase)
 
     @provide
     def override_get_mission_branches_use_case(self) -> GetMissionBranchesUseCase:
         return AsyncMock(spec=GetMissionBranchesUseCase)
+
+    @provide
+    def override_update_mission_branch_use_case(self) -> UpdateMissionBranchUseCase:
+        return AsyncMock(spec=CreateMissionBranchUseCase)
+
+    @provide
+    def override_delete_mission_branch_usecase(self) -> DeleteMissionBranchUseCase:
+        return AsyncMock(spec=GetMissionBranchesUseCase)
+
+    @provide
+    def override_create_mission_use_case(self) -> CreateMissionUseCase:
+        return AsyncMock(spec=CreateMissionUseCase)
+
+    @provide
+    def override_get_missions_use_case(self) -> GetMissionsUseCase:
+        return AsyncMock(spec=GetMissionsUseCase)
+
+    @provide
+    def override_get_mission_use_case(self) -> GetMissionUseCase:
+        return AsyncMock(spec=GetMissionUseCase)
+
+    @provide
+    def override_update_mission_use_case(self) -> UpdateMissionUseCase:
+        return AsyncMock(spec=UpdateMissionUseCase)
+
+    @provide
+    def override_delete_mission_use_case(self) -> DeleteMissionUseCase:
+        return AsyncMock(spec=DeleteMissionUseCase)
 
 
 class AuthProviderMock(Provider):
