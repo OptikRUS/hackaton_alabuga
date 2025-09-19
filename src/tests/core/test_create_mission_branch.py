@@ -1,6 +1,6 @@
 import pytest
 
-from src.core.missions.exceptions import MissionBranchAlreadyExistError
+from src.core.missions.exceptions import MissionBranchNameAlreadyExistError
 from src.core.missions.use_cases import CreateMissionBranchUseCase
 from src.tests.fixtures import FactoryFixture
 from src.tests.mocks.storage_stub import StorageMock
@@ -24,7 +24,7 @@ class TestCreateMissionBranchUseCase(FactoryFixture):
             branch=(self.factory.mission_branch(branch_id=0, name="TEST_BRANCH"))
         )
 
-        with pytest.raises(MissionBranchAlreadyExistError):
+        with pytest.raises(MissionBranchNameAlreadyExistError):
             await self.use_case.execute(
                 branch=(self.factory.mission_branch(branch_id=0, name="TEST_BRANCH"))
             )

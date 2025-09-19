@@ -8,18 +8,27 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.api.auth.schemas import JwtUser
 from src.core.exceptions import InvalidJWTTokenError
 from src.core.missions.use_cases import (
+    AddTaskToMissionUseCase,
     CreateMissionBranchUseCase,
     CreateMissionUseCase,
     DeleteMissionBranchUseCase,
     DeleteMissionUseCase,
     GetMissionBranchesUseCase,
+    GetMissionDetailUseCase,
     GetMissionsUseCase,
-    GetMissionUseCase,
+    RemoveTaskFromMissionUseCase,
     UpdateMissionBranchUseCase,
     UpdateMissionUseCase,
 )
 from src.core.password import PasswordService
 from src.core.storages import MissionStorage, UserStorage
+from src.core.tasks.use_cases import (
+    CreateMissionTaskUseCase,
+    DeleteMissionTaskUseCase,
+    GetMissionTaskDetailUseCase,
+    GetMissionTasksUseCase,
+    UpdateMissionTaskUseCase,
+)
 from src.core.users.use_cases import CreateUserUseCase, GetUserUseCase, LoginUserUseCase
 from src.services.user_password_service import UserPasswordService
 from src.storages.database import async_session
@@ -78,8 +87,8 @@ class MissionProvider(Provider):
         return GetMissionsUseCase(storage=storage)
 
     @provide
-    def build_get_mission_use_case(self, storage: MissionStorage) -> GetMissionUseCase:
-        return GetMissionUseCase(storage=storage)
+    def build_get_mission_detail_use_case(self, storage: MissionStorage) -> GetMissionDetailUseCase:
+        return GetMissionDetailUseCase(storage=storage)
 
     @provide
     def build_update_mission_use_case(self, storage: MissionStorage) -> UpdateMissionUseCase:
@@ -102,6 +111,47 @@ class MissionProvider(Provider):
         storage: MissionStorage,
     ) -> DeleteMissionBranchUseCase:
         return DeleteMissionBranchUseCase(storage=storage)
+
+    @provide
+    def build_create_mission_task_use_case(
+        self,
+        storage: MissionStorage,
+    ) -> CreateMissionTaskUseCase:
+        return CreateMissionTaskUseCase(storage=storage)
+
+    @provide
+    def build_get_mission_tasks_use_case(self, storage: MissionStorage) -> GetMissionTasksUseCase:
+        return GetMissionTasksUseCase(storage=storage)
+
+    @provide
+    def build_get_mission_task_detail_use_case(
+        self, storage: MissionStorage
+    ) -> GetMissionTaskDetailUseCase:
+        return GetMissionTaskDetailUseCase(storage=storage)
+
+    @provide
+    def build_update_mission_task_use_case(
+        self, storage: MissionStorage
+    ) -> UpdateMissionTaskUseCase:
+        return UpdateMissionTaskUseCase(storage=storage)
+
+    @provide
+    def build_delete_mission_task_use_case(
+        self, storage: MissionStorage
+    ) -> DeleteMissionTaskUseCase:
+        return DeleteMissionTaskUseCase(storage=storage)
+
+    @provide
+    def build_add_task_to_mission_use_case(
+        self, storage: MissionStorage
+    ) -> AddTaskToMissionUseCase:
+        return AddTaskToMissionUseCase(storage=storage)
+
+    @provide
+    def build_remove_task_from_mission_use_case(
+        self, storage: MissionStorage
+    ) -> RemoveTaskFromMissionUseCase:
+        return RemoveTaskFromMissionUseCase(storage=storage)
 
 
 class DatabaseProvider(Provider):

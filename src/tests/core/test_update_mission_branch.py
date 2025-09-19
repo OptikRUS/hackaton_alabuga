@@ -1,7 +1,7 @@
 import pytest
 
 from src.core.missions.exceptions import (
-    MissionBranchAlreadyExistError,
+    MissionBranchNameAlreadyExistError,
     MissionBranchNotFoundError,
 )
 from src.core.missions.schemas import MissionBranch
@@ -21,8 +21,7 @@ class TestUpdateMissionBranchUseCase(FactoryFixture):
 
         branch = await self.use_case.execute(branch=(MissionBranch(id=1, name="Updated Branch")))
 
-        assert branch.id == 1
-        assert branch.name == "Updated Branch"
+        assert branch == self.factory.mission_branch(branch_id=1, name="Updated Branch")
 
     async def test_update_mission_branch_not_found(self):
         with pytest.raises(MissionBranchNotFoundError):
@@ -32,7 +31,7 @@ class TestUpdateMissionBranchUseCase(FactoryFixture):
         await self.storage.insert_mission_branch(MissionBranch(id=1, name="Branch 1"))
         await self.storage.insert_mission_branch(MissionBranch(id=2, name="Branch 2"))
 
-        with pytest.raises(MissionBranchAlreadyExistError):
+        with pytest.raises(MissionBranchNameAlreadyExistError):
             await self.use_case.execute(branch=(MissionBranch(id=1, name="Branch 2")))
 
     async def test_update_mission_branch_same_name(self):
@@ -40,5 +39,4 @@ class TestUpdateMissionBranchUseCase(FactoryFixture):
 
         branch = await self.use_case.execute(branch=(MissionBranch(id=1, name="Test Branch")))
 
-        assert branch.id == 1
-        assert branch.name == "Test Branch"
+        assert branch == self.factory.mission_branch(branch_id=1, name="Test Branch")

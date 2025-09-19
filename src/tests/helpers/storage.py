@@ -4,8 +4,14 @@ from sqlalchemy import ScalarResult, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.missions.schemas import Mission, MissionBranch
+from src.core.tasks.schemas import MissionTask
 from src.core.users.schemas import User
-from src.storages.models import MissionBranchModel, MissionModel, UserModel
+from src.storages.models import (
+    MissionBranchModel,
+    MissionModel,
+    MissionTaskModel,
+    UserModel,
+)
 
 
 @dataclass(kw_only=True, slots=True)
@@ -66,4 +72,25 @@ class StorageHelper:
 
     async def get_mission_by_title(self, title: str) -> MissionModel | None:
         query = select(MissionModel).where(MissionModel.title == title)
+        return await self.session.scalar(query)  # type: ignore[no-any-return]
+
+    async def insert_task(self, task: MissionTask) -> MissionTaskModel | None:
+        query = (
+            insert(MissionTaskModel)
+            .values(
+                {
+                    "title": task.title,
+                    "description": task.description,
+                },
+            )
+            .returning(MissionTaskModel)
+        )
+        return await self.session.scalar(query)  # type: ignore[no-any-return]
+
+    async def get_task_by_id(self, task_id: int) -> MissionTaskModel | None:
+        query = select(MissionTaskModel).where(MissionTaskModel.id == task_id)
+        return await self.session.scalar(query)  # type: ignore[no-any-return]
+
+    async def get_task_by_title(self, title: str) -> MissionTaskModel | None:
+        query = select(MissionTaskModel).where(MissionTaskModel.title == title)
         return await self.session.scalar(query)  # type: ignore[no-any-return]

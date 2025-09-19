@@ -12,17 +12,22 @@ class TestGetMissionBranchesUseCase(FactoryFixture):
         self.use_case = GetMissionBranchesUseCase(storage=self.storage)
 
     async def test_get_mission_branches(self) -> None:
-        branch1 = self.factory.mission_branch(branch_id=1, name="BRANCH_1")
-        branch2 = self.factory.mission_branch(branch_id=2, name="BRANCH_2")
+        await self.storage.insert_mission_branch(
+            branch=self.factory.mission_branch(branch_id=1, name="TEST1")
+        )
+        await self.storage.insert_mission_branch(
+            branch=self.factory.mission_branch(branch_id=2, name="TEST2")
+        )
 
-        await self.storage.insert_mission_branch(branch=branch1)
-        await self.storage.insert_mission_branch(branch=branch2)
+        branches = await self.use_case.execute()
 
-        result = await self.use_case.execute()
-
-        assert len(result.values) == 2
-        assert result.values[0].name == "BRANCH_1"
-        assert result.values[1].name == "BRANCH_2"
+        assert len(branches.values) == 2
+        assert branches == self.factory.mission_branches(
+            values=[
+                self.factory.mission_branch(branch_id=1, name="TEST1"),
+                self.factory.mission_branch(branch_id=2, name="TEST2"),
+            ]
+        )
 
     async def test_get_empty_mission_branches(self) -> None:
         result = await self.use_case.execute()

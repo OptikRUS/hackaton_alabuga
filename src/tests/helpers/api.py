@@ -95,3 +95,36 @@ class APIHelper:
 
     def delete_mission(self, mission_id: int) -> Response:
         return self.client.delete(f"/missions/{mission_id}")
+
+    def create_task(self, title: str, description: str) -> Response:
+        return self.client.post(
+            url="/tasks",
+            json={
+                "title": title,
+                "description": description,
+            },
+        )
+
+    def get_tasks(self) -> Response:
+        return self.client.get("/tasks")
+
+    def get_task(self, task_id: int) -> Response:
+        return self.client.get(f"/tasks/{task_id}")
+
+    def update_task(self, task_id: int, title: str, description: str) -> Response:
+        return self.client.put(
+            url=f"/tasks/{task_id}",
+            json={
+                "title": title,
+                "description": description,
+            },
+        )
+
+    def delete_task(self, task_id: int) -> Response:
+        return self.client.delete(f"/tasks/{task_id}")
+
+    def add_task_to_mission(self, mission_id: int, task_id: int) -> Response:
+        return self.client.post(f"/missions/{mission_id}/tasks/{task_id}")
+
+    def remove_task_from_mission(self, mission_id: int, task_id: int) -> Response:
+        return self.client.delete(f"/missions/{mission_id}/tasks/{task_id}")

@@ -12,13 +12,15 @@ from src.api.missions.schemas import (
     MissionUpdateRequest,
 )
 from src.core.missions.use_cases import (
+    AddTaskToMissionUseCase,
     CreateMissionBranchUseCase,
     CreateMissionUseCase,
     DeleteMissionBranchUseCase,
     DeleteMissionUseCase,
     GetMissionBranchesUseCase,
+    GetMissionDetailUseCase,
     GetMissionsUseCase,
-    GetMissionUseCase,
+    RemoveTaskFromMissionUseCase,
     UpdateMissionBranchUseCase,
     UpdateMissionUseCase,
 )
@@ -81,7 +83,7 @@ async def get_missions(
 @router.get(path="/missions/{mission_id}", status_code=status.HTTP_200_OK)
 async def get_mission(
     mission_id: int,
-    use_case: FromDishka[GetMissionUseCase],
+    use_case: FromDishka[GetMissionDetailUseCase],
 ) -> MissionResponse:
     mission = await use_case.execute(mission_id=mission_id)
     return MissionResponse.from_schema(mission=mission)
@@ -103,3 +105,23 @@ async def delete_mission(
     use_case: FromDishka[DeleteMissionUseCase],
 ) -> None:
     await use_case.execute(mission_id=mission_id)
+
+
+@router.post(path="/missions/{mission_id}/tasks/{task_id}", status_code=status.HTTP_200_OK)
+async def add_task_to_mission(
+    mission_id: int,
+    task_id: int,
+    use_case: FromDishka[AddTaskToMissionUseCase],
+) -> MissionResponse:
+    mission = await use_case.execute(mission_id=mission_id, task_id=task_id)
+    return MissionResponse.from_schema(mission=mission)
+
+
+@router.delete(path="/missions/{mission_id}/tasks/{task_id}", status_code=status.HTTP_200_OK)
+async def remove_task_from_mission(
+    mission_id: int,
+    task_id: int,
+    use_case: FromDishka[RemoveTaskFromMissionUseCase],
+) -> MissionResponse:
+    mission = await use_case.execute(mission_id=mission_id, task_id=task_id)
+    return MissionResponse.from_schema(mission=mission)

@@ -3,6 +3,7 @@ from pydantic import Field
 from src.api.boundary import BoundaryModel
 from src.core.missions.enums import MissionCategoryEnum
 from src.core.missions.schemas import Mission, MissionBranch, MissionBranches, Missions
+from src.core.tasks.schemas import MissionTask
 
 
 class MissionBranchCreateRequest(BoundaryModel):
@@ -17,6 +18,16 @@ class MissionBranchUpdateRequest(BoundaryModel):
 
     def to_schema(self, branch_id: int) -> MissionBranch:
         return MissionBranch(id=branch_id, name=self.name)
+
+
+class MissionTaskResponse(BoundaryModel):
+    id: int = Field(default=..., description="Идентификатор таска миссии")
+    title: str = Field(default=..., description="Название таска миссии")
+    description: str = Field(default=..., description="Описание таска миссии")
+
+    @classmethod
+    def from_schema(cls, task: MissionTask) -> "MissionTaskResponse":
+        return cls(id=task.id, title=task.title, description=task.description)
 
 
 class MissionBranchResponse(BoundaryModel):
@@ -91,6 +102,7 @@ class MissionResponse(BoundaryModel):
     rank_requirement: int = Field(default=..., description="Требуемый ранг")
     branch_id: int = Field(default=..., description="ID ветки миссий")
     category: str = Field(default=..., description="Категория миссии")
+    tasks: list[MissionTaskResponse] = Field(default_factory=list, description="Таски миссии")
 
     @classmethod
     def from_schema(cls, mission: Mission) -> "MissionResponse":
@@ -103,6 +115,7 @@ class MissionResponse(BoundaryModel):
             rank_requirement=mission.rank_requirement,
             branch_id=mission.branch_id,
             category=mission.category,
+            tasks=[MissionTaskResponse.from_schema(task=task) for task in (mission.tasks or [])],
         )
 
 

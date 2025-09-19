@@ -1,7 +1,7 @@
 import pytest
 
 from src.core.missions.enums import MissionCategoryEnum
-from src.core.missions.exceptions import MissionAlreadyExistError, MissionBranchNotFoundError
+from src.core.missions.exceptions import MissionBranchNotFoundError, MissionNameAlreadyExistError
 from src.core.missions.use_cases import CreateMissionUseCase
 from src.tests.fixtures import FactoryFixture
 from src.tests.mocks.storage_stub import StorageMock
@@ -43,7 +43,7 @@ class TestCreateMissionUseCase(FactoryFixture):
             category=MissionCategoryEnum.QUEST,
         )
 
-    async def test_create_mission_already_exist(self) -> None:
+    async def test_create_mission_name_already_exist(self) -> None:
         await self.storage.insert_mission(
             mission=(
                 self.factory.mission(
@@ -59,7 +59,7 @@ class TestCreateMissionUseCase(FactoryFixture):
             )
         )
 
-        with pytest.raises(MissionAlreadyExistError):
+        with pytest.raises(MissionNameAlreadyExistError):
             await self.use_case.execute(
                 mission=(
                     self.factory.mission(

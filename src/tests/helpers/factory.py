@@ -1,5 +1,14 @@
 from src.core.missions.enums import MissionCategoryEnum
-from src.core.missions.schemas import Mission, MissionBranch, MissionBranches, Missions
+from src.core.missions.schemas import (
+    Mission,
+    MissionBranch,
+    MissionBranches,
+    Missions,
+)
+from src.core.tasks.schemas import (
+    MissionTask,
+    MissionTasks,
+)
 from src.core.users.enums import UserRoleEnum
 from src.core.users.schemas import User
 
@@ -40,13 +49,14 @@ class FactoryHelper:
     def mission(
         cls,
         mission_id: int = 0,
-        title: str = "TEST_MISSION",
-        description: str = "Test description",
+        title: str = "TEST",
+        description: str = "TEST",
         reward_xp: int = 100,
         reward_mana: int = 50,
         rank_requirement: int = 1,
         branch_id: int = 1,
         category: MissionCategoryEnum = MissionCategoryEnum.QUEST,
+        tasks: list[MissionTask] | None = None,
     ) -> Mission:
         return Mission(
             id=mission_id,
@@ -57,8 +67,22 @@ class FactoryHelper:
             rank_requirement=rank_requirement,
             branch_id=branch_id,
             category=category,
+            tasks=tasks,
         )
 
     @classmethod
+    def mission_task(
+        cls,
+        task_id: int = 0,
+        title: str = "TEST",
+        description: str = "TEST",
+    ) -> MissionTask:
+        return MissionTask(id=task_id, title=title, description=description)
+
+    @classmethod
     def missions(cls, values: list[Mission]) -> Missions:
-        return Missions(values=values if values else [cls.mission()])
+        return Missions(values=values)
+
+    @classmethod
+    def mission_tasks(cls, values: list[MissionTask]) -> MissionTasks:
+        return MissionTasks(values=values)

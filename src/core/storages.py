@@ -1,6 +1,15 @@
 from abc import ABCMeta, abstractmethod
 
-from src.core.missions.schemas import Mission, MissionBranch, MissionBranches, Missions
+from src.core.missions.schemas import (
+    Mission,
+    MissionBranch,
+    MissionBranches,
+    Missions,
+)
+from src.core.tasks.schemas import (
+    MissionTask,
+    MissionTasks,
+)
 from src.core.users.schemas import User
 
 
@@ -61,4 +70,36 @@ class MissionStorage(metaclass=ABCMeta):
 
     @abstractmethod
     async def delete_mission_branch(self, branch_id: int) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def insert_mission_task(self, task: MissionTask) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_mission_task_by_id(self, task_id: int) -> MissionTask:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_mission_task_by_title(self, title: str) -> MissionTask:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def list_mission_tasks(self) -> MissionTasks:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def update_mission_task(self, task: MissionTask) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def delete_mission_task(self, task_id: int) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def add_task_to_mission(self, mission_id: int, task_id: int) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def remove_task_from_mission(self, mission_id: int, task_id: int) -> None:
         raise NotImplementedError

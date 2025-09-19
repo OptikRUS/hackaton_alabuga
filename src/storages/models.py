@@ -3,6 +3,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 from src.core.missions.enums import MissionCategoryEnum
 from src.core.missions.schemas import Mission, MissionBranch
+from src.core.tasks.schemas import MissionTask
 from src.core.users.enums import UserRoleEnum
 from src.core.users.schemas import User
 
@@ -85,6 +86,13 @@ class MissionModel(Base):
 
     branch_id: Mapped[int] = mapped_column(ForeignKey(MissionBranchModel.id, ondelete="CASCADE"))
 
+    tasks: Mapped[list["MissionTaskModel"]] = relationship(
+        "MissionTaskModel",
+        secondary="missions_missions_tasks",
+        back_populates="missions",
+        lazy="selectin",
+    )
+
     @classmethod
     def from_schema(cls, mission: Mission) -> "MissionModel":
         return cls(
@@ -107,4 +115,52 @@ class MissionModel(Base):
             rank_requirement=self.rank_requirement,
             branch_id=self.branch_id,
             category=MissionCategoryEnum(self.category),
+            tasks=[task.to_schema() for task in self.tasks],
         )
+
+
+class MissionTaskModel(Base):
+    __tablename__ = "missions_mission_task"
+    __table_args__ = (UniqueConstraint("title", name="uq_missions_task_title"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    title: Mapped[str] = mapped_column(String(255))
+    description: Mapped[str] = mapped_column()
+
+    missions: Mapped[list["MissionModel"]] = relationship(
+        MissionModel,
+        secondary="missions_missions_tasks",
+        back_populates="tasks",
+        lazy="selectin",
+    )
+
+    @classmethod
+    def from_schema(cls, task: MissionTask) -> "MissionTaskModel":
+        return cls(title=task.title, description=task.description)
+
+    def to_schema(self) -> MissionTask:
+        return MissionTask(
+            id=self.id,
+            title=self.title,
+            description=self.description,
+        )
+
+
+class MissionTaskRelationModel(Base):
+    __tablename__ = "missions_missions_tasks"
+    __table_args__ = (
+        PrimaryKeyConstraint(
+            "task_id",
+            "mission_id",
+            name="pk_missions_mission_tasks",
+        ),
+    )
+
+    task_id: Mapped[int] = mapped_column(
+        ForeignKey(MissionTaskModel.id, ondelete="CASCADE"),
+        primary_key=True,
+    )
+    mission_id: Mapped[int] = mapped_column(
+        ForeignKey(MissionModel.id, ondelete="CASCADE"),
+        primary_key=True,
+    )

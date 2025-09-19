@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 from src.core.missions.enums import MissionCategoryEnum
+from src.core.tasks.schemas import MissionTask
 
 
 @dataclass
@@ -24,6 +25,7 @@ class Mission:
     rank_requirement: int
     branch_id: int
     category: MissionCategoryEnum
+    tasks: list[MissionTask] | None = None
 
 
 @dataclass

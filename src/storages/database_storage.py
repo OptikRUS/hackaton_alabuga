@@ -3,18 +3,38 @@ from dataclasses import dataclass
 from sqlalchemy import delete, insert, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from src.core.missions.exceptions import (
-    MissionAlreadyExistError,
-    MissionBranchAlreadyExistError,
+    MissionBranchNameAlreadyExistError,
     MissionBranchNotFoundError,
+    MissionNameAlreadyExistError,
     MissionNotFoundError,
 )
-from src.core.missions.schemas import Mission, MissionBranch, MissionBranches, Missions
+from src.core.missions.schemas import (
+    Mission,
+    MissionBranch,
+    MissionBranches,
+    Missions,
+)
 from src.core.storages import MissionStorage, UserStorage
+from src.core.tasks.exceptions import (
+    TaskNameAlreadyExistError,
+    TaskNotFoundError,
+)
+from src.core.tasks.schemas import (
+    MissionTask,
+    MissionTasks,
+)
 from src.core.users.exceptions import UserAlreadyExistError, UserNotFoundError
 from src.core.users.schemas import User
-from src.storages.models import MissionBranchModel, MissionModel, UserModel
+from src.storages.models import (
+    MissionBranchModel,
+    MissionModel,
+    MissionTaskModel,
+    MissionTaskRelationModel,
+    UserModel,
+)
 
 
 @dataclass
@@ -54,7 +74,7 @@ class DatabaseStorage(UserStorage, MissionStorage):
         try:
             await self.session.scalar(query)
         except IntegrityError as error:
-            raise MissionBranchAlreadyExistError from error
+            raise MissionBranchNameAlreadyExistError from error
 
     async def get_mission_branch_by_name(self, name: str) -> MissionBranch:
         query = select(MissionBranchModel).where(MissionBranchModel.name == name)
@@ -92,10 +112,14 @@ class DatabaseStorage(UserStorage, MissionStorage):
         try:
             await self.session.scalar(query)
         except IntegrityError as error:
-            raise MissionAlreadyExistError from error
+            raise MissionNameAlreadyExistError from error
 
     async def get_mission_by_id(self, mission_id: int) -> Mission:
-        query = select(MissionModel).where(MissionModel.id == mission_id)
+        query = (
+            select(MissionModel)
+            .where(MissionModel.id == mission_id)
+            .options(selectinload(MissionModel.tasks))
+        )
         mission = await self.session.scalar(query)
         if mission is None:
             raise MissionNotFoundError
@@ -144,9 +168,76 @@ class DatabaseStorage(UserStorage, MissionStorage):
         try:
             await self.session.execute(query)
         except IntegrityError as error:
-            raise MissionBranchAlreadyExistError from error
+            raise MissionBranchNameAlreadyExistError from error
 
     async def delete_mission_branch(self, branch_id: int) -> None:
         await self.get_mission_branch_by_id(branch_id=branch_id)
         query = delete(MissionBranchModel).where(MissionBranchModel.id == branch_id)
+        await self.session.execute(query)
+
+    async def insert_mission_task(self, task: MissionTask) -> None:
+        query = (
+            insert(MissionTaskModel)
+            .values({
+                "title": task.title,
+                "description": task.description,
+            })
+            .returning(MissionTaskModel.id)
+        )
+        try:
+            await self.session.scalar(query)
+        except IntegrityError as error:
+            raise TaskNameAlreadyExistError from error
+
+    async def get_mission_task_by_id(self, task_id: int) -> MissionTask:
+        query = select(MissionTaskModel).where(MissionTaskModel.id == task_id)
+        task = await self.session.scalar(query)
+        if task is None:
+            raise TaskNotFoundError
+        return task.to_schema()
+
+    async def get_mission_task_by_title(self, title: str) -> MissionTask:
+        query = select(MissionTaskModel).where(MissionTaskModel.title == title)
+        task = await self.session.scalar(query)
+        if task is None:
+            raise TaskNotFoundError
+        return task.to_schema()
+
+    async def list_mission_tasks(self) -> MissionTasks:
+        query = select(MissionTaskModel)
+        result = await self.session.scalars(query)
+        return MissionTasks(values=[row.to_schema() for row in result])
+
+    async def update_mission_task(self, task: MissionTask) -> None:
+        await self.get_mission_task_by_id(task_id=task.id)
+        query = (
+            update(MissionTaskModel)
+            .where(MissionTaskModel.id == task.id)
+            .values({
+                "title": task.title,
+                "description": task.description,
+            })
+        )
+        try:
+            await self.session.execute(query)
+        except IntegrityError as error:
+            raise TaskNameAlreadyExistError from error
+
+    async def delete_mission_task(self, task_id: int) -> None:
+        await self.get_mission_task_by_id(task_id=task_id)
+        query = delete(MissionTaskModel).where(MissionTaskModel.id == task_id)
+        await self.session.execute(query)
+
+    async def add_task_to_mission(self, mission_id: int, task_id: int) -> None:
+        query = insert(MissionTaskRelationModel).values({
+            "mission_id": mission_id,
+            "task_id": task_id,
+        })
+        await self.session.execute(query)
+
+    async def remove_task_from_mission(self, mission_id: int, task_id: int) -> None:
+        query = delete(MissionTaskRelationModel).where(
+            MissionTaskRelationModel.mission_id == mission_id,
+            MissionTaskRelationModel.task_id == task_id,
+        )
         await self.session.execute(query)

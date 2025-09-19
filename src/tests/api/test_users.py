@@ -28,6 +28,15 @@ class TestUsersAPI(APIFixture, FactoryFixture, ContainerFixture):
         )
 
         assert response.status_code == codes.CREATED
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(
+            user=self.factory.user(
+                login="TEST",
+                first_name="TEST",
+                last_name="TEST",
+                password="TEST",
+            )
+        )
 
     def test_user_registration_already_exist(self) -> None:
         self.use_case.execute.side_effect = UserAlreadyExistError
@@ -41,6 +50,15 @@ class TestUsersAPI(APIFixture, FactoryFixture, ContainerFixture):
 
         assert response.status_code == codes.CONFLICT
         assert response.json() == {"detail": UserAlreadyExistError.detail}
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(
+            user=self.factory.user(
+                login="TEST",
+                first_name="TEST",
+                last_name="TEST",
+                password="TEST",
+            )
+        )
 
 
 class TestUserLoginAPI(APIFixture, FactoryFixture, ContainerFixture):
@@ -124,6 +142,8 @@ class TestGetMeAPI(APIFixture, FactoryFixture, ContainerFixture):
             "exp": 100,
             "mana": 150,
         }
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(login="test_user")
 
     def test_get_user_not_found(self) -> None:
         self.use_case.execute.side_effect = UserNotFoundError
@@ -132,3 +152,5 @@ class TestGetMeAPI(APIFixture, FactoryFixture, ContainerFixture):
 
         assert response.status_code == codes.NOT_FOUND
         assert response.json() == {"detail": UserNotFoundError.detail}
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(login="test_user")
