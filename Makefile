@@ -32,3 +32,7 @@ fix:
 
 .PHONY: quality
 quality: lint types fix tests
+
+.PHONY: install
+install:
+	uv sync --all-extras --all-groups

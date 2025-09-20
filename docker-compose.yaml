@@ -1,0 +1,116 @@
+services:
+  api:
+    profiles: [ "api" ]
+    container_name: alabuga.api
+    image: ${DOCKER_API_IMAGE:-alabuga}
+    build:
+      context: .
+    restart: unless-stopped
+    expose:
+      - "8080"
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - alabuga.postgres.network
+      - alabuga.minio.network
+    environment:
+      - APP_ADDRESS=0.0.0.0
+      - APP_PORT=8080
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=${POSTGRES_USER:-postgres}
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - DB_NAME=${POSTGRES_DB:-alabuga}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsSL http://localhost:8080/health"]
+      interval: 10s
+      timeout: 60s
+      retries: 5
+      start_period: 10s
+
+  postgres:
+    profiles: [ "api" ]
+    container_name: alabuga.postgres
+    image: "postgres:17-alpine"
+    hostname: alabuga.postgres
+    restart: unless-stopped
+    expose:
+      - "5432"
+    ports:
+      - "0.0.0.0:${PG_PORT:-5432}:5432"
+    networks:
+      - alabuga.postgres.network
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-alabuga}
+    volumes:
+      - alabuga.postgres.data:/var/lib/postgresql/data:rw
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 60s
+      retries: 5
+      start_period: 10s
+
+  postgres_backup:
+    profiles: [ "api" ]
+    container_name: alabuga.postgres_backup
+    image: prodrigestivill/postgres-backup-local:15-alpine
+    networks:
+      - alabuga.postgres.network
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=${POSTGRES_DB:-$USER}
+      - POSTGRES_USER=${POSTGRES_USER:-$USER}
+      - POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+      - BACKUP_DIR=/backups
+      - POSTGRES_EXTRA_OPTS=-Z6 --schema=public --blobs
+      - SCHEDULE=${POSTGRES_BACKUP_SCHEDULE:-@daily}
+      - HEALTHCHECK_PORT=8081
+    volumes:
+      - ${POSTGRES_BACKUP_DIR:-./.backups/postgres}:/backups
+
+  minio:
+    profiles: [ "api" ]
+    container_name: alabuga.minio
+    image: minio/minio:latest
+    hostname: alabuga.minio
+    restart: unless-stopped
+    expose:
+      - "9000"
+      - "9001"
+    ports:
+      - "0.0.0.0:${MINIO_PORT:-9000}:9000"
+      - "0.0.0.0:${MINIO_CONSOLE_PORT:-9001}:9001"
+    networks:
+      - alabuga.minio.network
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minio}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minio12345}
+    volumes:
+      - alabuga.minio.data:/data:rw
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsSL http://localhost:9000/minio/health/ready"]
+      interval: 10s
+      timeout: 60s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  alabuga.postgres.data:
+    name: alabuga.postgres.data
+  alabuga.minio.data:
+    name: alabuga.minio.data
+
+networks:
+  alabuga.postgres.network:
+    name: alabuga.postgres.network
+  alabuga.minio.network:
+    name: alabuga.minio.network
