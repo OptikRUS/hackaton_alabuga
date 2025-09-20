@@ -1,11 +1,13 @@
 from collections.abc import AsyncIterator
 
+from aiobotocore.client import AioBaseClient
 from dishka import Provider, Scope, provide
 from fastapi import Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.auth.schemas import JwtUser
+from src.clients.minio import get_minio_client
 from src.core.exceptions import InvalidJWTTokenError
 from src.core.missions.use_cases import (
     AddTaskToMissionUseCase,
@@ -30,6 +32,7 @@ from src.core.tasks.use_cases import (
     UpdateMissionTaskUseCase,
 )
 from src.core.users.use_cases import CreateUserUseCase, GetUserUseCase, LoginUserUseCase
+from src.services.minio import MinioService
 from src.services.user_password_service import UserPasswordService
 from src.storages.database import async_session
 from src.storages.database_storage import DatabaseStorage
@@ -201,3 +204,16 @@ class AuthProvider(Provider):
     @provide(scope=Scope.REQUEST)
     async def get_jwt_user(self, auth: HTTPAuthorizationCredentials) -> JwtUser:
         return JwtUser.decode(payload=auth.credentials)
+
+
+class FileStorageProvider(Provider):
+    scope = Scope.REQUEST
+
+    @provide(scope=Scope.REQUEST)
+    async def get_minio_connection(self) -> AsyncIterator[AioBaseClient]:
+        async with get_minio_client() as minio_connection:
+            yield minio_connection
+
+    @provide
+    async def get_minio_service(self, minio_connection: AioBaseClient) -> MinioService:
+        return MinioService(minio_connection=minio_connection)

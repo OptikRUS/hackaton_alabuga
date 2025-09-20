@@ -5,6 +5,7 @@ from fastapi import Request, status
 from fastapi.responses import JSONResponse, Response
 
 from src.core.exceptions import BaseExceptionError, InvalidJWTTokenError
+from src.core.media.exceptions import MediaNotFoundError
 from src.core.missions.exceptions import (
     MissionBranchNameAlreadyExistError,
     MissionBranchNotFoundError,
@@ -58,4 +59,5 @@ exception_handlers: (
     MissionNotFoundError: handler(status_code=status.HTTP_404_NOT_FOUND),
     TaskNameAlreadyExistError: handler(status_code=status.HTTP_409_CONFLICT),
     TaskNotFoundError: handler(status_code=status.HTTP_404_NOT_FOUND),
+    MediaNotFoundError: handler(status_code=status.HTTP_404_NOT_FOUND),
 }
