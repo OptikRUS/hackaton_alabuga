@@ -13,7 +13,7 @@ class FileStorage(metaclass=ABCMeta):
     @abstractmethod
     async def upload_file_stream(
         self,
-        key: str,
+        file_name: str,
         file_stream: AsyncIterator[bytes] | IO[bytes],
         content_type: str,
         file_size: int | None = None,
