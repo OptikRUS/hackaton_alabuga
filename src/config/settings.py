@@ -50,7 +50,6 @@ class MinioSettings(BaseSettings):
     REGION: str = "us-east-1"
     BUCKET: str = "alabuga"
     USE_SSL: bool = False
-    ADDRESSING_STYLE: str = "path"  # or "virtual"
 
     model_config = SettingsConfigDict(env_prefix="S3_")
 
