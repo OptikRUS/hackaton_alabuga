@@ -51,7 +51,7 @@ class MinioSettings(BaseSettings):
     BUCKET: str = "alabuga"
     USE_SSL: bool = False
 
-    model_config = SettingsConfigDict(env_prefix="S3_")
+    model_config = SettingsConfigDict(env_prefix="MINIO_")
 
 
 class LoggingConfig(BaseSettings):
