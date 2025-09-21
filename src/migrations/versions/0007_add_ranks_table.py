@@ -1,8 +1,8 @@
 import sqlalchemy as sa
 from alembic import op
 
-revision = "0006"
-down_revision = "0005"
+revision = "0007"
+down_revision = "0006"
 branch_labels = None
 depends_on = None
 
@@ -21,6 +21,3 @@ def upgrade() -> None:
 def downgrade() -> None:
     op.drop_constraint("uq_ranks_name", "ranks_rank", type_="unique")
     op.drop_table("ranks_rank")
-
-
-

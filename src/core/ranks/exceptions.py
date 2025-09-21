@@ -9,4 +9,5 @@ class RankNameAlreadyExistError(BaseExceptionError):
     detail = "Rank name already exists"
 
 
-
+class RankCompetencyMinLevelTooHighError(BaseExceptionError):
+    detail = "Minimum level exceeds competency max level"

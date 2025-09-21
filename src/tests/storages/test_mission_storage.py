@@ -80,6 +80,8 @@ class TestMissionStorage(FactoryFixture, StorageFixture):
             category=MissionCategoryEnum.QUEST,
             tasks=[task_1.to_schema(), task_2.to_schema()],
             reward_artifacts=[],
+            reward_competencies=[],
+            reward_skills=[],
         )
 
     async def test_get_mission_by_id_with_artifacts(self) -> None:
@@ -139,6 +141,8 @@ class TestMissionStorage(FactoryFixture, StorageFixture):
             category=MissionCategoryEnum.QUEST,
             tasks=[],
             reward_artifacts=[artifact_1.to_schema(), artifact_2.to_schema()],
+            reward_competencies=[],
+            reward_skills=[],
         )
 
     async def test_get_mission_by_id_with_entities(self) -> None:
@@ -208,6 +212,8 @@ class TestMissionStorage(FactoryFixture, StorageFixture):
             category=MissionCategoryEnum.QUEST,
             tasks=[task_1.to_schema(), task_2.to_schema()],
             reward_artifacts=[artifact_1.to_schema(), artifact_2.to_schema()],
+            reward_competencies=[],
+            reward_skills=[],
         )
 
     async def test_get_mission_by_id_not_found(self) -> None:

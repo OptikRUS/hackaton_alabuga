@@ -178,6 +178,8 @@ class TestMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             rank_requirement=1,
             branch_id=1,
             category=MissionCategoryEnum.QUEST,
+            reward_competencies=[],
+            reward_skills=[],
         )
 
         response = self.api.create_mission(
@@ -202,6 +204,8 @@ class TestMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             "category": MissionCategoryEnum.QUEST,
             "tasks": [],
             "rewardArtifacts": [],
+            "rewardSkills": [],
+            "rewardCompetencies": [],
         }
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(
@@ -213,6 +217,10 @@ class TestMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
                 rank_requirement=1,
                 branch_id=1,
                 category=MissionCategoryEnum.QUEST,
+                tasks=None,
+                reward_artifacts=None,
+                reward_competencies=None,
+                reward_skills=None,
             )
         )
 
@@ -320,6 +328,8 @@ class TestGetMissionsAPI(APIFixture, FactoryFixture, ContainerFixture):
                     "category": MissionCategoryEnum.QUEST,
                     "tasks": [],
                     "rewardArtifacts": [],
+                    "rewardSkills": [],
+                    "rewardCompetencies": [],
                 },
                 {
                     "id": 2,
@@ -332,6 +342,8 @@ class TestGetMissionsAPI(APIFixture, FactoryFixture, ContainerFixture):
                     "category": MissionCategoryEnum.SIMULATOR,
                     "tasks": [],
                     "rewardArtifacts": [],
+                    "rewardSkills": [],
+                    "rewardCompetencies": [],
                 },
             ]
         }
@@ -379,6 +391,8 @@ class TestGetMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             "category": MissionCategoryEnum.QUEST,
             "tasks": [],
             "rewardArtifacts": [],
+            "rewardSkills": [],
+            "rewardCompetencies": [],
         }
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(mission_id=1)
@@ -419,6 +433,8 @@ class TestGetMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             "rankRequirement": 1,
             "branchId": 1,
             "category": "quest",
+            "rewardSkills": [],
+            "rewardCompetencies": [],
             "tasks": [
                 {"id": 1, "title": "TEST1", "description": "TEST1"},
                 {"id": 2, "title": "TEST2", "description": "TEST2"},
@@ -469,6 +485,8 @@ class TestGetMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             "branchId": 1,
             "category": "quest",
             "tasks": [],
+            "rewardSkills": [],
+            "rewardCompetencies": [],
             "rewardArtifacts": [
                 {
                     "id": 1,
@@ -540,6 +558,8 @@ class TestUpdateMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             "category": MissionCategoryEnum.QUEST,
             "tasks": [],
             "rewardArtifacts": [],
+            "rewardSkills": [],
+            "rewardCompetencies": [],
         }
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(
@@ -672,6 +692,8 @@ class TestAddTaskToMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             "category": MissionCategoryEnum.QUEST,
             "tasks": [],
             "rewardArtifacts": [],
+            "rewardSkills": [],
+            "rewardCompetencies": [],
         }
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(mission_id=1, task_id=1)
@@ -728,6 +750,8 @@ class TestRemoveTaskFromMissionAPI(APIFixture, FactoryFixture, ContainerFixture)
             "category": MissionCategoryEnum.QUEST,
             "tasks": [],
             "rewardArtifacts": [],
+            "rewardSkills": [],
+            "rewardCompetencies": [],
         }
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(mission_id=1, task_id=1)
@@ -768,6 +792,8 @@ class TestRemoveTaskFromMissionAPI(APIFixture, FactoryFixture, ContainerFixture)
             "rankRequirement": 1,
             "branchId": 1,
             "category": MissionCategoryEnum.QUEST,
+            "rewardSkills": [],
+            "rewardCompetencies": [],
             "tasks": [
                 {"id": 1, "title": "TEST1", "description": "TEST1"},
                 {"id": 2, "title": "TEST2", "description": "TEST2"},
@@ -825,6 +851,8 @@ class TestAddArtifactToMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             "category": "quest",
             "tasks": [],
             "rewardArtifacts": [],
+            "rewardSkills": [],
+            "rewardCompetencies": [],
         }
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(mission_id=1, artifact_id=1)
@@ -857,6 +885,8 @@ class TestRemoveArtifactFromMissionAPI(APIFixture, FactoryFixture, ContainerFixt
             "category": "quest",
             "tasks": [],
             "rewardArtifacts": [],
+            "rewardSkills": [],
+            "rewardCompetencies": [],
         }
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(mission_id=1, artifact_id=1)

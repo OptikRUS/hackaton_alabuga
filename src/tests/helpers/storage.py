@@ -5,14 +5,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from src.core.artifacts.schemas import Artifact
+from src.core.competencies.schemas import Competency
 from src.core.missions.schemas import Mission, MissionBranch
+from src.core.skills.schemas import Skill
 from src.core.tasks.schemas import MissionTask
 from src.core.users.schemas import User
 from src.storages.models import (
     ArtifactModel,
+    CompetencyModel,
     MissionBranchModel,
     MissionModel,
     MissionTaskModel,
+    SkillModel,
     UserModel,
 )
 
@@ -91,7 +95,12 @@ class StorageHelper:
         query = (
             select(MissionModel)
             .where(MissionModel.id == mission_id)
-            .options(selectinload(MissionModel.tasks))
+            .options(
+                selectinload(MissionModel.tasks),
+                selectinload(MissionModel.artifacts),
+                selectinload(MissionModel.competency_rewards),
+                selectinload(MissionModel.skill_rewards),
+            )
             .execution_options(populate_existing=True)
         )
         return await self.session.scalar(query)  # type: ignore[no-any-return]
@@ -142,4 +151,57 @@ class StorageHelper:
 
     async def get_artifact_by_title(self, title: str) -> ArtifactModel | None:
         query = select(ArtifactModel).where(ArtifactModel.title == title)
+        return await self.session.scalar(query)  # type: ignore[no-any-return]
+
+    async def insert_competency(self, competency: Competency) -> CompetencyModel | None:
+        query = (
+            insert(CompetencyModel)
+            .values(
+                {
+                    "name": competency.name,
+                    "max_level": competency.max_level,
+                },
+            )
+            .returning(CompetencyModel)
+        )
+        return await self.session.scalar(query)  # type: ignore[no-any-return]
+
+    async def get_competency_by_id(self, competency_id: int) -> CompetencyModel | None:
+        query = select(CompetencyModel).where(CompetencyModel.id == competency_id)
+        return await self.session.scalar(query)  # type: ignore[no-any-return]
+
+    async def get_competency_by_id_with_entities(
+        self, competency_id: int
+    ) -> CompetencyModel | None:
+        query = (
+            select(CompetencyModel)
+            .where(CompetencyModel.id == competency_id)
+            .options(selectinload(CompetencyModel.skills))
+            .execution_options(populate_existing=True)
+        )
+        return await self.session.scalar(query)  # type: ignore[no-any-return]
+
+    async def get_competency_by_name(self, name: str) -> CompetencyModel | None:
+        query = select(CompetencyModel).where(CompetencyModel.name == name)
+        return await self.session.scalar(query)  # type: ignore[no-any-return]
+
+    async def insert_skill(self, skill: Skill) -> SkillModel | None:
+        query = (
+            insert(SkillModel)
+            .values(
+                {
+                    "name": skill.name,
+                    "max_level": skill.max_level,
+                },
+            )
+            .returning(SkillModel)
+        )
+        return await self.session.scalar(query)  # type: ignore[no-any-return]
+
+    async def get_skill_by_id(self, skill_id: int) -> SkillModel | None:
+        query = select(SkillModel).where(SkillModel.id == skill_id)
+        return await self.session.scalar(query)  # type: ignore[no-any-return]
+
+    async def get_skill_by_name(self, name: str) -> SkillModel | None:
+        query = select(SkillModel).where(SkillModel.name == name)
         return await self.session.scalar(query)  # type: ignore[no-any-return]

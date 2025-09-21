@@ -10,6 +10,12 @@ from src.core.artifacts.exceptions import (
     ArtifactTitleAlreadyExistError,
 )
 from src.core.artifacts.schemas import Artifact, Artifacts
+from src.core.competencies.exceptions import (
+    CompetencyLevelIncreaseTooHighError,
+    CompetencyNameAlreadyExistError,
+    CompetencyNotFoundError,
+)
+from src.core.competencies.schemas import Competencies, Competency
 from src.core.missions.exceptions import (
     MissionBranchNameAlreadyExistError,
     MissionBranchNotFoundError,
@@ -22,8 +28,26 @@ from src.core.missions.schemas import (
     MissionBranches,
     Missions,
 )
-from src.core.storages import ArtifactStorage, MissionStorage, UserStorage
-from src.core.storages import CompetitionStorage, MissionStorage, UserStorage, RankStorage
+from src.core.ranks.exceptions import (
+    RankCompetencyMinLevelTooHighError,
+    RankNameAlreadyExistError,
+    RankNotFoundError,
+)
+from src.core.ranks.schemas import Rank, Ranks
+from src.core.skills.exceptions import (
+    SkillLevelIncreaseTooHighError,
+    SkillNameAlreadyExistError,
+    SkillNotFoundError,
+)
+from src.core.skills.schemas import Skill, Skills
+from src.core.storages import (
+    ArtifactStorage,
+    CompetencyStorage,
+    MissionStorage,
+    RankStorage,
+    SkillStorage,
+    UserStorage,
+)
 from src.core.tasks.exceptions import (
     TaskNameAlreadyExistError,
     TaskNotFoundError,
@@ -38,28 +62,31 @@ from src.storages.models import (
     ArtifactMissionRelationModel,
     ArtifactModel,
     ArtifactUserRelationModel,
+    CompetencyModel,
+    CompetencySkillRelationModel,
     MissionBranchModel,
+    MissionCompetencyRewardModel,
     MissionModel,
+    MissionSkillRewardModel,
     MissionTaskModel,
     MissionTaskRelationModel,
-    UserModel,
-    CompetitionModel,
+    RankCompetencyRequirementModel,
+    RankMissionRelationModel,
     RankModel,
-)
-from src.core.competitions.schemas import Competition, Competitions
-from src.core.competitions.exceptions import (
-    CompetitionNameAlreadyExistError,
-    CompetitionNotFoundError,
-)
-from src.core.ranks.schemas import Rank, Ranks
-from src.core.ranks.exceptions import (
-    RankNameAlreadyExistError,
-    RankNotFoundError,
+    SkillModel,
+    UserModel,
 )
 
 
 @dataclass
-class DatabaseStorage(UserStorage, MissionStorage, ArtifactStorage, CompetitionStorage, RankStorage):
+class DatabaseStorage(
+    UserStorage,
+    MissionStorage,
+    ArtifactStorage,
+    CompetencyStorage,
+    RankStorage,
+    SkillStorage,
+):
     session: AsyncSession
 
     async def insert_user(self, user: User) -> None:
@@ -143,7 +170,16 @@ class DatabaseStorage(UserStorage, MissionStorage, ArtifactStorage, CompetitionS
         query = (
             select(MissionModel)
             .where(MissionModel.id == mission_id)
-            .options(selectinload(MissionModel.tasks), selectinload(MissionModel.artifacts))
+            .options(
+                selectinload(MissionModel.tasks),
+                selectinload(MissionModel.artifacts),
+                selectinload(MissionModel.competency_rewards).selectinload(
+                    MissionCompetencyRewardModel.competency
+                ),
+                selectinload(MissionModel.skill_rewards).selectinload(
+                    MissionSkillRewardModel.skill
+                ),
+            )
             .execution_options(populate_existing=True)
         )
         mission = await self.session.scalar(query)
@@ -159,7 +195,14 @@ class DatabaseStorage(UserStorage, MissionStorage, ArtifactStorage, CompetitionS
         return mission.to_schema()
 
     async def list_missions(self) -> Missions:
-        query = select(MissionModel)
+        query = select(MissionModel).options(
+            selectinload(MissionModel.tasks),
+            selectinload(MissionModel.artifacts),
+            selectinload(MissionModel.competency_rewards).selectinload(
+                MissionCompetencyRewardModel.competency
+            ),
+            selectinload(MissionModel.skill_rewards).selectinload(MissionSkillRewardModel.skill),
+        )
         result = await self.session.scalars(query)
         return Missions(values=[row.to_schema() for row in result])
 
@@ -268,6 +311,50 @@ class DatabaseStorage(UserStorage, MissionStorage, ArtifactStorage, CompetitionS
         )
         await self.session.execute(query)
 
+    async def add_competency_reward_to_mission(
+        self, mission_id: int, competency_id: int, level_increase: int
+    ) -> None:
+        await self.get_mission_by_id(mission_id=mission_id)
+        competency = await self.get_competency_by_id(competency_id=competency_id)
+        if level_increase < 1 or level_increase > competency.max_level:
+            raise CompetencyLevelIncreaseTooHighError
+        query = insert(MissionCompetencyRewardModel).values({
+            "mission_id": mission_id,
+            "competency_id": competency_id,
+            "level_increase": level_increase,
+        })
+        await self.session.execute(query)
+
+    async def remove_competency_reward_from_mission(
+        self, mission_id: int, competency_id: int
+    ) -> None:
+        query = delete(MissionCompetencyRewardModel).where(
+            MissionCompetencyRewardModel.mission_id == mission_id,
+            MissionCompetencyRewardModel.competency_id == competency_id,
+        )
+        await self.session.execute(query)
+
+    async def add_skill_reward_to_mission(
+        self, mission_id: int, skill_id: int, level_increase: int
+    ) -> None:
+        await self.get_mission_by_id(mission_id=mission_id)
+        skill = await self.get_skill_by_id(skill_id=skill_id)
+        if level_increase < 1 or level_increase > skill.max_level:
+            raise SkillLevelIncreaseTooHighError
+        query = insert(MissionSkillRewardModel).values({
+            "mission_id": mission_id,
+            "skill_id": skill_id,
+            "level_increase": level_increase,
+        })
+        await self.session.execute(query)
+
+    async def remove_skill_reward_from_mission(self, mission_id: int, skill_id: int) -> None:
+        query = delete(MissionSkillRewardModel).where(
+            MissionSkillRewardModel.mission_id == mission_id,
+            MissionSkillRewardModel.skill_id == skill_id,
+        )
+        await self.session.execute(query)
+
     async def insert_artifact(self, artifact: Artifact) -> None:
         query = (
             insert(ArtifactModel)
@@ -353,57 +440,81 @@ class DatabaseStorage(UserStorage, MissionStorage, ArtifactStorage, CompetitionS
         )
         await self.session.execute(query)
 
-    async def insert_competition(self, competition: Competition) -> None:
+    async def insert_competency(self, competency: Competency) -> None:
         query = (
-            insert(CompetitionModel)
+            insert(CompetencyModel)
             .values({
-                "name": competition.name,
-                "max_level": competition.max_level,
+                "name": competency.name,
+                "max_level": competency.max_level,
             })
-            .returning(CompetitionModel.id)
+            .returning(CompetencyModel.id)
         )
         try:
             await self.session.scalar(query)
         except IntegrityError as error:
-            raise CompetitionNameAlreadyExistError from error
+            raise CompetencyNameAlreadyExistError from error
 
-    async def get_competition_by_id(self, competition_id: int) -> Competition:
-        query = select(CompetitionModel).where(CompetitionModel.id == competition_id)
-        competition = await self.session.scalar(query)
-        if competition is None:
-            raise CompetitionNotFoundError
-        return competition.to_schema()
-
-    async def get_competition_by_name(self, name: str) -> Competition:
-        query = select(CompetitionModel).where(CompetitionModel.name == name)
-        competition = await self.session.scalar(query)
-        if competition is None:
-            raise CompetitionNotFoundError
-        return competition.to_schema()
-
-    async def list_competitions(self) -> Competitions:
-        query = select(CompetitionModel)
-        result = await self.session.scalars(query)
-        return Competitions(values=[row.to_schema() for row in result])
-
-    async def update_competition(self, competition: Competition) -> None:
-        await self.get_competition_by_id(competition_id=competition.id)
+    async def get_competency_by_id(self, competency_id: int) -> Competency:
         query = (
-            update(CompetitionModel)
-            .where(CompetitionModel.id == competition.id)
+            select(CompetencyModel)
+            .where(CompetencyModel.id == competency_id)
+            .options(selectinload(CompetencyModel.skills))
+        )
+        competency = await self.session.scalar(query)
+        if competency is None:
+            raise CompetencyNotFoundError
+        return competency.to_schema()
+
+    async def get_competency_by_name(self, name: str) -> Competency:
+        query = (
+            select(CompetencyModel)
+            .where(CompetencyModel.name == name)
+            .options(selectinload(CompetencyModel.skills))
+        )
+        competency = await self.session.scalar(query)
+        if competency is None:
+            raise CompetencyNotFoundError
+        return competency.to_schema()
+
+    async def list_competencies(self) -> Competencies:
+        query = select(CompetencyModel).options(selectinload(CompetencyModel.skills))
+        result = await self.session.scalars(query)
+        return Competencies(values=[row.to_schema() for row in result])
+
+    async def update_competency(self, competency: Competency) -> None:
+        await self.get_competency_by_id(competency_id=competency.id)
+        query = (
+            update(CompetencyModel)
+            .where(CompetencyModel.id == competency.id)
             .values({
-                "name": competition.name,
-                "max_level": competition.max_level,
+                "name": competency.name,
+                "max_level": competency.max_level,
             })
         )
         try:
             await self.session.execute(query)
         except IntegrityError as error:
-            raise CompetitionNameAlreadyExistError from error
+            raise CompetencyNameAlreadyExistError from error
 
-    async def delete_competition(self, competition_id: int) -> None:
-        await self.get_competition_by_id(competition_id=competition_id)
-        query = delete(CompetitionModel).where(CompetitionModel.id == competition_id)
+    async def delete_competency(self, competency_id: int) -> None:
+        await self.get_competency_by_id(competency_id=competency_id)
+        query = delete(CompetencyModel).where(CompetencyModel.id == competency_id)
+        await self.session.execute(query)
+
+    async def add_skill_to_competency(self, competency_id: int, skill_id: int) -> None:
+        await self.get_competency_by_id(competency_id=competency_id)
+        await self.get_skill_by_id(skill_id=skill_id)
+        query = insert(CompetencySkillRelationModel).values({
+            "competency_id": competency_id,
+            "skill_id": skill_id,
+        })
+        await self.session.execute(query)
+
+    async def remove_skill_from_competency(self, competency_id: int, skill_id: int) -> None:
+        query = delete(CompetencySkillRelationModel).where(
+            CompetencySkillRelationModel.competency_id == competency_id,
+            CompetencySkillRelationModel.skill_id == skill_id,
+        )
         await self.session.execute(query)
 
     async def insert_rank(self, rank: Rank) -> None:
@@ -421,21 +532,44 @@ class DatabaseStorage(UserStorage, MissionStorage, ArtifactStorage, CompetitionS
             raise RankNameAlreadyExistError from error
 
     async def get_rank_by_id(self, rank_id: int) -> Rank:
-        query = select(RankModel).where(RankModel.id == rank_id)
+        query = (
+            select(RankModel)
+            .where(RankModel.id == rank_id)
+            .options(
+                selectinload(RankModel.required_missions),
+                selectinload(RankModel.required_competencies_rel).selectinload(
+                    RankCompetencyRequirementModel.competency
+                ),
+            )
+        )
         row = await self.session.scalar(query)
         if row is None:
             raise RankNotFoundError
         return row.to_schema()
 
     async def get_rank_by_name(self, name: str) -> Rank:
-        query = select(RankModel).where(RankModel.name == name)
+        query = (
+            select(RankModel)
+            .where(RankModel.name == name)
+            .options(
+                selectinload(RankModel.required_missions),
+                selectinload(RankModel.required_competencies_rel).selectinload(
+                    RankCompetencyRequirementModel.competency
+                ),
+            )
+        )
         row = await self.session.scalar(query)
         if row is None:
             raise RankNotFoundError
         return row.to_schema()
 
     async def list_ranks(self) -> Ranks:
-        query = select(RankModel)
+        query = select(RankModel).options(
+            selectinload(RankModel.required_missions),
+            selectinload(RankModel.required_competencies_rel).selectinload(
+                RankCompetencyRequirementModel.competency
+            ),
+        )
         result = await self.session.scalars(query)
         return Ranks(values=[row.to_schema() for row in result])
 
@@ -457,4 +591,94 @@ class DatabaseStorage(UserStorage, MissionStorage, ArtifactStorage, CompetitionS
     async def delete_rank(self, rank_id: int) -> None:
         await self.get_rank_by_id(rank_id=rank_id)
         query = delete(RankModel).where(RankModel.id == rank_id)
+        await self.session.execute(query)
+
+    async def add_required_competency_to_rank(
+        self, rank_id: int, competency_id: int, min_level: int
+    ) -> None:
+        await self.get_rank_by_id(rank_id=rank_id)
+        competency = await self.get_competency_by_id(competency_id=competency_id)
+        if min_level < 1 or min_level > competency.max_level:
+            raise RankCompetencyMinLevelTooHighError
+        query = insert(RankCompetencyRequirementModel).values({
+            "rank_id": rank_id,
+            "competency_id": competency_id,
+            "min_level": min_level,
+        })
+        await self.session.execute(query)
+
+    async def remove_required_competency_from_rank(self, rank_id: int, competency_id: int) -> None:
+        query = delete(RankCompetencyRequirementModel).where(
+            RankCompetencyRequirementModel.rank_id == rank_id,
+            RankCompetencyRequirementModel.competency_id == competency_id,
+        )
+        await self.session.execute(query)
+
+    async def add_required_mission_to_rank(self, rank_id: int, mission_id: int) -> None:
+        await self.get_rank_by_id(rank_id=rank_id)
+        await self.get_mission_by_id(mission_id=mission_id)
+        query = insert(RankMissionRelationModel).values({
+            "rank_id": rank_id,
+            "mission_id": mission_id,
+        })
+        await self.session.execute(query)
+
+    async def remove_required_mission_from_rank(self, rank_id: int, mission_id: int) -> None:
+        query = delete(RankMissionRelationModel).where(
+            RankMissionRelationModel.rank_id == rank_id,
+            RankMissionRelationModel.mission_id == mission_id,
+        )
+        await self.session.execute(query)
+
+    async def insert_skill(self, skill: Skill) -> None:
+        query = (
+            insert(SkillModel)
+            .values({
+                "name": skill.name,
+                "max_level": skill.max_level,
+            })
+            .returning(SkillModel.id)
+        )
+        try:
+            await self.session.scalar(query)
+        except IntegrityError as error:
+            raise SkillNameAlreadyExistError from error
+
+    async def get_skill_by_id(self, skill_id: int) -> Skill:
+        query = select(SkillModel).where(SkillModel.id == skill_id)
+        row = await self.session.scalar(query)
+        if row is None:
+            raise SkillNotFoundError
+        return row.to_schema()
+
+    async def get_skill_by_name(self, name: str) -> Skill:
+        query = select(SkillModel).where(SkillModel.name == name)
+        row = await self.session.scalar(query)
+        if row is None:
+            raise SkillNotFoundError
+        return row.to_schema()
+
+    async def list_skills(self) -> Skills:
+        query = select(SkillModel)
+        result = await self.session.scalars(query)
+        return Skills(values=[row.to_schema() for row in result])
+
+    async def update_skill(self, skill: Skill) -> None:
+        await self.get_skill_by_id(skill_id=skill.id)
+        query = (
+            update(SkillModel)
+            .where(SkillModel.id == skill.id)
+            .values({
+                "name": skill.name,
+                "max_level": skill.max_level,
+            })
+        )
+        try:
+            await self.session.execute(query)
+        except IntegrityError as error:
+            raise SkillNameAlreadyExistError from error
+
+    async def delete_skill(self, skill_id: int) -> None:
+        await self.get_skill_by_id(skill_id=skill_id)
+        query = delete(SkillModel).where(SkillModel.id == skill_id)
         await self.session.execute(query)

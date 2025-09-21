@@ -36,3 +36,7 @@ quality: lint types fix tests
 .PHONY: install
 install:
 	uv sync --all-extras --all-groups
+
+.PHONY: up
+up:
+	docker compose --profile api up -d --build

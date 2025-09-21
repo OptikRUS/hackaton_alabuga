@@ -2,14 +2,12 @@ from dataclasses import dataclass
 
 
 @dataclass
-class Competition:
+class Skill:
     id: int
     name: str
     max_level: int
 
 
 @dataclass
-class Competitions:
-    values: list[Competition]
-
-
+class Skills:
+    values: list[Skill]

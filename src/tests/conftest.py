@@ -19,12 +19,23 @@ from src.core.users.enums import UserRoleEnum
 from src.migrations.commands import downgrade, migrate
 from src.storages.database import async_session
 from src.storages.database_storage import DatabaseStorage
-from src.storages.models import ArtifactModel, MissionBranchModel, MissionTaskModel, UserModel
+from src.storages.models import (
+    ArtifactModel,
+    CompetencyModel,
+    MissionBranchModel,
+    MissionTaskModel,
+    RankModel,
+    SkillModel,
+    UserModel,
+)
 from src.tests.mocks.providers import (
     ArtifactProviderMock,
     AuthProviderMock,
+    CompetencyProviderMock,
     FileStorageProviderMock,
     MissionProviderMock,
+    RankProviderMock,
+    SkillProviderMock,
     UserProviderMock,
 )
 
@@ -36,6 +47,9 @@ async def container() -> AsyncGenerator[AsyncContainer]:
         UserProviderMock(),
         MissionProviderMock(),
         ArtifactProviderMock(),
+        CompetencyProviderMock(),
+        SkillProviderMock(),
+        RankProviderMock(),
         FileStorageProviderMock(),
         AuthProviderMock(),
     )
@@ -99,6 +113,9 @@ async def clear_tables(engine: AsyncEngine) -> None:
         await conn.execute(delete(MissionBranchModel))
         await conn.execute(delete(MissionTaskModel))
         await conn.execute(delete(ArtifactModel))
+        await conn.execute(delete(SkillModel))
+        await conn.execute(delete(CompetencyModel))
+        await conn.execute(delete(RankModel))
 
 
 @pytest.fixture

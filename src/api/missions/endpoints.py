@@ -16,6 +16,8 @@ from src.core.artifacts.use_cases import (
     RemoveArtifactFromMissionUseCase,
 )
 from src.core.missions.use_cases import (
+    AddCompetencyRewardToMissionUseCase,
+    AddSkillRewardToMissionUseCase,
     AddTaskToMissionUseCase,
     CreateMissionBranchUseCase,
     CreateMissionUseCase,
@@ -24,6 +26,8 @@ from src.core.missions.use_cases import (
     GetMissionBranchesUseCase,
     GetMissionDetailUseCase,
     GetMissionsUseCase,
+    RemoveCompetencyRewardFromMissionUseCase,
+    RemoveSkillRewardFromMissionUseCase,
     RemoveTaskFromMissionUseCase,
     UpdateMissionBranchUseCase,
     UpdateMissionUseCase,
@@ -128,6 +132,56 @@ async def remove_task_from_mission(
     use_case: FromDishka[RemoveTaskFromMissionUseCase],
 ) -> MissionResponse:
     mission = await use_case.execute(mission_id=mission_id, task_id=task_id)
+    return MissionResponse.from_schema(mission=mission)
+
+
+@router.post(
+    path="/missions/{mission_id}/competencies/{competency_id}", status_code=status.HTTP_200_OK
+)
+async def add_competency_reward_to_mission(
+    mission_id: int,
+    competency_id: int,
+    level_increase: int,
+    use_case: FromDishka[AddCompetencyRewardToMissionUseCase],
+) -> MissionResponse:
+    mission = await use_case.execute(
+        mission_id=mission_id, competency_id=competency_id, level_increase=level_increase
+    )
+    return MissionResponse.from_schema(mission=mission)
+
+
+@router.delete(
+    path="/missions/{mission_id}/competencies/{competency_id}", status_code=status.HTTP_200_OK
+)
+async def remove_competency_reward_from_mission(
+    mission_id: int,
+    competency_id: int,
+    use_case: FromDishka[RemoveCompetencyRewardFromMissionUseCase],
+) -> MissionResponse:
+    mission = await use_case.execute(mission_id=mission_id, competency_id=competency_id)
+    return MissionResponse.from_schema(mission=mission)
+
+
+@router.post(path="/missions/{mission_id}/skills/{skill_id}", status_code=status.HTTP_200_OK)
+async def add_skill_reward_to_mission(
+    mission_id: int,
+    skill_id: int,
+    level_increase: int,
+    use_case: FromDishka[AddSkillRewardToMissionUseCase],
+) -> MissionResponse:
+    mission = await use_case.execute(
+        mission_id=mission_id, skill_id=skill_id, level_increase=level_increase
+    )
+    return MissionResponse.from_schema(mission=mission)
+
+
+@router.delete(path="/missions/{mission_id}/skills/{skill_id}", status_code=status.HTTP_200_OK)
+async def remove_skill_reward_from_mission(
+    mission_id: int,
+    skill_id: int,
+    use_case: FromDishka[RemoveSkillRewardFromMissionUseCase],
+) -> MissionResponse:
+    mission = await use_case.execute(mission_id=mission_id, skill_id=skill_id)
     return MissionResponse.from_schema(mission=mission)
 
 

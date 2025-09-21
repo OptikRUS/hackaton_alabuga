@@ -1,19 +1,20 @@
 from abc import ABCMeta, abstractmethod
 
 from src.core.artifacts.schemas import Artifact, Artifacts
+from src.core.competencies.schemas import Competencies, Competency
 from src.core.missions.schemas import (
     Mission,
     MissionBranch,
     MissionBranches,
     Missions,
 )
+from src.core.ranks.schemas import Rank, Ranks
+from src.core.skills.schemas import Skill, Skills
 from src.core.tasks.schemas import (
     MissionTask,
     MissionTasks,
 )
 from src.core.users.schemas import User
-from src.core.competitions.schemas import Competition, Competitions
-from src.core.ranks.schemas import Rank, Ranks
 
 
 class UserStorage(metaclass=ABCMeta):
@@ -107,6 +108,28 @@ class MissionStorage(metaclass=ABCMeta):
     async def remove_task_from_mission(self, mission_id: int, task_id: int) -> None:
         raise NotImplementedError
 
+    @abstractmethod
+    async def add_competency_reward_to_mission(
+        self, mission_id: int, competency_id: int, level_increase: int
+    ) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def remove_competency_reward_from_mission(
+        self, mission_id: int, competency_id: int
+    ) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def add_skill_reward_to_mission(
+        self, mission_id: int, skill_id: int, level_increase: int
+    ) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def remove_skill_reward_from_mission(self, mission_id: int, skill_id: int) -> None:
+        raise NotImplementedError
+
 
 class ArtifactStorage(metaclass=ABCMeta):
     @abstractmethod
@@ -150,29 +173,37 @@ class ArtifactStorage(metaclass=ABCMeta):
         raise NotImplementedError
 
 
-class CompetitionStorage(metaclass=ABCMeta):
+class CompetencyStorage(metaclass=ABCMeta):
     @abstractmethod
-    async def insert_competition(self, competition: Competition) -> None:
+    async def insert_competency(self, competency: Competency) -> None:
         raise NotImplementedError
 
     @abstractmethod
-    async def get_competition_by_id(self, competition_id: int) -> Competition:
+    async def get_competency_by_id(self, competency_id: int) -> Competency:
         raise NotImplementedError
 
     @abstractmethod
-    async def get_competition_by_name(self, name: str) -> Competition:
+    async def get_competency_by_name(self, name: str) -> Competency:
         raise NotImplementedError
 
     @abstractmethod
-    async def list_competitions(self) -> Competitions:
+    async def list_competencies(self) -> Competencies:
         raise NotImplementedError
 
     @abstractmethod
-    async def update_competition(self, competition: Competition) -> None:
+    async def update_competency(self, competency: Competency) -> None:
         raise NotImplementedError
 
     @abstractmethod
-    async def delete_competition(self, competition_id: int) -> None:
+    async def delete_competency(self, competency_id: int) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def add_skill_to_competency(self, competency_id: int, skill_id: int) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def remove_skill_from_competency(self, competency_id: int, skill_id: int) -> None:
         raise NotImplementedError
 
 
@@ -199,4 +230,48 @@ class RankStorage(metaclass=ABCMeta):
 
     @abstractmethod
     async def delete_rank(self, rank_id: int) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def add_required_mission_to_rank(self, rank_id: int, mission_id: int) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def remove_required_mission_from_rank(self, rank_id: int, mission_id: int) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def add_required_competency_to_rank(
+        self, rank_id: int, competency_id: int, min_level: int
+    ) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def remove_required_competency_from_rank(self, rank_id: int, competency_id: int) -> None:
+        raise NotImplementedError
+
+
+class SkillStorage(metaclass=ABCMeta):
+    @abstractmethod
+    async def insert_skill(self, skill: Skill) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_skill_by_id(self, skill_id: int) -> Skill:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_skill_by_name(self, name: str) -> Skill:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def list_skills(self) -> Skills:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def update_skill(self, skill: Skill) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def delete_skill(self, skill_id: int) -> None:
         raise NotImplementedError
