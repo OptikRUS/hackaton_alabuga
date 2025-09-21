@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from src.core.artifacts.schemas import Artifact
 from src.core.users.enums import UserRoleEnum
 
 
@@ -13,3 +14,4 @@ class User:
     rank_id: int = 0
     exp: int = 0
     mana: int = 0
+    artifacts: list[Artifact] | None = None

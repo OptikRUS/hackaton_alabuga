@@ -1,6 +1,10 @@
 import pytest
 from httpx import codes
 
+from src.core.artifacts.use_cases import (
+    AddArtifactToUserUseCase,
+    RemoveArtifactFromUserUseCase,
+)
 from src.core.exceptions import InvalidJWTTokenError
 from src.core.users.enums import UserRoleEnum
 from src.core.users.exceptions import (
@@ -154,3 +158,57 @@ class TestGetMeAPI(APIFixture, FactoryFixture, ContainerFixture):
         assert response.json() == {"detail": UserNotFoundError.detail}
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(login="test_user")
+
+
+class TestAddArtifactToUserAPI(APIFixture, FactoryFixture, ContainerFixture):
+    @pytest.fixture(autouse=True)
+    async def setup(self) -> None:
+        self.use_case = await self.container.override_use_case(AddArtifactToUserUseCase)
+
+    async def test_add_artifact_to_user(self) -> None:
+        self.use_case.execute.return_value = self.factory.user(
+            login="testuser",
+            password="password",
+        )
+
+        response = self.api.add_artifact_to_user(user_login="testuser", artifact_id=1)
+
+        assert response.status_code == codes.OK
+        assert response.json() == {
+            "login": "testuser",
+            "firstName": "TEST",
+            "lastName": "TEST",
+            "role": "candidate",
+            "rankId": 0,
+            "exp": 0,
+            "mana": 0,
+        }
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(user_login="testuser", artifact_id=1)
+
+
+class TestRemoveArtifactFromUserAPI(APIFixture, FactoryFixture, ContainerFixture):
+    @pytest.fixture(autouse=True)
+    async def setup(self) -> None:
+        self.use_case = await self.container.override_use_case(RemoveArtifactFromUserUseCase)
+
+    async def test_remove_artifact_from_user(self) -> None:
+        self.use_case.execute.return_value = self.factory.user(
+            login="testuser",
+            password="password",
+        )
+
+        response = self.api.remove_artifact_from_user(user_login="testuser", artifact_id=1)
+
+        assert response.status_code == codes.OK
+        assert response.json() == {
+            "login": "testuser",
+            "firstName": "TEST",
+            "lastName": "TEST",
+            "role": "candidate",
+            "rankId": 0,
+            "exp": 0,
+            "mana": 0,
+        }
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(user_login="testuser", artifact_id=1)

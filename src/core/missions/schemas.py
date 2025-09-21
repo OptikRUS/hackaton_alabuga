@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from src.core.artifacts.schemas import Artifact
 from src.core.missions.enums import MissionCategoryEnum
 from src.core.tasks.schemas import MissionTask
 
@@ -26,6 +27,7 @@ class Mission:
     branch_id: int
     category: MissionCategoryEnum
     tasks: list[MissionTask] | None = None
+    reward_artifacts: list[Artifact] | None = None
 
 
 @dataclass
