@@ -28,6 +28,7 @@ from src.core.tasks.use_cases import (
     UpdateMissionTaskUseCase,
 )
 from src.core.users.use_cases import CreateUserUseCase, GetUserUseCase, LoginUserUseCase
+from src.services.minio import MinioService
 from src.tests.mocks.user_password import UserPasswordServiceMock
 
 
@@ -113,6 +114,14 @@ class MissionProviderMock(Provider):
     @provide
     def override_remove_task_from_mission_use_case(self) -> RemoveTaskFromMissionUseCase:
         return AsyncMock(spec=RemoveTaskFromMissionUseCase)
+
+
+class FileStorageProviderMock(Provider):
+    scope: Scope = Scope.APP
+
+    @provide
+    def get_minio_service(self) -> MinioService:
+        return AsyncMock(spec=MinioService)
 
 
 class AuthProviderMock(Provider):

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from io import BytesIO
 
 from httpx import Response
 from starlette.testclient import TestClient
@@ -99,10 +100,7 @@ class APIHelper:
     def create_task(self, title: str, description: str) -> Response:
         return self.client.post(
             url="/tasks",
-            json={
-                "title": title,
-                "description": description,
-            },
+            json={"title": title, "description": description},
         )
 
     def get_tasks(self) -> Response:
@@ -114,10 +112,7 @@ class APIHelper:
     def update_task(self, task_id: int, title: str, description: str) -> Response:
         return self.client.put(
             url=f"/tasks/{task_id}",
-            json={
-                "title": title,
-                "description": description,
-            },
+            json={"title": title, "description": description},
         )
 
     def delete_task(self, task_id: int) -> Response:
@@ -128,3 +123,17 @@ class APIHelper:
 
     def remove_task_from_mission(self, mission_id: int, task_id: int) -> Response:
         return self.client.delete(f"/missions/{mission_id}/tasks/{task_id}")
+
+    def upload_file(
+        self,
+        file_content: bytes,
+        filename: str,
+        content_type: str = "text/plain",
+    ) -> Response:
+        return self.client.post(
+            url="/media",
+            files={"file": (filename, BytesIO(file_content), content_type)},
+        )
+
+    def download_file(self, key: str) -> Response:
+        return self.client.get(f"/media/{key}")

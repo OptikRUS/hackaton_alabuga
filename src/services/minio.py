@@ -22,18 +22,12 @@ class MinioService(FileStorage):
     chunck_size: int = 65536
 
     async def get_file_metadata(self, key: str) -> FileMetadata:
-        """Получить метаданные файла в S3"""
-
         response = await self.minio_connection.head_object(Bucket=self.bucket, Key=key)
-        return FileMetadata(
-            file_size=response["ContentLength"],
-            media_type=response["ContentType"],
-        )
+        return FileMetadata(file_size=response["ContentLength"], media_type=response["ContentType"])
 
     async def ensure_bucket(self) -> None:
         buckets = await self.minio_connection.list_buckets()
         if not any(b["Name"] == self.bucket for b in buckets.get("Buckets", [])):
-            # MinIO may require explicit location constraint
             create_params: dict[str, Any] = {"Bucket": self.bucket}
             if self.region_name and self.region_name != "us-east-1":
                 create_params["CreateBucketConfiguration"] = {
@@ -82,7 +76,6 @@ class MinioService(FileStorage):
         await self.minio_connection.delete_object(Bucket=self.bucket, Key=key)
 
     def _build_url(self, key: str) -> str:
-        # For path-style on MinIO
         base = self.media_url_prefix.rstrip("/")
         return f"{base}/{key.lstrip('/')}"
 

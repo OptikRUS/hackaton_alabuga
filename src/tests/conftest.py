@@ -20,7 +20,12 @@ from src.migrations.commands import downgrade, migrate
 from src.storages.database import async_session
 from src.storages.database_storage import DatabaseStorage
 from src.storages.models import MissionBranchModel, MissionTaskModel, UserModel
-from src.tests.mocks.providers import AuthProviderMock, MissionProviderMock, UserProviderMock
+from src.tests.mocks.providers import (
+    AuthProviderMock,
+    FileStorageProviderMock,
+    MissionProviderMock,
+    UserProviderMock,
+)
 
 
 @pytest.fixture
@@ -29,6 +34,7 @@ async def container() -> AsyncGenerator[AsyncContainer]:
         FastapiProvider(),
         UserProviderMock(),
         MissionProviderMock(),
+        FileStorageProviderMock(),
         AuthProviderMock(),
     )
     yield container
@@ -65,7 +71,7 @@ def no_auth_client(app: FastAPI, container: AsyncContainer) -> Generator[TestCli
 @pytest.fixture
 def client(no_auth_client: TestClient, auth_token: str) -> Generator[TestClient]:
     client = copy(no_auth_client)
-    client.headers = Headers({"Authorization": auth_token, "Content-Type": "application/json"})
+    client.headers = Headers({"Authorization": auth_token})
     yield client
     client.headers = Headers()
 
