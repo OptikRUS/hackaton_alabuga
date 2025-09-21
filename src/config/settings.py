@@ -46,12 +46,12 @@ class AuthSettings(BaseSettings):
 class MinioSettings(BaseSettings):
     ENDPOINT: str = "http://localhost:9000"
     ACCESS_KEY: SecretStr = SecretStr("minio")
-    SECRET_KEY: SecretStr = SecretStr("minio12345")
+    SECRET_KEY: SecretStr = SecretStr("minio123")
     REGION: str = "us-east-1"
     BUCKET: str = "alabuga"
     USE_SSL: bool = False
 
-    model_config = SettingsConfigDict(env_prefix="S3_")
+    model_config = SettingsConfigDict(env_prefix="MINIO_")
 
 
 class LoggingConfig(BaseSettings):

@@ -37,6 +37,7 @@ jobs:
               -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
               -e DB_HOST=${{ secrets.DB_HOST }} \
               -e DB_PORT=${{ secrets.DB_PORT }} \
+              -e MINIO_ENDPOINT=${{ secrets.MINIO_ENDPOINT }} \
               ${{ vars.DOCKERHUB_USERNAME }}/${{ vars.DOCKERHUB_REPONAME }}
 
             echo "⏳ Проверяем healthcheck нового контейнера..."
@@ -70,6 +71,7 @@ jobs:
                 -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
                 -e DB_HOST=${{ secrets.DB_HOST }} \
                 -e DB_PORT=${{ secrets.DB_PORT }} \
+                -e MINIO_ENDPOINT=${{ secrets.MINIO_ENDPOINT }} \
                 ${{ vars.DOCKERHUB_USERNAME }}/${{ vars.DOCKERHUB_REPONAME }}
 
               echo "🧹 Чистим dangling images..."
