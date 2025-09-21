@@ -4,6 +4,7 @@ from typing import Any
 from fastapi import Request, status
 from fastapi.responses import JSONResponse, Response
 
+from src.core.artifacts.exceptions import ArtifactNotFoundError, ArtifactTitleAlreadyExistError
 from src.core.exceptions import BaseExceptionError, InvalidJWTTokenError
 from src.core.media.exceptions import MediaNotFoundError
 from src.core.missions.exceptions import (
@@ -60,4 +61,6 @@ exception_handlers: (
     TaskNameAlreadyExistError: handler(status_code=status.HTTP_409_CONFLICT),
     TaskNotFoundError: handler(status_code=status.HTTP_404_NOT_FOUND),
     MediaNotFoundError: handler(status_code=status.HTTP_404_NOT_FOUND),
+    ArtifactNotFoundError: handler(status_code=status.HTTP_404_NOT_FOUND),
+    ArtifactTitleAlreadyExistError: handler(status_code=status.HTTP_409_CONFLICT),
 }

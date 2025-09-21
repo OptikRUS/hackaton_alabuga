@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from src.api.artifacts import endpoints as artifacts
 from src.api.common import endpoints as common
 from src.api.media import endpoints as media
 from src.api.missions import endpoints as missions
@@ -11,4 +12,5 @@ root_router.include_router(common.router, include_in_schema=False)
 root_router.include_router(users.router)
 root_router.include_router(missions.router)
 root_router.include_router(tasks.router)
+root_router.include_router(artifacts.router)
 root_router.include_router(media.router)

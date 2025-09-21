@@ -9,6 +9,10 @@ from src.api.users.schemas import (
     UserResponse,
     UserTokenResponse,
 )
+from src.core.artifacts.use_cases import (
+    AddArtifactToUserUseCase,
+    RemoveArtifactFromUserUseCase,
+)
 from src.core.users.use_cases import (
     CreateUserUseCase,
     GetUserUseCase,
@@ -40,3 +44,23 @@ async def user_login(
 async def get_me(user: FromDishka[JwtUser], use_case: FromDishka[GetUserUseCase]) -> UserResponse:
     registered_user = await use_case.execute(login=user.login)
     return UserResponse.from_schema(user=registered_user)
+
+
+@router.post(path="/users/{user_login}/artifacts/{artifact_id}", status_code=status.HTTP_200_OK)
+async def add_artifact_to_user(
+    user_login: str,
+    artifact_id: int,
+    use_case: FromDishka[AddArtifactToUserUseCase],
+) -> UserResponse:
+    user = await use_case.execute(user_login=user_login, artifact_id=artifact_id)
+    return UserResponse.from_schema(user=user)
+
+
+@router.delete(path="/users/{user_login}/artifacts/{artifact_id}", status_code=status.HTTP_200_OK)
+async def remove_artifact_from_user(
+    user_login: str,
+    artifact_id: int,
+    use_case: FromDishka[RemoveArtifactFromUserUseCase],
+) -> UserResponse:
+    user = await use_case.execute(user_login=user_login, artifact_id=artifact_id)
+    return UserResponse.from_schema(user=user)

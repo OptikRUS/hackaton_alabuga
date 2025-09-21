@@ -53,12 +53,12 @@ class TestMissionTaskStorage(FactoryFixture, StorageFixture):
 
     async def test_insert_mission_task_already_exist(self) -> None:
         await self.storage_helper.insert_task(
-            task=(self.factory.mission_task(title="TEST", description="TEST"))
+            task=self.factory.mission_task(title="TEST", description="TEST")
         )
 
         with pytest.raises(TaskNameAlreadyExistError):
             await self.storage.insert_mission_task(
-                task=(self.factory.mission_task(title="TEST", description="TEST"))
+                task=self.factory.mission_task(title="TEST", description="TEST")
             )
 
     async def test_list_mission_tasks(self) -> None:
@@ -69,10 +69,7 @@ class TestMissionTaskStorage(FactoryFixture, StorageFixture):
             )
         )
         await self.storage_helper.insert_task(
-            task=self.factory.mission_task(
-                title="TEST2",
-                description="TEST2",
-            )
+            task=self.factory.mission_task(title="TEST2", description="TEST2")
         )
 
         tasks = await self.storage.list_mission_tasks()

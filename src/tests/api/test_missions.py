@@ -1,6 +1,11 @@
 import pytest
 from httpx import codes
 
+from src.core.artifacts.enums import ArtifactRarityEnum
+from src.core.artifacts.use_cases import (
+    AddArtifactToMissionUseCase,
+    RemoveArtifactFromMissionUseCase,
+)
 from src.core.missions.enums import MissionCategoryEnum
 from src.core.missions.exceptions import (
     MissionBranchNameAlreadyExistError,
@@ -196,6 +201,7 @@ class TestMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             "branchId": 1,
             "category": MissionCategoryEnum.QUEST,
             "tasks": [],
+            "rewardArtifacts": [],
         }
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(
@@ -313,6 +319,7 @@ class TestGetMissionsAPI(APIFixture, FactoryFixture, ContainerFixture):
                     "branchId": 1,
                     "category": MissionCategoryEnum.QUEST,
                     "tasks": [],
+                    "rewardArtifacts": [],
                 },
                 {
                     "id": 2,
@@ -324,6 +331,7 @@ class TestGetMissionsAPI(APIFixture, FactoryFixture, ContainerFixture):
                     "branchId": 1,
                     "category": MissionCategoryEnum.SIMULATOR,
                     "tasks": [],
+                    "rewardArtifacts": [],
                 },
             ]
         }
@@ -370,6 +378,7 @@ class TestGetMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             "branchId": 1,
             "category": MissionCategoryEnum.QUEST,
             "tasks": [],
+            "rewardArtifacts": [],
         }
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(mission_id=1)
@@ -413,6 +422,68 @@ class TestGetMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             "tasks": [
                 {"id": 1, "title": "TEST1", "description": "TEST1"},
                 {"id": 2, "title": "TEST2", "description": "TEST2"},
+            ],
+            "rewardArtifacts": [],
+        }
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(mission_id=1)
+
+    def test_get_mission_with_artifacts(self) -> None:
+        self.use_case.execute.return_value = self.factory.mission(
+            mission_id=1,
+            title="TEST",
+            description="TEST",
+            reward_xp=100,
+            reward_mana=50,
+            rank_requirement=1,
+            branch_id=1,
+            category=MissionCategoryEnum.QUEST,
+            reward_artifacts=[
+                self.factory.artifact(
+                    artifact_id=1,
+                    title="ARTIFACT1",
+                    description="Description 1",
+                    rarity=ArtifactRarityEnum.RARE,
+                    image_url="https://example.com/artifact1.jpg",
+                ),
+                self.factory.artifact(
+                    artifact_id=2,
+                    title="ARTIFACT2",
+                    description="Description 2",
+                    rarity=ArtifactRarityEnum.EPIC,
+                    image_url="https://example.com/artifact2.jpg",
+                ),
+            ],
+        )
+
+        response = self.api.get_mission(mission_id=1)
+
+        assert response.status_code == codes.OK
+        assert response.json() == {
+            "id": 1,
+            "title": "TEST",
+            "description": "TEST",
+            "rewardXp": 100,
+            "rewardMana": 50,
+            "rankRequirement": 1,
+            "branchId": 1,
+            "category": "quest",
+            "tasks": [],
+            "rewardArtifacts": [
+                {
+                    "id": 1,
+                    "title": "ARTIFACT1",
+                    "description": "Description 1",
+                    "rarity": "rare",
+                    "imageUrl": "https://example.com/artifact1.jpg",
+                },
+                {
+                    "id": 2,
+                    "title": "ARTIFACT2",
+                    "description": "Description 2",
+                    "rarity": "epic",
+                    "imageUrl": "https://example.com/artifact2.jpg",
+                },
             ],
         }
         self.use_case.execute.assert_called_once()
@@ -468,6 +539,7 @@ class TestUpdateMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             "branchId": 1,
             "category": MissionCategoryEnum.QUEST,
             "tasks": [],
+            "rewardArtifacts": [],
         }
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(
@@ -599,6 +671,7 @@ class TestAddTaskToMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             "branchId": 1,
             "category": MissionCategoryEnum.QUEST,
             "tasks": [],
+            "rewardArtifacts": [],
         }
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(mission_id=1, task_id=1)
@@ -654,6 +727,7 @@ class TestRemoveTaskFromMissionAPI(APIFixture, FactoryFixture, ContainerFixture)
             "branchId": 1,
             "category": MissionCategoryEnum.QUEST,
             "tasks": [],
+            "rewardArtifacts": [],
         }
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(mission_id=1, task_id=1)
@@ -698,6 +772,7 @@ class TestRemoveTaskFromMissionAPI(APIFixture, FactoryFixture, ContainerFixture)
                 {"id": 1, "title": "TEST1", "description": "TEST1"},
                 {"id": 2, "title": "TEST2", "description": "TEST2"},
             ],
+            "rewardArtifacts": [],
         }
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(mission_id=1, task_id=1)
@@ -721,3 +796,67 @@ class TestRemoveTaskFromMissionAPI(APIFixture, FactoryFixture, ContainerFixture)
         assert response.json() == {"detail": TaskNotFoundError.detail}
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(mission_id=1, task_id=999)
+
+
+class TestAddArtifactToMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
+    @pytest.fixture(autouse=True)
+    async def setup(self) -> None:
+        self.use_case = await self.container.override_use_case(AddArtifactToMissionUseCase)
+
+    async def test_add_artifact_to_mission(self) -> None:
+        self.use_case.execute.return_value = self.factory.mission(
+            mission_id=1,
+            title="Test Mission",
+            description="Test Description",
+            branch_id=1,
+        )
+
+        response = self.api.add_artifact_to_mission(mission_id=1, artifact_id=1)
+
+        assert response.status_code == codes.OK
+        assert response.json() == {
+            "id": 1,
+            "title": "Test Mission",
+            "description": "Test Description",
+            "rewardXp": 100,
+            "rewardMana": 50,
+            "rankRequirement": 1,
+            "branchId": 1,
+            "category": "quest",
+            "tasks": [],
+            "rewardArtifacts": [],
+        }
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(mission_id=1, artifact_id=1)
+
+
+class TestRemoveArtifactFromMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
+    @pytest.fixture(autouse=True)
+    async def setup(self) -> None:
+        self.use_case = await self.container.override_use_case(RemoveArtifactFromMissionUseCase)
+
+    async def test_remove_artifact_from_mission(self) -> None:
+        self.use_case.execute.return_value = self.factory.mission(
+            mission_id=1,
+            title="Test Mission",
+            description="Test Description",
+            branch_id=1,
+        )
+
+        response = self.api.remove_artifact_from_mission(mission_id=1, artifact_id=1)
+
+        assert response.status_code == codes.OK
+        assert response.json() == {
+            "id": 1,
+            "title": "Test Mission",
+            "description": "Test Description",
+            "rewardXp": 100,
+            "rewardMana": 50,
+            "rankRequirement": 1,
+            "branchId": 1,
+            "category": "quest",
+            "tasks": [],
+            "rewardArtifacts": [],
+        }
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(mission_id=1, artifact_id=1)

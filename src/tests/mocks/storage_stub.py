@@ -1,5 +1,10 @@
 from dataclasses import dataclass, field
 
+from src.core.artifacts.exceptions import (
+    ArtifactNotFoundError,
+    ArtifactTitleAlreadyExistError,
+)
+from src.core.artifacts.schemas import Artifact, Artifacts
 from src.core.missions.exceptions import (
     MissionBranchNameAlreadyExistError,
     MissionBranchNotFoundError,
@@ -12,7 +17,7 @@ from src.core.missions.schemas import (
     MissionBranches,
     Missions,
 )
-from src.core.storages import MissionStorage, UserStorage
+from src.core.storages import ArtifactStorage, MissionStorage, UserStorage
 from src.core.tasks.exceptions import (
     TaskNameAlreadyExistError,
     TaskNotFoundError,
@@ -26,12 +31,15 @@ from src.core.users.schemas import User
 
 
 @dataclass
-class StorageMock(UserStorage, MissionStorage):
+class StorageMock(UserStorage, MissionStorage, ArtifactStorage):
     user_table: dict[str, User] = field(default_factory=dict)
     mission_branch_table: dict[str, MissionBranch] = field(default_factory=dict)
     mission_table: dict[int, Mission] = field(default_factory=dict)
     task_table: dict[int, MissionTask] = field(default_factory=dict)
+    artifact_table: dict[int, Artifact] = field(default_factory=dict)
     missions_tasks_relations: dict[int, set[int]] = field(default_factory=dict)
+    missions_artifacts_relations: dict[int, set[int]] = field(default_factory=dict)
+    users_artifacts_relations: dict[str, set[int]] = field(default_factory=dict)
 
     async def insert_user(self, user: User) -> None:
         try:
@@ -188,3 +196,90 @@ class StorageMock(UserStorage, MissionStorage):
             self.missions_tasks_relations[mission_id].discard(task_id)
             if not self.missions_tasks_relations[mission_id]:
                 del self.missions_tasks_relations[mission_id]
+
+    # ArtifactStorage methods
+    async def insert_artifact(self, artifact: Artifact) -> None:
+        for existing_artifact in self.artifact_table.values():
+            if existing_artifact.title == artifact.title:
+                raise ArtifactTitleAlreadyExistError
+
+        # Generate ID if not provided
+        if artifact.id == 0:
+            artifact_id = max(self.artifact_table.keys(), default=0) + 1
+            artifact = Artifact(
+                id=artifact_id,
+                title=artifact.title,
+                description=artifact.description,
+                rarity=artifact.rarity,
+                image_url=artifact.image_url,
+            )
+
+        self.artifact_table[artifact.id] = artifact
+
+    async def get_artifact_by_id(self, artifact_id: int) -> Artifact:
+        try:
+            return self.artifact_table[artifact_id]
+        except KeyError as error:
+            raise ArtifactNotFoundError from error
+
+    async def get_artifact_by_title(self, title: str) -> Artifact:
+        for artifact in self.artifact_table.values():
+            if artifact.title == title:
+                return artifact
+        raise ArtifactNotFoundError
+
+    async def list_artifacts(self) -> Artifacts:
+        return Artifacts(values=list(self.artifact_table.values()))
+
+    async def update_artifact(self, artifact: Artifact) -> None:
+        if artifact.id not in self.artifact_table:
+            raise ArtifactNotFoundError
+        self.artifact_table[artifact.id] = artifact
+
+    async def delete_artifact(self, artifact_id: int) -> None:
+        try:
+            del self.artifact_table[artifact_id]
+        except KeyError as error:
+            raise ArtifactNotFoundError from error
+
+    async def add_artifact_to_mission(self, mission_id: int, artifact_id: int) -> None:
+        if mission_id not in self.mission_table:
+            raise MissionNotFoundError
+        if artifact_id not in self.artifact_table:
+            raise ArtifactNotFoundError
+
+        if mission_id not in self.missions_artifacts_relations:
+            self.missions_artifacts_relations[mission_id] = set()
+        self.missions_artifacts_relations[mission_id].add(artifact_id)
+
+    async def remove_artifact_from_mission(self, mission_id: int, artifact_id: int) -> None:
+        if mission_id not in self.mission_table:
+            raise MissionNotFoundError
+        if artifact_id not in self.artifact_table:
+            raise ArtifactNotFoundError
+
+        if mission_id in self.missions_artifacts_relations:
+            self.missions_artifacts_relations[mission_id].discard(artifact_id)
+            if not self.missions_artifacts_relations[mission_id]:
+                del self.missions_artifacts_relations[mission_id]
+
+    async def add_artifact_to_user(self, user_login: str, artifact_id: int) -> None:
+        if user_login not in self.user_table:
+            raise UserNotFoundError
+        if artifact_id not in self.artifact_table:
+            raise ArtifactNotFoundError
+
+        if user_login not in self.users_artifacts_relations:
+            self.users_artifacts_relations[user_login] = set()
+        self.users_artifacts_relations[user_login].add(artifact_id)
+
+    async def remove_artifact_from_user(self, user_login: str, artifact_id: int) -> None:
+        if user_login not in self.user_table:
+            raise UserNotFoundError
+        if artifact_id not in self.artifact_table:
+            raise ArtifactNotFoundError
+
+        if user_login in self.users_artifacts_relations:
+            self.users_artifacts_relations[user_login].discard(artifact_id)
+            if not self.users_artifacts_relations[user_login]:
+                del self.users_artifacts_relations[user_login]
