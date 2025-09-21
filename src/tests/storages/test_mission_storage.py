@@ -1,5 +1,6 @@
 import pytest
 
+from src.core.artifacts.enums import ArtifactRarityEnum
 from src.core.missions.enums import MissionCategoryEnum
 from src.core.missions.exceptions import MissionNameAlreadyExistError, MissionNotFoundError
 from src.storages.database_storage import DatabaseStorage
@@ -15,28 +16,16 @@ class TestMissionStorage(FactoryFixture, StorageFixture):
         assert inserted_branch is not None
         self.created_branch = inserted_branch.to_schema()
 
-    async def _create_test_branch(self) -> int:
-        await self.storage_helper.insert_branch(
-            branch=self.factory.mission_branch(branch_id=0, name="TEST_BRANCH")
-        )
-
-        stored_branch = await self.storage_helper.get_branch_by_name(name="TEST_BRANCH")
-
-        assert stored_branch is not None
-        return stored_branch.id
-
     async def test_get_mission_by_id(self) -> None:
         inserted_mission = await self.storage_helper.insert_mission(
-            mission=(
-                self.factory.mission(
-                    title="TEST",
-                    description="Test description",
-                    reward_xp=100,
-                    reward_mana=50,
-                    rank_requirement=1,
-                    branch_id=self.created_branch.id,
-                    category=MissionCategoryEnum.QUEST,
-                )
+            mission=self.factory.mission(
+                title="TEST",
+                description="Test description",
+                reward_xp=100,
+                reward_mana=50,
+                rank_requirement=1,
+                branch_id=self.created_branch.id,
+                category=MissionCategoryEnum.QUEST,
             )
         )
         assert inserted_mission is not None
@@ -51,6 +40,175 @@ class TestMissionStorage(FactoryFixture, StorageFixture):
         assert mission.rank_requirement == 1
         assert mission.branch_id == self.created_branch.id
         assert mission.category == MissionCategoryEnum.QUEST
+
+    async def test_get_mission_by_id_with_tasks(self) -> None:
+        inserted_mission = await self.storage_helper.insert_mission(
+            mission=self.factory.mission(
+                title="TEST",
+                description="TEST",
+                reward_xp=100,
+                reward_mana=50,
+                rank_requirement=1,
+                branch_id=self.created_branch.id,
+                category=MissionCategoryEnum.QUEST,
+            )
+        )
+
+        task_1 = await self.storage_helper.insert_task(
+            task=self.factory.mission_task(title="TEST1", description="TEST1")
+        )
+        task_2 = await self.storage_helper.insert_task(
+            task=self.factory.mission_task(title="TEST2", description="TEST2")
+        )
+        assert inserted_mission is not None
+        assert task_1 is not None
+        assert task_2 is not None
+        await self.storage.add_task_to_mission(mission_id=inserted_mission.id, task_id=task_1.id)
+        await self.storage.add_task_to_mission(mission_id=inserted_mission.id, task_id=task_2.id)
+
+        mission = await self.storage.get_mission_by_id(mission_id=inserted_mission.id)
+
+        assert mission is not None
+        assert mission == self.factory.mission(
+            mission_id=inserted_mission.id,
+            title="TEST",
+            description="TEST",
+            reward_xp=100,
+            reward_mana=50,
+            rank_requirement=1,
+            branch_id=self.created_branch.id,
+            category=MissionCategoryEnum.QUEST,
+            tasks=[task_1.to_schema(), task_2.to_schema()],
+            reward_artifacts=[],
+        )
+
+    async def test_get_mission_by_id_with_artifacts(self) -> None:
+        inserted_mission = await self.storage_helper.insert_mission(
+            mission=self.factory.mission(
+                title="TEST",
+                description="TEST",
+                reward_xp=100,
+                reward_mana=50,
+                rank_requirement=1,
+                branch_id=self.created_branch.id,
+                category=MissionCategoryEnum.QUEST,
+            )
+        )
+        artifact_1 = await self.storage_helper.insert_artifact(
+            artifact=self.factory.artifact(
+                title="TEST",
+                description="TEST",
+                rarity=ArtifactRarityEnum.COMMON,
+                image_url="TEST",
+            )
+        )
+        artifact_2 = await self.storage_helper.insert_artifact(
+            artifact=self.factory.artifact(
+                title="TEST2",
+                description="TEST2",
+                rarity=ArtifactRarityEnum.RARE,
+                image_url="TEST2",
+            )
+        )
+        assert inserted_mission is not None
+        assert artifact_1 is not None
+        assert artifact_2 is not None
+        await self.storage.add_artifact_to_mission(
+            mission_id=inserted_mission.id,
+            artifact_id=artifact_1.id,
+        )
+        await self.storage.add_artifact_to_mission(
+            mission_id=inserted_mission.id,
+            artifact_id=artifact_2.id,
+        )
+
+        mission_model = await self.storage_helper.get_mission_by_id_with_entities(
+            mission_id=inserted_mission.id
+        )
+        mission = mission_model.to_schema() if mission_model else None
+
+        assert mission is not None
+        assert mission == self.factory.mission(
+            mission_id=inserted_mission.id,
+            title="TEST",
+            description="TEST",
+            reward_xp=100,
+            reward_mana=50,
+            rank_requirement=1,
+            branch_id=self.created_branch.id,
+            category=MissionCategoryEnum.QUEST,
+            tasks=[],
+            reward_artifacts=[artifact_1.to_schema(), artifact_2.to_schema()],
+        )
+
+    async def test_get_mission_by_id_with_entities(self) -> None:
+        inserted_mission = await self.storage_helper.insert_mission(
+            mission=self.factory.mission(
+                title="TEST",
+                description="TEST",
+                reward_xp=100,
+                reward_mana=50,
+                rank_requirement=1,
+                branch_id=self.created_branch.id,
+                category=MissionCategoryEnum.QUEST,
+            )
+        )
+        task_1 = await self.storage_helper.insert_task(
+            task=self.factory.mission_task(title="TEST1", description="TEST1")
+        )
+        task_2 = await self.storage_helper.insert_task(
+            task=self.factory.mission_task(title="TEST2", description="TEST2")
+        )
+        artifact_1 = await self.storage_helper.insert_artifact(
+            artifact=self.factory.artifact(
+                title="TEST",
+                description="TEST",
+                rarity=ArtifactRarityEnum.COMMON,
+                image_url="TEST",
+            )
+        )
+        artifact_2 = await self.storage_helper.insert_artifact(
+            artifact=self.factory.artifact(
+                title="TEST2",
+                description="TEST2",
+                rarity=ArtifactRarityEnum.RARE,
+                image_url="TEST2",
+            )
+        )
+        assert inserted_mission is not None
+        assert task_1 is not None
+        assert task_2 is not None
+        assert artifact_1 is not None
+        assert artifact_2 is not None
+        await self.storage.add_task_to_mission(mission_id=inserted_mission.id, task_id=task_1.id)
+        await self.storage.add_task_to_mission(mission_id=inserted_mission.id, task_id=task_2.id)
+        await self.storage.add_artifact_to_mission(
+            mission_id=inserted_mission.id,
+            artifact_id=artifact_1.id,
+        )
+        await self.storage.add_artifact_to_mission(
+            mission_id=inserted_mission.id,
+            artifact_id=artifact_2.id,
+        )
+
+        mission_model = await self.storage_helper.get_mission_by_id_with_entities(
+            mission_id=inserted_mission.id
+        )
+        mission = mission_model.to_schema() if mission_model else None
+
+        assert mission is not None
+        assert mission == self.factory.mission(
+            mission_id=inserted_mission.id,
+            title="TEST",
+            description="TEST",
+            reward_xp=100,
+            reward_mana=50,
+            rank_requirement=1,
+            branch_id=self.created_branch.id,
+            category=MissionCategoryEnum.QUEST,
+            tasks=[task_1.to_schema(), task_2.to_schema()],
+            reward_artifacts=[artifact_1.to_schema(), artifact_2.to_schema()],
+        )
 
     async def test_get_mission_by_id_not_found(self) -> None:
         with pytest.raises(MissionNotFoundError):

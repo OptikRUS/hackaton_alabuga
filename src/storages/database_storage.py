@@ -5,6 +5,11 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from src.core.artifacts.exceptions import (
+    ArtifactNotFoundError,
+    ArtifactTitleAlreadyExistError,
+)
+from src.core.artifacts.schemas import Artifact, Artifacts
 from src.core.missions.exceptions import (
     MissionBranchNameAlreadyExistError,
     MissionBranchNotFoundError,
@@ -17,6 +22,7 @@ from src.core.missions.schemas import (
     MissionBranches,
     Missions,
 )
+from src.core.storages import ArtifactStorage, MissionStorage, UserStorage
 from src.core.storages import CompetitionStorage, MissionStorage, UserStorage, RankStorage
 from src.core.tasks.exceptions import (
     TaskNameAlreadyExistError,
@@ -29,6 +35,9 @@ from src.core.tasks.schemas import (
 from src.core.users.exceptions import UserAlreadyExistError, UserNotFoundError
 from src.core.users.schemas import User
 from src.storages.models import (
+    ArtifactMissionRelationModel,
+    ArtifactModel,
+    ArtifactUserRelationModel,
     MissionBranchModel,
     MissionModel,
     MissionTaskModel,
@@ -50,7 +59,7 @@ from src.core.ranks.exceptions import (
 
 
 @dataclass
-class DatabaseStorage(UserStorage, MissionStorage, CompetitionStorage, RankStorage):
+class DatabaseStorage(UserStorage, MissionStorage, ArtifactStorage, CompetitionStorage, RankStorage):
     session: AsyncSession
 
     async def insert_user(self, user: User) -> None:
@@ -73,7 +82,11 @@ class DatabaseStorage(UserStorage, MissionStorage, CompetitionStorage, RankStora
             raise UserAlreadyExistError from error
 
     async def get_user_by_login(self, login: str) -> User:
-        query = select(UserModel).where(UserModel.login == login)
+        query = (
+            select(UserModel)
+            .where(UserModel.login == login)
+            .options(selectinload(UserModel.artifacts))
+        )
         user = await self.session.scalar(query)
         if user is None:
             raise UserNotFoundError
@@ -130,7 +143,8 @@ class DatabaseStorage(UserStorage, MissionStorage, CompetitionStorage, RankStora
         query = (
             select(MissionModel)
             .where(MissionModel.id == mission_id)
-            .options(selectinload(MissionModel.tasks))
+            .options(selectinload(MissionModel.tasks), selectinload(MissionModel.artifacts))
+            .execution_options(populate_existing=True)
         )
         mission = await self.session.scalar(query)
         if mission is None:
@@ -251,6 +265,91 @@ class DatabaseStorage(UserStorage, MissionStorage, CompetitionStorage, RankStora
         query = delete(MissionTaskRelationModel).where(
             MissionTaskRelationModel.mission_id == mission_id,
             MissionTaskRelationModel.task_id == task_id,
+        )
+        await self.session.execute(query)
+
+    async def insert_artifact(self, artifact: Artifact) -> None:
+        query = (
+            insert(ArtifactModel)
+            .values({
+                "title": artifact.title,
+                "description": artifact.description,
+                "rarity": artifact.rarity,
+                "image_url": artifact.image_url,
+            })
+            .returning(ArtifactModel.id)
+        )
+        try:
+            await self.session.scalar(query)
+        except IntegrityError as error:
+            raise ArtifactTitleAlreadyExistError from error
+
+    async def get_artifact_by_id(self, artifact_id: int) -> Artifact:
+        query = select(ArtifactModel).where(ArtifactModel.id == artifact_id)
+        artifact = await self.session.scalar(query)
+        if artifact is None:
+            raise ArtifactNotFoundError
+        return artifact.to_schema()
+
+    async def get_artifact_by_title(self, title: str) -> Artifact:
+        query = select(ArtifactModel).where(ArtifactModel.title == title)
+        artifact = await self.session.scalar(query)
+        if artifact is None:
+            raise ArtifactNotFoundError
+        return artifact.to_schema()
+
+    async def list_artifacts(self) -> Artifacts:
+        query = select(ArtifactModel)
+        result = await self.session.scalars(query)
+        return Artifacts(values=[row.to_schema() for row in result])
+
+    async def update_artifact(self, artifact: Artifact) -> None:
+        await self.get_artifact_by_id(artifact_id=artifact.id)
+        query = (
+            update(ArtifactModel)
+            .where(ArtifactModel.id == artifact.id)
+            .values({
+                "title": artifact.title,
+                "description": artifact.description,
+                "rarity": artifact.rarity,
+                "image_url": artifact.image_url,
+            })
+        )
+        try:
+            await self.session.execute(query)
+        except IntegrityError as error:
+            raise ArtifactTitleAlreadyExistError from error
+
+    async def delete_artifact(self, artifact_id: int) -> None:
+        await self.get_artifact_by_id(artifact_id=artifact_id)
+        query = delete(ArtifactModel).where(ArtifactModel.id == artifact_id)
+        await self.session.execute(query)
+
+    async def add_artifact_to_mission(self, mission_id: int, artifact_id: int) -> None:
+        query = insert(ArtifactMissionRelationModel).values({
+            "mission_id": mission_id,
+            "artifact_id": artifact_id,
+        })
+        await self.session.execute(query)
+
+    async def remove_artifact_from_mission(self, mission_id: int, artifact_id: int) -> None:
+        query = delete(ArtifactMissionRelationModel).where(
+            ArtifactMissionRelationModel.mission_id == mission_id,
+            ArtifactMissionRelationModel.artifact_id == artifact_id,
+        )
+        await self.session.execute(query)
+
+    async def add_artifact_to_user(self, user_login: str, artifact_id: int) -> None:
+        query = insert(ArtifactUserRelationModel).values({
+            "user_login": user_login,
+            "artifact_id": artifact_id,
+        })
+        await self.session.execute(query)
+
+    async def remove_artifact_from_user(self, user_login: str, artifact_id: int) -> None:
+        query = delete(ArtifactUserRelationModel).where(
+            ArtifactUserRelationModel.user_login == user_login,
+            ArtifactUserRelationModel.artifact_id == artifact_id,
         )
         await self.session.execute(query)
 

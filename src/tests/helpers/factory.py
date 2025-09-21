@@ -1,3 +1,5 @@
+from src.core.artifacts.enums import ArtifactRarityEnum
+from src.core.artifacts.schemas import Artifact, Artifacts
 from src.core.missions.enums import MissionCategoryEnum
 from src.core.missions.schemas import (
     Mission,
@@ -25,6 +27,7 @@ class FactoryHelper:
         rank_id: int = 0,
         exp: int = 0,
         mana: int = 0,
+        artifacts: list[Artifact] | None = None,
     ) -> User:
         return User(
             login=login,
@@ -35,6 +38,7 @@ class FactoryHelper:
             rank_id=rank_id,
             exp=exp,
             mana=mana,
+            artifacts=artifacts,
         )
 
     @classmethod
@@ -57,6 +61,7 @@ class FactoryHelper:
         branch_id: int = 1,
         category: MissionCategoryEnum = MissionCategoryEnum.QUEST,
         tasks: list[MissionTask] | None = None,
+        reward_artifacts: list[Artifact] | None = None,
     ) -> Mission:
         return Mission(
             id=mission_id,
@@ -68,6 +73,7 @@ class FactoryHelper:
             branch_id=branch_id,
             category=category,
             tasks=tasks,
+            reward_artifacts=reward_artifacts,
         )
 
     @classmethod
@@ -86,3 +92,24 @@ class FactoryHelper:
     @classmethod
     def mission_tasks(cls, values: list[MissionTask]) -> MissionTasks:
         return MissionTasks(values=values)
+
+    @classmethod
+    def artifact(
+        cls,
+        artifact_id: int = 0,
+        title: str = "TEST",
+        description: str = "TEST",
+        rarity: ArtifactRarityEnum = ArtifactRarityEnum.COMMON,
+        image_url: str = "https://example.com/image.jpg",
+    ) -> Artifact:
+        return Artifact(
+            id=artifact_id,
+            title=title,
+            description=description,
+            rarity=rarity,
+            image_url=image_url,
+        )
+
+    @classmethod
+    def artifacts(cls, values: list[Artifact]) -> Artifacts:
+        return Artifacts(values=values)

@@ -1,5 +1,6 @@
 from pydantic import Field
 
+from src.api.artifacts.schemas import ArtifactResponse
 from src.api.boundary import BoundaryModel
 from src.core.missions.enums import MissionCategoryEnum
 from src.core.missions.schemas import Mission, MissionBranch, MissionBranches, Missions
@@ -103,6 +104,9 @@ class MissionResponse(BoundaryModel):
     branch_id: int = Field(default=..., description="ID ветки миссий")
     category: str = Field(default=..., description="Категория миссии")
     tasks: list[MissionTaskResponse] = Field(default_factory=list, description="Таски миссии")
+    reward_artifacts: list[ArtifactResponse] = Field(
+        default_factory=list, description="Артефакты-награды"
+    )
 
     @classmethod
     def from_schema(cls, mission: Mission) -> "MissionResponse":
@@ -116,6 +120,10 @@ class MissionResponse(BoundaryModel):
             branch_id=mission.branch_id,
             category=mission.category,
             tasks=[MissionTaskResponse.from_schema(task=task) for task in (mission.tasks or [])],
+            reward_artifacts=[
+                ArtifactResponse.from_schema(artifact=artifact)
+                for artifact in (mission.reward_artifacts or [])
+            ],
         )
 
 

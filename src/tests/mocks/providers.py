@@ -5,6 +5,17 @@ from fastapi import Request
 from fastapi.security import HTTPBearer
 
 from src.api.auth.schemas import JwtUser
+from src.core.artifacts.use_cases import (
+    AddArtifactToMissionUseCase,
+    AddArtifactToUserUseCase,
+    CreateArtifactUseCase,
+    DeleteArtifactUseCase,
+    GetArtifactDetailUseCase,
+    GetArtifactsUseCase,
+    RemoveArtifactFromMissionUseCase,
+    RemoveArtifactFromUserUseCase,
+    UpdateArtifactUseCase,
+)
 from src.core.exceptions import InvalidJWTTokenError
 from src.core.missions.use_cases import (
     AddTaskToMissionUseCase,
@@ -28,6 +39,7 @@ from src.core.tasks.use_cases import (
     UpdateMissionTaskUseCase,
 )
 from src.core.users.use_cases import CreateUserUseCase, GetUserUseCase, LoginUserUseCase
+from src.services.minio import MinioService
 from src.tests.mocks.user_password import UserPasswordServiceMock
 
 
@@ -113,6 +125,54 @@ class MissionProviderMock(Provider):
     @provide
     def override_remove_task_from_mission_use_case(self) -> RemoveTaskFromMissionUseCase:
         return AsyncMock(spec=RemoveTaskFromMissionUseCase)
+
+
+class ArtifactProviderMock(Provider):
+    scope: Scope = Scope.APP
+
+    @provide
+    def override_create_artifact_use_case(self) -> CreateArtifactUseCase:
+        return AsyncMock(spec=CreateArtifactUseCase)
+
+    @provide
+    def override_get_artifacts_use_case(self) -> GetArtifactsUseCase:
+        return AsyncMock(spec=GetArtifactsUseCase)
+
+    @provide
+    def override_get_artifact_detail_use_case(self) -> GetArtifactDetailUseCase:
+        return AsyncMock(spec=GetArtifactDetailUseCase)
+
+    @provide
+    def override_update_artifact_use_case(self) -> UpdateArtifactUseCase:
+        return AsyncMock(spec=UpdateArtifactUseCase)
+
+    @provide
+    def override_delete_artifact_use_case(self) -> DeleteArtifactUseCase:
+        return AsyncMock(spec=DeleteArtifactUseCase)
+
+    @provide
+    def override_add_artifact_to_mission_use_case(self) -> AddArtifactToMissionUseCase:
+        return AsyncMock(spec=AddArtifactToMissionUseCase)
+
+    @provide
+    def override_remove_artifact_from_mission_use_case(self) -> RemoveArtifactFromMissionUseCase:
+        return AsyncMock(spec=RemoveArtifactFromMissionUseCase)
+
+    @provide
+    def override_add_artifact_to_user_use_case(self) -> AddArtifactToUserUseCase:
+        return AsyncMock(spec=AddArtifactToUserUseCase)
+
+    @provide
+    def override_remove_artifact_from_user_use_case(self) -> RemoveArtifactFromUserUseCase:
+        return AsyncMock(spec=RemoveArtifactFromUserUseCase)
+
+
+class FileStorageProviderMock(Provider):
+    scope: Scope = Scope.APP
+
+    @provide
+    def get_minio_service(self) -> MinioService:
+        return AsyncMock(spec=MinioService)
 
 
 class AuthProviderMock(Provider):

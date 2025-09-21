@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
 
+from src.core.artifacts.schemas import Artifact, Artifacts
 from src.core.missions.schemas import (
     Mission,
     MissionBranch,
@@ -104,6 +105,48 @@ class MissionStorage(metaclass=ABCMeta):
 
     @abstractmethod
     async def remove_task_from_mission(self, mission_id: int, task_id: int) -> None:
+        raise NotImplementedError
+
+
+class ArtifactStorage(metaclass=ABCMeta):
+    @abstractmethod
+    async def insert_artifact(self, artifact: Artifact) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_artifact_by_id(self, artifact_id: int) -> Artifact:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_artifact_by_title(self, title: str) -> Artifact:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def list_artifacts(self) -> Artifacts:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def update_artifact(self, artifact: Artifact) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def delete_artifact(self, artifact_id: int) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def add_artifact_to_mission(self, mission_id: int, artifact_id: int) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def remove_artifact_from_mission(self, mission_id: int, artifact_id: int) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def add_artifact_to_user(self, user_login: str, artifact_id: int) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def remove_artifact_from_user(self, user_login: str, artifact_id: int) -> None:
         raise NotImplementedError
 
 

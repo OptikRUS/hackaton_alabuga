@@ -1,6 +1,8 @@
 from sqlalchemy import ForeignKey, PrimaryKeyConstraint, String, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
+from src.core.artifacts.enums import ArtifactRarityEnum
+from src.core.artifacts.schemas import Artifact
 from src.core.missions.enums import MissionCategoryEnum
 from src.core.missions.schemas import Mission, MissionBranch
 from src.core.tasks.schemas import MissionTask
@@ -31,6 +33,13 @@ class UserModel(Base):
     first_name: Mapped[str] = mapped_column()
     last_name: Mapped[str] = mapped_column()
 
+    artifacts: Mapped[list["ArtifactModel"]] = relationship(
+        "ArtifactModel",
+        secondary="artifacts_users_artifacts",
+        back_populates="users",
+        lazy="selectin",
+    )
+
     @classmethod
     def from_schema(cls, user: User) -> "UserModel":
         return cls(
@@ -54,6 +63,7 @@ class UserModel(Base):
             mana=self.mana,
             first_name=self.first_name,
             last_name=self.last_name,
+            artifacts=[artifact.to_schema() for artifact in self.artifacts],
         )
 
 
@@ -95,6 +105,13 @@ class MissionModel(Base):
         lazy="selectin",
     )
 
+    artifacts: Mapped[list["ArtifactModel"]] = relationship(
+        "ArtifactModel",
+        secondary="artifacts_missions_artifacts",
+        back_populates="missions",
+        lazy="selectin",
+    )
+
     @classmethod
     def from_schema(cls, mission: Mission) -> "MissionModel":
         return cls(
@@ -118,6 +135,7 @@ class MissionModel(Base):
             branch_id=self.branch_id,
             category=MissionCategoryEnum(self.category),
             tasks=[task.to_schema() for task in self.tasks],
+            reward_artifacts=[artifact.to_schema() for artifact in self.artifacts],
         )
 
 
@@ -198,3 +216,86 @@ class RankModel(Base):
 
     def to_schema(self) -> Rank:
         return Rank(id=self.id, name=self.name, required_xp=self.required_xp)
+
+
+class ArtifactModel(Base):
+    __tablename__ = "artifacts_artifact"
+    __table_args__ = (UniqueConstraint("title", name="uq_artifacts_artifact_title"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    title: Mapped[str] = mapped_column(String(255))
+    description: Mapped[str] = mapped_column()
+    rarity: Mapped[str] = mapped_column(String(100))
+    image_url: Mapped[str] = mapped_column()
+
+    missions: Mapped[list["MissionModel"]] = relationship(
+        "MissionModel",
+        secondary="artifacts_missions_artifacts",
+        back_populates="artifacts",
+        lazy="selectin",
+    )
+
+    users: Mapped[list["UserModel"]] = relationship(
+        "UserModel",
+        secondary="artifacts_users_artifacts",
+        back_populates="artifacts",
+        lazy="selectin",
+    )
+
+    @classmethod
+    def from_schema(cls, artifact: Artifact) -> "ArtifactModel":
+        return cls(
+            title=artifact.title,
+            description=artifact.description,
+            rarity=artifact.rarity,
+            image_url=artifact.image_url,
+        )
+
+    def to_schema(self) -> Artifact:
+        return Artifact(
+            id=self.id,
+            title=self.title,
+            description=self.description,
+            rarity=ArtifactRarityEnum(self.rarity),
+            image_url=self.image_url,
+        )
+
+
+class ArtifactMissionRelationModel(Base):
+    __tablename__ = "artifacts_missions_artifacts"
+    __table_args__ = (
+        PrimaryKeyConstraint(
+            "artifact_id",
+            "mission_id",
+            name="pk_artifacts_missions_artifacts",
+        ),
+    )
+
+    artifact_id: Mapped[int] = mapped_column(
+        ForeignKey(ArtifactModel.id, ondelete="CASCADE"),
+        primary_key=True,
+    )
+    mission_id: Mapped[int] = mapped_column(
+        ForeignKey(MissionModel.id, ondelete="CASCADE"),
+        primary_key=True,
+    )
+
+
+class ArtifactUserRelationModel(Base):
+    __tablename__ = "artifacts_users_artifacts"
+    __table_args__ = (
+        PrimaryKeyConstraint(
+            "artifact_id",
+            "user_login",
+            name="pk_artifacts_users_artifacts",
+        ),
+    )
+
+    artifact_id: Mapped[int] = mapped_column(
+        ForeignKey(ArtifactModel.id, ondelete="CASCADE"),
+        primary_key=True,
+    )
+    user_login: Mapped[str] = mapped_column(
+        ForeignKey(UserModel.login, ondelete="CASCADE"),
+        primary_key=True,
+    )

@@ -1,0 +1,34 @@
+import pytest
+
+from src.core.artifacts.enums import ArtifactRarityEnum
+from src.core.artifacts.exceptions import ArtifactNotFoundError
+from src.core.artifacts.use_cases import DeleteArtifactUseCase
+from src.tests.fixtures import FactoryFixture
+from src.tests.mocks.storage_stub import StorageMock
+
+
+class TestDeleteArtifactUseCase(FactoryFixture):
+    @pytest.fixture(autouse=True)
+    def setup(self) -> None:
+        self.storage = StorageMock()
+        self.use_case = DeleteArtifactUseCase(storage=self.storage)
+
+    async def test_delete_artifact(self) -> None:
+        await self.storage.insert_artifact(
+            artifact=self.factory.artifact(
+                artifact_id=1,
+                title="TEST_ARTIFACT",
+                description="Test description",
+                rarity=ArtifactRarityEnum.COMMON,
+                image_url="https://example.com/image.jpg",
+            )
+        )
+
+        await self.use_case.execute(artifact_id=1)
+
+        with pytest.raises(ArtifactNotFoundError):
+            await self.storage.get_artifact_by_id(artifact_id=1)
+
+    async def test_delete_artifact_not_found(self) -> None:
+        with pytest.raises(ArtifactNotFoundError):
+            await self.use_case.execute(artifact_id=999)

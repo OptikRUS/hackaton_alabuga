@@ -11,6 +11,10 @@ from src.api.missions.schemas import (
     MissionsResponse,
     MissionUpdateRequest,
 )
+from src.core.artifacts.use_cases import (
+    AddArtifactToMissionUseCase,
+    RemoveArtifactFromMissionUseCase,
+)
 from src.core.missions.use_cases import (
     AddTaskToMissionUseCase,
     CreateMissionBranchUseCase,
@@ -124,4 +128,26 @@ async def remove_task_from_mission(
     use_case: FromDishka[RemoveTaskFromMissionUseCase],
 ) -> MissionResponse:
     mission = await use_case.execute(mission_id=mission_id, task_id=task_id)
+    return MissionResponse.from_schema(mission=mission)
+
+
+@router.post(path="/missions/{mission_id}/artifacts/{artifact_id}", status_code=status.HTTP_200_OK)
+async def add_artifact_to_mission(
+    mission_id: int,
+    artifact_id: int,
+    use_case: FromDishka[AddArtifactToMissionUseCase],
+) -> MissionResponse:
+    mission = await use_case.execute(mission_id=mission_id, artifact_id=artifact_id)
+    return MissionResponse.from_schema(mission=mission)
+
+
+@router.delete(
+    path="/missions/{mission_id}/artifacts/{artifact_id}", status_code=status.HTTP_200_OK
+)
+async def remove_artifact_from_mission(
+    mission_id: int,
+    artifact_id: int,
+    use_case: FromDishka[RemoveArtifactFromMissionUseCase],
+) -> MissionResponse:
+    mission = await use_case.execute(mission_id=mission_id, artifact_id=artifact_id)
     return MissionResponse.from_schema(mission=mission)

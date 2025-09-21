@@ -1,11 +1,24 @@
 from collections.abc import AsyncIterator
 
+from aiobotocore.client import AioBaseClient
 from dishka import Provider, Scope, provide
 from fastapi import Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.api.auth.schemas import JwtUser
+from src.clients.minio import get_minio_client
+from src.core.artifacts.use_cases import (
+    AddArtifactToMissionUseCase,
+    AddArtifactToUserUseCase,
+    CreateArtifactUseCase,
+    DeleteArtifactUseCase,
+    GetArtifactDetailUseCase,
+    GetArtifactsUseCase,
+    RemoveArtifactFromMissionUseCase,
+    RemoveArtifactFromUserUseCase,
+    UpdateArtifactUseCase,
+)
 from src.core.exceptions import InvalidJWTTokenError
 from src.core.missions.use_cases import (
     AddTaskToMissionUseCase,
@@ -22,6 +35,7 @@ from src.core.missions.use_cases import (
 )
 from src.core.password import PasswordService
 from src.core.storages import CompetitionStorage, MissionStorage, UserStorage, RankStorage
+from src.core.storages import ArtifactStorage, MissionStorage, UserStorage
 from src.core.tasks.use_cases import (
     CreateMissionTaskUseCase,
     DeleteMissionTaskUseCase,
@@ -30,6 +44,7 @@ from src.core.tasks.use_cases import (
     UpdateMissionTaskUseCase,
 )
 from src.core.users.use_cases import CreateUserUseCase, GetUserUseCase, LoginUserUseCase
+from src.services.minio import MinioService
 from src.services.user_password_service import UserPasswordService
 from src.storages.database import async_session
 from src.storages.database_storage import DatabaseStorage
@@ -223,6 +238,59 @@ class RankProvider(Provider):
     def build_delete_rank_use_case(self, storage: RankStorage) -> DeleteRankUseCase:
         return DeleteRankUseCase(storage=storage)
 
+class ArtifactProvider(Provider):
+    scope: Scope = Scope.REQUEST
+
+    @provide
+    def build_create_artifact_use_case(
+        self,
+        storage: ArtifactStorage,
+    ) -> CreateArtifactUseCase:
+        return CreateArtifactUseCase(storage=storage)
+
+    @provide
+    def build_get_artifacts_use_case(self, storage: ArtifactStorage) -> GetArtifactsUseCase:
+        return GetArtifactsUseCase(storage=storage)
+
+    @provide
+    def build_get_artifact_detail_use_case(
+        self, storage: ArtifactStorage
+    ) -> GetArtifactDetailUseCase:
+        return GetArtifactDetailUseCase(storage=storage)
+
+    @provide
+    def build_update_artifact_use_case(self, storage: ArtifactStorage) -> UpdateArtifactUseCase:
+        return UpdateArtifactUseCase(storage=storage)
+
+    @provide
+    def build_delete_artifact_use_case(self, storage: ArtifactStorage) -> DeleteArtifactUseCase:
+        return DeleteArtifactUseCase(storage=storage)
+
+    @provide
+    def build_add_artifact_to_mission_use_case(
+        self, storage: ArtifactStorage, mission_storage: MissionStorage
+    ) -> AddArtifactToMissionUseCase:
+        return AddArtifactToMissionUseCase(storage=storage, mission_storage=mission_storage)
+
+    @provide
+    def build_remove_artifact_from_mission_use_case(
+        self, storage: ArtifactStorage, mission_storage: MissionStorage
+    ) -> RemoveArtifactFromMissionUseCase:
+        return RemoveArtifactFromMissionUseCase(storage=storage, mission_storage=mission_storage)
+
+    @provide
+    def build_add_artifact_to_user_use_case(
+        self, storage: ArtifactStorage, user_storage: UserStorage
+    ) -> AddArtifactToUserUseCase:
+        return AddArtifactToUserUseCase(storage=storage, user_storage=user_storage)
+
+    @provide
+    def build_remove_artifact_from_user_use_case(
+        self, storage: ArtifactStorage, user_storage: UserStorage
+    ) -> RemoveArtifactFromUserUseCase:
+        return RemoveArtifactFromUserUseCase(storage=storage, user_storage=user_storage)
+
+
 class DatabaseProvider(Provider):
     scope = Scope.REQUEST
 
@@ -252,6 +320,10 @@ class DatabaseProvider(Provider):
     def get_rank_storage(self, session: AsyncSession) -> RankStorage:
         return DatabaseStorage(session=session)
 
+    @provide
+    def get_artifact_storage(self, session: AsyncSession) -> ArtifactStorage:
+        return DatabaseStorage(session=session)
+
 
 class AuthProvider(Provider):
     scope = Scope.APP
@@ -278,3 +350,16 @@ class AuthProvider(Provider):
     @provide(scope=Scope.REQUEST)
     async def get_jwt_user(self, auth: HTTPAuthorizationCredentials) -> JwtUser:
         return JwtUser.decode(payload=auth.credentials)
+
+
+class FileStorageProvider(Provider):
+    scope = Scope.REQUEST
+
+    @provide(scope=Scope.REQUEST)
+    async def get_minio_connection(self) -> AsyncIterator[AioBaseClient]:
+        async with get_minio_client() as minio_connection:
+            yield minio_connection
+
+    @provide
+    async def get_minio_service(self, minio_connection: AioBaseClient) -> MinioService:
+        return MinioService(minio_connection=minio_connection)

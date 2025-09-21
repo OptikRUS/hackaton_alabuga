@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from io import BytesIO
 
 from httpx import Response
 from starlette.testclient import TestClient
@@ -99,10 +100,7 @@ class APIHelper:
     def create_task(self, title: str, description: str) -> Response:
         return self.client.post(
             url="/tasks",
-            json={
-                "title": title,
-                "description": description,
-            },
+            json={"title": title, "description": description},
         )
 
     def get_tasks(self) -> Response:
@@ -114,10 +112,7 @@ class APIHelper:
     def update_task(self, task_id: int, title: str, description: str) -> Response:
         return self.client.put(
             url=f"/tasks/{task_id}",
-            json={
-                "title": title,
-                "description": description,
-            },
+            json={"title": title, "description": description},
         )
 
     def delete_task(self, task_id: int) -> Response:
@@ -128,3 +123,73 @@ class APIHelper:
 
     def remove_task_from_mission(self, mission_id: int, task_id: int) -> Response:
         return self.client.delete(f"/missions/{mission_id}/tasks/{task_id}")
+
+    def create_artifact(
+        self,
+        title: str,
+        description: str,
+        rarity: str,
+        image_url: str,
+    ) -> Response:
+        return self.client.post(
+            url="/artifacts",
+            json={
+                "title": title,
+                "description": description,
+                "rarity": rarity,
+                "image_url": image_url,
+            },
+        )
+
+    def get_artifacts(self) -> Response:
+        return self.client.get("/artifacts")
+
+    def get_artifact(self, artifact_id: int) -> Response:
+        return self.client.get(f"/artifacts/{artifact_id}")
+
+    def update_artifact(
+        self,
+        artifact_id: int,
+        title: str,
+        description: str,
+        rarity: str,
+        image_url: str,
+    ) -> Response:
+        return self.client.put(
+            url=f"/artifacts/{artifact_id}",
+            json={
+                "title": title,
+                "description": description,
+                "rarity": rarity,
+                "image_url": image_url,
+            },
+        )
+
+    def delete_artifact(self, artifact_id: int) -> Response:
+        return self.client.delete(f"/artifacts/{artifact_id}")
+
+    def add_artifact_to_mission(self, mission_id: int, artifact_id: int) -> Response:
+        return self.client.post(f"/missions/{mission_id}/artifacts/{artifact_id}")
+
+    def remove_artifact_from_mission(self, mission_id: int, artifact_id: int) -> Response:
+        return self.client.delete(f"/missions/{mission_id}/artifacts/{artifact_id}")
+
+    def add_artifact_to_user(self, user_login: str, artifact_id: int) -> Response:
+        return self.client.post(f"/users/{user_login}/artifacts/{artifact_id}")
+
+    def remove_artifact_from_user(self, user_login: str, artifact_id: int) -> Response:
+        return self.client.delete(f"/users/{user_login}/artifacts/{artifact_id}")
+
+    def upload_file(
+        self,
+        file_content: bytes,
+        filename: str,
+        content_type: str = "text/plain",
+    ) -> Response:
+        return self.client.post(
+            url="/media",
+            files={"file": (filename, BytesIO(file_content), content_type)},
+        )
+
+    def download_file(self, key: str) -> Response:
+        return self.client.get(f"/media/{key}")
