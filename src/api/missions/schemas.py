@@ -2,6 +2,8 @@ from pydantic import Field
 
 from src.api.artifacts.schemas import ArtifactResponse
 from src.api.boundary import BoundaryModel
+from src.api.competitions.schemas import CompetitionResponse
+from src.api.skills.schemas import SkillResponse
 from src.core.missions.enums import MissionCategoryEnum
 from src.core.missions.schemas import Mission, MissionBranch, MissionBranches, Missions
 from src.core.tasks.schemas import MissionTask
@@ -107,6 +109,12 @@ class MissionResponse(BoundaryModel):
     reward_artifacts: list[ArtifactResponse] = Field(
         default_factory=list, description="Артефакты-награды"
     )
+    reward_competitions: list["CompetitionRewardResponse"] = Field(
+        default_factory=list, description="Награды в компетенциях"
+    )
+    reward_skills: list["SkillRewardResponse"] = Field(
+        default_factory=list, description="Награды в скиллах"
+    )
 
     @classmethod
     def from_schema(cls, mission: Mission) -> "MissionResponse":
@@ -124,7 +132,27 @@ class MissionResponse(BoundaryModel):
                 ArtifactResponse.from_schema(artifact=artifact)
                 for artifact in (mission.reward_artifacts or [])
             ],
+            reward_competitions=[
+                CompetitionRewardResponse(
+                    competition=CompetitionResponse.from_schema(comp), level_increase=inc
+                )
+                for comp, inc in (mission.reward_competitions or [])
+            ],
+            reward_skills=[
+                SkillRewardResponse(skill=SkillResponse.from_schema(skill), level_increase=inc)
+                for skill, inc in (mission.reward_skills or [])
+            ],
         )
+
+
+class CompetitionRewardResponse(BoundaryModel):
+    competition: CompetitionResponse
+    level_increase: int
+
+
+class SkillRewardResponse(BoundaryModel):
+    skill: SkillResponse
+    level_increase: int
 
 
 class MissionsResponse(BoundaryModel):

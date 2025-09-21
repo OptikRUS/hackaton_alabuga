@@ -5,6 +5,11 @@ from fastapi import Request, status
 from fastapi.responses import JSONResponse, Response
 
 from src.core.artifacts.exceptions import ArtifactNotFoundError, ArtifactTitleAlreadyExistError
+from src.core.competitions.exceptions import (
+    CompetitionLevelIncreaseTooHighError,
+    CompetitionNameAlreadyExistError,
+    CompetitionNotFoundError,
+)
 from src.core.exceptions import BaseExceptionError, InvalidJWTTokenError
 from src.core.media.exceptions import MediaNotFoundError
 from src.core.missions.exceptions import (
@@ -12,6 +17,16 @@ from src.core.missions.exceptions import (
     MissionBranchNotFoundError,
     MissionNameAlreadyExistError,
     MissionNotFoundError,
+)
+from src.core.ranks.exceptions import (
+    RankCompetitionMinLevelTooHighError,
+    RankNameAlreadyExistError,
+    RankNotFoundError,
+)
+from src.core.skills.exceptions import (
+    SkillLevelIncreaseTooHighError,
+    SkillNameAlreadyExistError,
+    SkillNotFoundError,
 )
 from src.core.tasks.exceptions import (
     TaskNameAlreadyExistError,
@@ -21,14 +36,6 @@ from src.core.users.exceptions import (
     UserAlreadyExistError,
     UserIncorrectCredentialsError,
     UserNotFoundError,
-)
-from src.core.competitions.exceptions import (
-    CompetitionNameAlreadyExistError,
-    CompetitionNotFoundError,
-)
-from src.core.ranks.exceptions import (
-    RankNameAlreadyExistError,
-    RankNotFoundError,
 )
 
 
@@ -73,6 +80,11 @@ exception_handlers: (
     ArtifactTitleAlreadyExistError: handler(status_code=status.HTTP_409_CONFLICT),
     CompetitionNameAlreadyExistError: handler(status_code=status.HTTP_409_CONFLICT),
     CompetitionNotFoundError: handler(status_code=status.HTTP_404_NOT_FOUND),
+    CompetitionLevelIncreaseTooHighError: handler(status_code=status.HTTP_400_BAD_REQUEST),
     RankNameAlreadyExistError: handler(status_code=status.HTTP_409_CONFLICT),
     RankNotFoundError: handler(status_code=status.HTTP_404_NOT_FOUND),
+    RankCompetitionMinLevelTooHighError: handler(status_code=status.HTTP_400_BAD_REQUEST),
+    SkillNameAlreadyExistError: handler(status_code=status.HTTP_409_CONFLICT),
+    SkillNotFoundError: handler(status_code=status.HTTP_404_NOT_FOUND),
+    SkillLevelIncreaseTooHighError: handler(status_code=status.HTTP_400_BAD_REQUEST),
 }

@@ -19,8 +19,19 @@ from src.core.artifacts.use_cases import (
     RemoveArtifactFromUserUseCase,
     UpdateArtifactUseCase,
 )
+from src.core.competitions.use_cases import (
+    AddSkillToCompetitionUseCase,
+    CreateCompetitionUseCase,
+    DeleteCompetitionUseCase,
+    GetCompetitionDetailUseCase,
+    GetCompetitionsUseCase,
+    RemoveSkillFromCompetitionUseCase,
+    UpdateCompetitionUseCase,
+)
 from src.core.exceptions import InvalidJWTTokenError
 from src.core.missions.use_cases import (
+    AddCompetencyRewardToMissionUseCase,
+    AddSkillRewardToMissionUseCase,
     AddTaskToMissionUseCase,
     CreateMissionBranchUseCase,
     CreateMissionUseCase,
@@ -29,13 +40,39 @@ from src.core.missions.use_cases import (
     GetMissionBranchesUseCase,
     GetMissionDetailUseCase,
     GetMissionsUseCase,
+    RemoveCompetencyRewardFromMissionUseCase,
+    RemoveSkillRewardFromMissionUseCase,
     RemoveTaskFromMissionUseCase,
     UpdateMissionBranchUseCase,
     UpdateMissionUseCase,
 )
 from src.core.password import PasswordService
-from src.core.storages import CompetitionStorage, MissionStorage, UserStorage, RankStorage
-from src.core.storages import ArtifactStorage, MissionStorage, UserStorage
+from src.core.ranks.use_cases import (
+    AddRequiredCompetitionToRankUseCase,
+    AddRequiredMissionToRankUseCase,
+    CreateRankUseCase,
+    DeleteRankUseCase,
+    GetRankDetailUseCase,
+    GetRanksUseCase,
+    RemoveRequiredCompetitionFromRankUseCase,
+    RemoveRequiredMissionFromRankUseCase,
+    UpdateRankUseCase,
+)
+from src.core.skills.use_cases import (
+    CreateSkillUseCase,
+    DeleteSkillUseCase,
+    GetSkillDetailUseCase,
+    GetSkillsUseCase,
+    UpdateSkillUseCase,
+)
+from src.core.storages import (
+    ArtifactStorage,
+    CompetitionStorage,
+    MissionStorage,
+    RankStorage,
+    SkillStorage,
+    UserStorage,
+)
 from src.core.tasks.use_cases import (
     CreateMissionTaskUseCase,
     DeleteMissionTaskUseCase,
@@ -48,20 +85,6 @@ from src.services.minio import MinioService
 from src.services.user_password_service import UserPasswordService
 from src.storages.database import async_session
 from src.storages.database_storage import DatabaseStorage
-from src.core.competitions.use_cases import (
-    CreateCompetitionUseCase,
-    GetCompetitionsUseCase,
-    GetCompetitionDetailUseCase,
-    UpdateCompetitionUseCase,
-    DeleteCompetitionUseCase,
-)
-from src.core.ranks.use_cases import (
-    CreateRankUseCase,
-    GetRanksUseCase,
-    GetRankDetailUseCase,
-    UpdateRankUseCase,
-    DeleteRankUseCase,
-)
 
 
 class UserProvider(Provider):
@@ -182,6 +205,30 @@ class MissionProvider(Provider):
     ) -> RemoveTaskFromMissionUseCase:
         return RemoveTaskFromMissionUseCase(storage=storage)
 
+    @provide
+    def build_add_competency_reward_to_mission_use_case(
+        self, storage: MissionStorage
+    ) -> AddCompetencyRewardToMissionUseCase:
+        return AddCompetencyRewardToMissionUseCase(storage=storage)
+
+    @provide
+    def build_remove_competency_reward_from_mission_use_case(
+        self, storage: MissionStorage
+    ) -> RemoveCompetencyRewardFromMissionUseCase:
+        return RemoveCompetencyRewardFromMissionUseCase(storage=storage)
+
+    @provide
+    def build_add_skill_reward_to_mission_use_case(
+        self, storage: MissionStorage
+    ) -> AddSkillRewardToMissionUseCase:
+        return AddSkillRewardToMissionUseCase(storage=storage)
+
+    @provide
+    def build_remove_skill_reward_from_mission_use_case(
+        self, storage: MissionStorage
+    ) -> RemoveSkillRewardFromMissionUseCase:
+        return RemoveSkillRewardFromMissionUseCase(storage=storage)
+
 
 class CompetitionProvider(Provider):
     scope: Scope = Scope.REQUEST
@@ -194,7 +241,9 @@ class CompetitionProvider(Provider):
         return CreateCompetitionUseCase(storage=storage)
 
     @provide
-    def build_get_competitions_use_case(self, storage: CompetitionStorage) -> GetCompetitionsUseCase:
+    def build_get_competitions_use_case(
+        self, storage: CompetitionStorage
+    ) -> GetCompetitionsUseCase:
         return GetCompetitionsUseCase(storage=storage)
 
     @provide
@@ -204,12 +253,28 @@ class CompetitionProvider(Provider):
         return GetCompetitionDetailUseCase(storage=storage)
 
     @provide
-    def build_update_competition_use_case(self, storage: CompetitionStorage) -> UpdateCompetitionUseCase:
+    def build_update_competition_use_case(
+        self, storage: CompetitionStorage
+    ) -> UpdateCompetitionUseCase:
         return UpdateCompetitionUseCase(storage=storage)
 
     @provide
-    def build_delete_competition_use_case(self, storage: CompetitionStorage) -> DeleteCompetitionUseCase:
+    def build_delete_competition_use_case(
+        self, storage: CompetitionStorage
+    ) -> DeleteCompetitionUseCase:
         return DeleteCompetitionUseCase(storage=storage)
+
+    @provide
+    def build_add_skill_to_competition_use_case(
+        self, storage: CompetitionStorage
+    ) -> AddSkillToCompetitionUseCase:
+        return AddSkillToCompetitionUseCase(storage=storage)
+
+    @provide
+    def build_remove_skill_from_competition_use_case(
+        self, storage: CompetitionStorage
+    ) -> RemoveSkillFromCompetitionUseCase:
+        return RemoveSkillFromCompetitionUseCase(storage=storage)
 
 
 class RankProvider(Provider):
@@ -237,6 +302,58 @@ class RankProvider(Provider):
     @provide
     def build_delete_rank_use_case(self, storage: RankStorage) -> DeleteRankUseCase:
         return DeleteRankUseCase(storage=storage)
+
+    @provide
+    def build_add_required_mission_to_rank_use_case(
+        self, storage: RankStorage
+    ) -> AddRequiredMissionToRankUseCase:
+        return AddRequiredMissionToRankUseCase(storage=storage)
+
+    @provide
+    def build_remove_required_mission_from_rank_use_case(
+        self, storage: RankStorage
+    ) -> RemoveRequiredMissionFromRankUseCase:
+        return RemoveRequiredMissionFromRankUseCase(storage=storage)
+
+    @provide
+    def build_add_required_competition_to_rank_use_case(
+        self, storage: RankStorage
+    ) -> AddRequiredCompetitionToRankUseCase:
+        return AddRequiredCompetitionToRankUseCase(storage=storage)
+
+    @provide
+    def build_remove_required_competition_from_rank_use_case(
+        self, storage: RankStorage
+    ) -> RemoveRequiredCompetitionFromRankUseCase:
+        return RemoveRequiredCompetitionFromRankUseCase(storage=storage)
+
+
+class SkillProvider(Provider):
+    scope: Scope = Scope.REQUEST
+
+    @provide
+    def build_create_skill_use_case(
+        self,
+        storage: SkillStorage,
+    ) -> CreateSkillUseCase:
+        return CreateSkillUseCase(storage=storage)
+
+    @provide
+    def build_get_skills_use_case(self, storage: SkillStorage) -> GetSkillsUseCase:
+        return GetSkillsUseCase(storage=storage)
+
+    @provide
+    def build_get_skill_detail_use_case(self, storage: SkillStorage) -> GetSkillDetailUseCase:
+        return GetSkillDetailUseCase(storage=storage)
+
+    @provide
+    def build_update_skill_use_case(self, storage: SkillStorage) -> UpdateSkillUseCase:
+        return UpdateSkillUseCase(storage=storage)
+
+    @provide
+    def build_delete_skill_use_case(self, storage: SkillStorage) -> DeleteSkillUseCase:
+        return DeleteSkillUseCase(storage=storage)
+
 
 class ArtifactProvider(Provider):
     scope: Scope = Scope.REQUEST
@@ -318,6 +435,10 @@ class DatabaseProvider(Provider):
 
     @provide
     def get_rank_storage(self, session: AsyncSession) -> RankStorage:
+        return DatabaseStorage(session=session)
+
+    @provide
+    def get_skill_storage(self, session: AsyncSession) -> SkillStorage:
         return DatabaseStorage(session=session)
 
     @provide

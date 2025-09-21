@@ -9,4 +9,5 @@ class RankNameAlreadyExistError(BaseExceptionError):
     detail = "Rank name already exists"
 
 
-
+class RankCompetitionMinLevelTooHighError(BaseExceptionError):
+    detail = "Minimum level exceeds competition max level"

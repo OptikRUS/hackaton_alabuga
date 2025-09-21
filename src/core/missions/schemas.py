@@ -1,7 +1,9 @@
 from dataclasses import dataclass
 
 from src.core.artifacts.schemas import Artifact
+from src.core.competitions.schemas import Competition
 from src.core.missions.enums import MissionCategoryEnum
+from src.core.skills.schemas import Skill
 from src.core.tasks.schemas import MissionTask
 
 
@@ -28,6 +30,8 @@ class Mission:
     category: MissionCategoryEnum
     tasks: list[MissionTask] | None = None
     reward_artifacts: list[Artifact] | None = None
+    reward_competitions: list[tuple[Competition, int]] | None = None
+    reward_skills: list[tuple[Skill, int]] | None = None
 
 
 @dataclass

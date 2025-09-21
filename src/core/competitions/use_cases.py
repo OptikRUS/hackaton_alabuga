@@ -61,3 +61,23 @@ class DeleteCompetitionUseCase(UseCase):
         await self.storage.delete_competition(competition_id=competition_id)
 
 
+@dataclass
+class AddSkillToCompetitionUseCase(UseCase):
+    storage: CompetitionStorage
+
+    async def execute(self, competition_id: int, skill_id: int) -> Competition:
+        await self.storage.add_skill_to_competition(
+            competition_id=competition_id, skill_id=skill_id
+        )
+        return await self.storage.get_competition_by_id(competition_id=competition_id)
+
+
+@dataclass
+class RemoveSkillFromCompetitionUseCase(UseCase):
+    storage: CompetitionStorage
+
+    async def execute(self, competition_id: int, skill_id: int) -> Competition:
+        await self.storage.remove_skill_from_competition(
+            competition_id=competition_id, skill_id=skill_id
+        )
+        return await self.storage.get_competition_by_id(competition_id=competition_id)

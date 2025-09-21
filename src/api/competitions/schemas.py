@@ -1,6 +1,7 @@
 from pydantic import Field
 
 from src.api.boundary import BoundaryModel
+from src.api.skills.schemas import SkillResponse
 from src.core.competitions.schemas import Competition, Competitions
 
 
@@ -24,10 +25,16 @@ class CompetitionResponse(BoundaryModel):
     id: int = Field(default=..., description="Идентификатор соревнования")
     name: str = Field(default=..., description="Название соревнования")
     max_level: int = Field(default=..., description="Максимальный уровень")
+    skills: list[SkillResponse] = Field(default_factory=list, description="Список скилов")
 
     @classmethod
     def from_schema(cls, competition: Competition) -> "CompetitionResponse":
-        return cls(id=competition.id, name=competition.name, max_level=competition.max_level)
+        return cls(
+            id=competition.id,
+            name=competition.name,
+            max_level=competition.max_level,
+            skills=[SkillResponse.from_schema(skill=s) for s in (competition.skills or [])],
+        )
 
 
 class CompetitionsResponse(BoundaryModel):
@@ -35,6 +42,6 @@ class CompetitionsResponse(BoundaryModel):
 
     @classmethod
     def from_schema(cls, competitions: Competitions) -> "CompetitionsResponse":
-        return cls(values=[CompetitionResponse.from_schema(competition=c) for c in competitions.values])
-
-
+        return cls(
+            values=[CompetitionResponse.from_schema(competition=c) for c in competitions.values]
+        )

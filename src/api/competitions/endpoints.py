@@ -4,17 +4,18 @@ from fastapi import APIRouter, status
 from src.api.competitions.schemas import (
     CompetitionCreateRequest,
     CompetitionResponse,
-    CompetitionUpdateRequest,
     CompetitionsResponse,
+    CompetitionUpdateRequest,
 )
 from src.core.competitions.use_cases import (
+    AddSkillToCompetitionUseCase,
     CreateCompetitionUseCase,
     DeleteCompetitionUseCase,
     GetCompetitionDetailUseCase,
     GetCompetitionsUseCase,
+    RemoveSkillFromCompetitionUseCase,
     UpdateCompetitionUseCase,
 )
-
 
 router = APIRouter(tags=["competitions"], route_class=DishkaRoute)
 
@@ -63,3 +64,25 @@ async def delete_competition(
     await use_case.execute(competition_id=competition_id)
 
 
+@router.post(
+    path="/competitions/{competition_id}/skills/{skill_id}", status_code=status.HTTP_200_OK
+)
+async def add_skill_to_competition(
+    competition_id: int,
+    skill_id: int,
+    use_case: FromDishka[AddSkillToCompetitionUseCase],
+) -> CompetitionResponse:
+    competition = await use_case.execute(competition_id=competition_id, skill_id=skill_id)
+    return CompetitionResponse.from_schema(competition=competition)
+
+
+@router.delete(
+    path="/competitions/{competition_id}/skills/{skill_id}", status_code=status.HTTP_200_OK
+)
+async def remove_skill_from_competition(
+    competition_id: int,
+    skill_id: int,
+    use_case: FromDishka[RemoveSkillFromCompetitionUseCase],
+) -> CompetitionResponse:
+    competition = await use_case.execute(competition_id=competition_id, skill_id=skill_id)
+    return CompetitionResponse.from_schema(competition=competition)
