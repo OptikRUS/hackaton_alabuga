@@ -20,6 +20,14 @@ from src.core.users.exceptions import (
     UserIncorrectCredentialsError,
     UserNotFoundError,
 )
+from src.core.competitions.exceptions import (
+    CompetitionNameAlreadyExistError,
+    CompetitionNotFoundError,
+)
+from src.core.ranks.exceptions import (
+    RankNameAlreadyExistError,
+    RankNotFoundError,
+)
 
 
 async def internal_server_error_exception_handler(_: Request, __: Exception) -> JSONResponse:
@@ -58,4 +66,8 @@ exception_handlers: (
     MissionNotFoundError: handler(status_code=status.HTTP_404_NOT_FOUND),
     TaskNameAlreadyExistError: handler(status_code=status.HTTP_409_CONFLICT),
     TaskNotFoundError: handler(status_code=status.HTTP_404_NOT_FOUND),
+    CompetitionNameAlreadyExistError: handler(status_code=status.HTTP_409_CONFLICT),
+    CompetitionNotFoundError: handler(status_code=status.HTTP_404_NOT_FOUND),
+    RankNameAlreadyExistError: handler(status_code=status.HTTP_409_CONFLICT),
+    RankNotFoundError: handler(status_code=status.HTTP_404_NOT_FOUND),
 }

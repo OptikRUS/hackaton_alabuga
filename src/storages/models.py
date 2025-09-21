@@ -6,6 +6,8 @@ from src.core.missions.schemas import Mission, MissionBranch
 from src.core.tasks.schemas import MissionTask
 from src.core.users.enums import UserRoleEnum
 from src.core.users.schemas import User
+from src.core.competitions.schemas import Competition
+from src.core.ranks.schemas import Rank
 
 
 class Base(DeclarativeBase): ...
@@ -164,3 +166,35 @@ class MissionTaskRelationModel(Base):
         ForeignKey(MissionModel.id, ondelete="CASCADE"),
         primary_key=True,
     )
+
+
+class CompetitionModel(Base):
+    __tablename__ = "competitions_competition"
+    __table_args__ = (UniqueConstraint("name", name="uq_competitions_name"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(255))
+    max_level: Mapped[int] = mapped_column()
+
+    @classmethod
+    def from_schema(cls, competition: Competition) -> "CompetitionModel":
+        return cls(id=competition.id, name=competition.name, max_level=competition.max_level)
+
+    def to_schema(self) -> Competition:
+        return Competition(id=self.id, name=self.name, max_level=self.max_level)
+
+
+class RankModel(Base):
+    __tablename__ = "ranks_rank"
+    __table_args__ = (UniqueConstraint("name", name="uq_ranks_name"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(255))
+    required_xp: Mapped[int] = mapped_column()
+
+    @classmethod
+    def from_schema(cls, rank: Rank) -> "RankModel":
+        return cls(id=rank.id, name=rank.name, required_xp=rank.required_xp)
+
+    def to_schema(self) -> Rank:
+        return Rank(id=self.id, name=self.name, required_xp=self.required_xp)

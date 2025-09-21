@@ -21,7 +21,7 @@ from src.core.missions.use_cases import (
     UpdateMissionUseCase,
 )
 from src.core.password import PasswordService
-from src.core.storages import MissionStorage, UserStorage
+from src.core.storages import CompetitionStorage, MissionStorage, UserStorage, RankStorage
 from src.core.tasks.use_cases import (
     CreateMissionTaskUseCase,
     DeleteMissionTaskUseCase,
@@ -33,6 +33,20 @@ from src.core.users.use_cases import CreateUserUseCase, GetUserUseCase, LoginUse
 from src.services.user_password_service import UserPasswordService
 from src.storages.database import async_session
 from src.storages.database_storage import DatabaseStorage
+from src.core.competitions.use_cases import (
+    CreateCompetitionUseCase,
+    GetCompetitionsUseCase,
+    GetCompetitionDetailUseCase,
+    UpdateCompetitionUseCase,
+    DeleteCompetitionUseCase,
+)
+from src.core.ranks.use_cases import (
+    CreateRankUseCase,
+    GetRanksUseCase,
+    GetRankDetailUseCase,
+    UpdateRankUseCase,
+    DeleteRankUseCase,
+)
 
 
 class UserProvider(Provider):
@@ -154,6 +168,61 @@ class MissionProvider(Provider):
         return RemoveTaskFromMissionUseCase(storage=storage)
 
 
+class CompetitionProvider(Provider):
+    scope: Scope = Scope.REQUEST
+
+    @provide
+    def build_create_competition_use_case(
+        self,
+        storage: CompetitionStorage,
+    ) -> CreateCompetitionUseCase:
+        return CreateCompetitionUseCase(storage=storage)
+
+    @provide
+    def build_get_competitions_use_case(self, storage: CompetitionStorage) -> GetCompetitionsUseCase:
+        return GetCompetitionsUseCase(storage=storage)
+
+    @provide
+    def build_get_competition_detail_use_case(
+        self, storage: CompetitionStorage
+    ) -> GetCompetitionDetailUseCase:
+        return GetCompetitionDetailUseCase(storage=storage)
+
+    @provide
+    def build_update_competition_use_case(self, storage: CompetitionStorage) -> UpdateCompetitionUseCase:
+        return UpdateCompetitionUseCase(storage=storage)
+
+    @provide
+    def build_delete_competition_use_case(self, storage: CompetitionStorage) -> DeleteCompetitionUseCase:
+        return DeleteCompetitionUseCase(storage=storage)
+
+
+class RankProvider(Provider):
+    scope: Scope = Scope.REQUEST
+
+    @provide
+    def build_create_rank_use_case(
+        self,
+        storage: RankStorage,
+    ) -> CreateRankUseCase:
+        return CreateRankUseCase(storage=storage)
+
+    @provide
+    def build_get_ranks_use_case(self, storage: RankStorage) -> GetRanksUseCase:
+        return GetRanksUseCase(storage=storage)
+
+    @provide
+    def build_get_rank_detail_use_case(self, storage: RankStorage) -> GetRankDetailUseCase:
+        return GetRankDetailUseCase(storage=storage)
+
+    @provide
+    def build_update_rank_use_case(self, storage: RankStorage) -> UpdateRankUseCase:
+        return UpdateRankUseCase(storage=storage)
+
+    @provide
+    def build_delete_rank_use_case(self, storage: RankStorage) -> DeleteRankUseCase:
+        return DeleteRankUseCase(storage=storage)
+
 class DatabaseProvider(Provider):
     scope = Scope.REQUEST
 
@@ -173,6 +242,14 @@ class DatabaseProvider(Provider):
 
     @provide
     def get_mission_storage(self, session: AsyncSession) -> MissionStorage:
+        return DatabaseStorage(session=session)
+
+    @provide
+    def get_competition_storage(self, session: AsyncSession) -> CompetitionStorage:
+        return DatabaseStorage(session=session)
+
+    @provide
+    def get_rank_storage(self, session: AsyncSession) -> RankStorage:
         return DatabaseStorage(session=session)
 
 

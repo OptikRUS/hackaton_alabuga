@@ -11,6 +11,8 @@ from src.core.tasks.schemas import (
     MissionTasks,
 )
 from src.core.users.schemas import User
+from src.core.competitions.schemas import Competition, Competitions
+from src.core.ranks.schemas import Rank, Ranks
 
 
 class UserStorage(metaclass=ABCMeta):
@@ -102,4 +104,56 @@ class MissionStorage(metaclass=ABCMeta):
 
     @abstractmethod
     async def remove_task_from_mission(self, mission_id: int, task_id: int) -> None:
+        raise NotImplementedError
+
+
+class CompetitionStorage(metaclass=ABCMeta):
+    @abstractmethod
+    async def insert_competition(self, competition: Competition) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_competition_by_id(self, competition_id: int) -> Competition:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_competition_by_name(self, name: str) -> Competition:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def list_competitions(self) -> Competitions:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def update_competition(self, competition: Competition) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def delete_competition(self, competition_id: int) -> None:
+        raise NotImplementedError
+
+
+class RankStorage(metaclass=ABCMeta):
+    @abstractmethod
+    async def insert_rank(self, rank: Rank) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_rank_by_id(self, rank_id: int) -> Rank:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_rank_by_name(self, name: str) -> Rank:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def list_ranks(self) -> Ranks:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def update_rank(self, rank: Rank) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def delete_rank(self, rank_id: int) -> None:
         raise NotImplementedError

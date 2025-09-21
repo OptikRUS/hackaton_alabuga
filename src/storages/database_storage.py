@@ -17,7 +17,7 @@ from src.core.missions.schemas import (
     MissionBranches,
     Missions,
 )
-from src.core.storages import MissionStorage, UserStorage
+from src.core.storages import CompetitionStorage, MissionStorage, UserStorage, RankStorage
 from src.core.tasks.exceptions import (
     TaskNameAlreadyExistError,
     TaskNotFoundError,
@@ -34,11 +34,23 @@ from src.storages.models import (
     MissionTaskModel,
     MissionTaskRelationModel,
     UserModel,
+    CompetitionModel,
+    RankModel,
+)
+from src.core.competitions.schemas import Competition, Competitions
+from src.core.competitions.exceptions import (
+    CompetitionNameAlreadyExistError,
+    CompetitionNotFoundError,
+)
+from src.core.ranks.schemas import Rank, Ranks
+from src.core.ranks.exceptions import (
+    RankNameAlreadyExistError,
+    RankNotFoundError,
 )
 
 
 @dataclass
-class DatabaseStorage(UserStorage, MissionStorage):
+class DatabaseStorage(UserStorage, MissionStorage, CompetitionStorage, RankStorage):
     session: AsyncSession
 
     async def insert_user(self, user: User) -> None:
@@ -240,4 +252,110 @@ class DatabaseStorage(UserStorage, MissionStorage):
             MissionTaskRelationModel.mission_id == mission_id,
             MissionTaskRelationModel.task_id == task_id,
         )
+        await self.session.execute(query)
+
+    async def insert_competition(self, competition: Competition) -> None:
+        query = (
+            insert(CompetitionModel)
+            .values({
+                "name": competition.name,
+                "max_level": competition.max_level,
+            })
+            .returning(CompetitionModel.id)
+        )
+        try:
+            await self.session.scalar(query)
+        except IntegrityError as error:
+            raise CompetitionNameAlreadyExistError from error
+
+    async def get_competition_by_id(self, competition_id: int) -> Competition:
+        query = select(CompetitionModel).where(CompetitionModel.id == competition_id)
+        competition = await self.session.scalar(query)
+        if competition is None:
+            raise CompetitionNotFoundError
+        return competition.to_schema()
+
+    async def get_competition_by_name(self, name: str) -> Competition:
+        query = select(CompetitionModel).where(CompetitionModel.name == name)
+        competition = await self.session.scalar(query)
+        if competition is None:
+            raise CompetitionNotFoundError
+        return competition.to_schema()
+
+    async def list_competitions(self) -> Competitions:
+        query = select(CompetitionModel)
+        result = await self.session.scalars(query)
+        return Competitions(values=[row.to_schema() for row in result])
+
+    async def update_competition(self, competition: Competition) -> None:
+        await self.get_competition_by_id(competition_id=competition.id)
+        query = (
+            update(CompetitionModel)
+            .where(CompetitionModel.id == competition.id)
+            .values({
+                "name": competition.name,
+                "max_level": competition.max_level,
+            })
+        )
+        try:
+            await self.session.execute(query)
+        except IntegrityError as error:
+            raise CompetitionNameAlreadyExistError from error
+
+    async def delete_competition(self, competition_id: int) -> None:
+        await self.get_competition_by_id(competition_id=competition_id)
+        query = delete(CompetitionModel).where(CompetitionModel.id == competition_id)
+        await self.session.execute(query)
+
+    async def insert_rank(self, rank: Rank) -> None:
+        query = (
+            insert(RankModel)
+            .values({
+                "name": rank.name,
+                "required_xp": rank.required_xp,
+            })
+            .returning(RankModel.id)
+        )
+        try:
+            await self.session.scalar(query)
+        except IntegrityError as error:
+            raise RankNameAlreadyExistError from error
+
+    async def get_rank_by_id(self, rank_id: int) -> Rank:
+        query = select(RankModel).where(RankModel.id == rank_id)
+        row = await self.session.scalar(query)
+        if row is None:
+            raise RankNotFoundError
+        return row.to_schema()
+
+    async def get_rank_by_name(self, name: str) -> Rank:
+        query = select(RankModel).where(RankModel.name == name)
+        row = await self.session.scalar(query)
+        if row is None:
+            raise RankNotFoundError
+        return row.to_schema()
+
+    async def list_ranks(self) -> Ranks:
+        query = select(RankModel)
+        result = await self.session.scalars(query)
+        return Ranks(values=[row.to_schema() for row in result])
+
+    async def update_rank(self, rank: Rank) -> None:
+        await self.get_rank_by_id(rank_id=rank.id)
+        query = (
+            update(RankModel)
+            .where(RankModel.id == rank.id)
+            .values({
+                "name": rank.name,
+                "required_xp": rank.required_xp,
+            })
+        )
+        try:
+            await self.session.execute(query)
+        except IntegrityError as error:
+            raise RankNameAlreadyExistError from error
+
+    async def delete_rank(self, rank_id: int) -> None:
+        await self.get_rank_by_id(rank_id=rank_id)
+        query = delete(RankModel).where(RankModel.id == rank_id)
         await self.session.execute(query)

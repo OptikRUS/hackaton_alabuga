@@ -52,7 +52,7 @@ class MissionBranchesResponse(BoundaryModel):
 class MissionCreateRequest(BoundaryModel):
     title: str = Field(default=..., description="Название миссии")
     description: str = Field(default=..., description="Описание миссии")
-    reward_xp: int = Field(default=..., description="Награда в опыте")
+    reward_xp: int = Field(default=..., ge=0, description="Награда в опыте")
     reward_mana: int = Field(default=..., description="Награда в мане")
     rank_requirement: int = Field(default=..., description="Требуемый ранг")
     branch_id: int = Field(default=..., description="ID ветки миссий")
@@ -74,7 +74,7 @@ class MissionCreateRequest(BoundaryModel):
 class MissionUpdateRequest(BoundaryModel):
     title: str = Field(default=..., description="Название миссии")
     description: str = Field(default=..., description="Описание миссии")
-    reward_xp: int = Field(default=..., description="Награда в опыте")
+    reward_xp: int = Field(default=..., ge=0, description="Награда в опыте")
     reward_mana: int = Field(default=..., description="Награда в мане")
     rank_requirement: int = Field(default=..., description="Требуемый ранг")
     branch_id: int = Field(default=..., description="ID ветки миссий")
