@@ -1,17 +1,15 @@
+from .endpoints import router
 from .schemas import (
     CompetitionCreateRequest,
-    CompetitionUpdateRequest,
     CompetitionResponse,
     CompetitionsResponse,
+    CompetitionUpdateRequest,
 )
-from .endpoints import router
 
 __all__ = [
     "CompetitionCreateRequest",
-    "CompetitionUpdateRequest",
     "CompetitionResponse",
+    "CompetitionUpdateRequest",
     "CompetitionsResponse",
     "router",
 ]
-
-

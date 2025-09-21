@@ -40,6 +40,8 @@ class StorageMock(UserStorage, MissionStorage, ArtifactStorage):
     missions_tasks_relations: dict[int, set[int]] = field(default_factory=dict)
     missions_artifacts_relations: dict[int, set[int]] = field(default_factory=dict)
     users_artifacts_relations: dict[str, set[int]] = field(default_factory=dict)
+    missions_competitions_rewards: dict[int, dict[int, int]] = field(default_factory=dict)
+    missions_skills_rewards: dict[int, dict[int, int]] = field(default_factory=dict)
 
     async def insert_user(self, user: User) -> None:
         try:
@@ -283,3 +285,40 @@ class StorageMock(UserStorage, MissionStorage, ArtifactStorage):
             self.users_artifacts_relations[user_login].discard(artifact_id)
             if not self.users_artifacts_relations[user_login]:
                 del self.users_artifacts_relations[user_login]
+
+    # New methods for competency and skill rewards
+    async def add_competency_reward_to_mission(
+        self, mission_id: int, competition_id: int, level_increase: int
+    ) -> None:
+        if mission_id not in self.mission_table:
+            raise MissionNotFoundError
+        if mission_id not in self.missions_competitions_rewards:
+            self.missions_competitions_rewards[mission_id] = {}
+        self.missions_competitions_rewards[mission_id][competition_id] = level_increase
+
+    async def remove_competency_reward_from_mission(
+        self, mission_id: int, competition_id: int
+    ) -> None:
+        if mission_id not in self.mission_table:
+            raise MissionNotFoundError
+        if mission_id in self.missions_competitions_rewards:
+            self.missions_competitions_rewards[mission_id].pop(competition_id, None)
+            if not self.missions_competitions_rewards[mission_id]:
+                del self.missions_competitions_rewards[mission_id]
+
+    async def add_skill_reward_to_mission(
+        self, mission_id: int, skill_id: int, level_increase: int
+    ) -> None:
+        if mission_id not in self.mission_table:
+            raise MissionNotFoundError
+        if mission_id not in self.missions_skills_rewards:
+            self.missions_skills_rewards[mission_id] = {}
+        self.missions_skills_rewards[mission_id][skill_id] = level_increase
+
+    async def remove_skill_reward_from_mission(self, mission_id: int, skill_id: int) -> None:
+        if mission_id not in self.mission_table:
+            raise MissionNotFoundError
+        if mission_id in self.missions_skills_rewards:
+            self.missions_skills_rewards[mission_id].pop(skill_id, None)
+            if not self.missions_skills_rewards[mission_id]:
+                del self.missions_skills_rewards[mission_id]
