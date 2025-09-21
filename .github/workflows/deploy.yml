@@ -38,10 +38,6 @@ jobs:
               -e DB_HOST=${{ secrets.DB_HOST }} \
               -e DB_PORT=${{ secrets.DB_PORT }} \
               -e MINIO_ENDPOINT=${{ secrets.MINIO_ENDPOINT }} \
-              -e MINIO_ACCESS_KEY=${{ secrets.MINIO_ACCESS_KEY }} \
-              -e MINIO_SECRET_KEY=${{ secrets.MINIO_SECRET_KEY }} \
-              -e MINIO_BUCKET=${{ vars.MINIO_BUCKET }} \
-              -e MINIO_REGION=${{ vars.MINIO_REGION }} \
               ${{ vars.DOCKERHUB_USERNAME }}/${{ vars.DOCKERHUB_REPONAME }}
 
             echo "⏳ Проверяем healthcheck нового контейнера..."
@@ -76,10 +72,6 @@ jobs:
                 -e DB_HOST=${{ secrets.DB_HOST }} \
                 -e DB_PORT=${{ secrets.DB_PORT }} \
                 -e MINIO_ENDPOINT=${{ secrets.MINIO_ENDPOINT }} \
-                -e MINIO_ACCESS_KEY=${{ secrets.MINIO_ACCESS_KEY }} \
-                -e MINIO_SECRET_KEY=${{ secrets.MINIO_SECRET_KEY }} \
-                -e MINIO_BUCKET=${{ vars.MINIO_BUCKET }} \
-                -e MINIO_REGION=${{ vars.MINIO_REGION }} \
                 ${{ vars.DOCKERHUB_USERNAME }}/${{ vars.DOCKERHUB_REPONAME }}
 
               echo "🧹 Чистим dangling images..."
