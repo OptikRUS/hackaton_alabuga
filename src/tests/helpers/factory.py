@@ -1,12 +1,17 @@
 from src.core.artifacts.enums import ArtifactRarityEnum
 from src.core.artifacts.schemas import Artifact, Artifacts
+from src.core.competitions.schemas import Competition, Competitions
 from src.core.missions.enums import MissionCategoryEnum
 from src.core.missions.schemas import (
+    CompetitionReward,
     Mission,
     MissionBranch,
     MissionBranches,
     Missions,
+    SkillReward,
 )
+from src.core.ranks.schemas import Rank, RankCompetitionRequirement, Ranks
+from src.core.skills.schemas import Skill, Skills
 from src.core.tasks.schemas import (
     MissionTask,
     MissionTasks,
@@ -62,6 +67,8 @@ class FactoryHelper:
         category: MissionCategoryEnum = MissionCategoryEnum.QUEST,
         tasks: list[MissionTask] | None = None,
         reward_artifacts: list[Artifact] | None = None,
+        reward_competitions: list[CompetitionReward] | None = None,
+        reward_skills: list[SkillReward] | None = None,
     ) -> Mission:
         return Mission(
             id=mission_id,
@@ -74,6 +81,8 @@ class FactoryHelper:
             category=category,
             tasks=tasks,
             reward_artifacts=reward_artifacts,
+            reward_competitions=reward_competitions,
+            reward_skills=reward_skills,
         )
 
     @classmethod
@@ -113,3 +122,56 @@ class FactoryHelper:
     @classmethod
     def artifacts(cls, values: list[Artifact]) -> Artifacts:
         return Artifacts(values=values)
+
+    @classmethod
+    def skill(
+        cls,
+        skill_id: int = 0,
+        name: str = "TEST",
+        max_level: int = 100,
+    ) -> Skill:
+        return Skill(id=skill_id, name=name, max_level=max_level)
+
+    @classmethod
+    def skills(cls, values: list[Skill]) -> Skills:
+        return Skills(values=values)
+
+    @classmethod
+    def competition(
+        cls,
+        competition_id: int = 0,
+        name: str = "TEST",
+        max_level: int = 100,
+        skills: list[Skill] | None = None,
+    ) -> Competition:
+        return Competition(
+            id=competition_id,
+            name=name,
+            max_level=max_level,
+            skills=skills,
+        )
+
+    @classmethod
+    def competitions(cls, values: list[Competition]) -> Competitions:
+        return Competitions(values=values)
+
+    @classmethod
+    def rank(
+        cls,
+        rank_id: int = 0,
+        name: str = "TEST",
+        required_xp: int = 0,
+        required_missions: list[Mission] | None = None,
+        required_competitions: list[RankCompetitionRequirement] | None = None,
+    ) -> Rank:
+        return Rank(
+            id=rank_id,
+            name=name,
+            required_xp=required_xp,
+            required_missions=required_missions or [],
+            required_competitions=required_competitions or [],
+        )
+
+    @classmethod
+    def ranks(cls, values: list[Rank]) -> Ranks:
+        return Ranks(values=values)

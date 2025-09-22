@@ -193,3 +193,53 @@ class APIHelper:
 
     def download_file(self, key: str) -> Response:
         return self.client.get(f"/media/{key}")
+
+    # Skills endpoints
+    def create_skill(self, name: str, max_level: int) -> Response:
+        return self.client.post(
+            url="/skills",
+            json={"name": name, "max_level": max_level},
+        )
+
+    def get_skills(self) -> Response:
+        return self.client.get("/skills")
+
+    def get_skill(self, skill_id: int) -> Response:
+        return self.client.get(f"/skills/{skill_id}")
+
+    def update_skill(self, skill_id: int, name: str, max_level: int) -> Response:
+        return self.client.put(
+            url=f"/skills/{skill_id}",
+            json={"name": name, "max_level": max_level},
+        )
+
+    def delete_skill(self, skill_id: int) -> Response:
+        return self.client.delete(f"/skills/{skill_id}")
+
+    # Competitions endpoints
+    def create_competition(self, name: str, max_level: int) -> Response:
+        return self.client.post(
+            url="/competitions",
+            json={"name": name, "max_level": max_level},
+        )
+
+    def get_competitions(self) -> Response:
+        return self.client.get("/competitions")
+
+    def get_competition(self, competition_id: int) -> Response:
+        return self.client.get(f"/competitions/{competition_id}")
+
+    def update_competition(self, competition_id: int, name: str, max_level: int) -> Response:
+        return self.client.put(
+            url=f"/competitions/{competition_id}",
+            json={"name": name, "max_level": max_level},
+        )
+
+    def delete_competition(self, competition_id: int) -> Response:
+        return self.client.delete(f"/competitions/{competition_id}")
+
+    def add_skill_to_competition(self, competition_id: int, skill_id: int) -> Response:
+        return self.client.post(f"/competitions/{competition_id}/skills/{skill_id}")
+
+    def remove_skill_from_competition(self, competition_id: int, skill_id: int) -> Response:
+        return self.client.delete(f"/competitions/{competition_id}/skills/{skill_id}")

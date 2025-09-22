@@ -19,12 +19,26 @@ from src.core.users.enums import UserRoleEnum
 from src.migrations.commands import downgrade, migrate
 from src.storages.database import async_session
 from src.storages.database_storage import DatabaseStorage
-from src.storages.models import ArtifactModel, MissionBranchModel, MissionTaskModel, UserModel
+from src.storages.models import (
+    ArtifactModel,
+    CompetitionModel,
+    CompetitionSkillRelationModel,
+    MissionBranchModel,
+    MissionTaskModel,
+    RankCompetitionRequirementModel,
+    RankMissionRelationModel,
+    RankModel,
+    SkillModel,
+    UserModel,
+)
 from src.tests.mocks.providers import (
     ArtifactProviderMock,
     AuthProviderMock,
+    CompetitionProviderMock,
     FileStorageProviderMock,
     MissionProviderMock,
+    RankProviderMock,
+    SkillProviderMock,
     UserProviderMock,
 )
 
@@ -36,6 +50,9 @@ async def container() -> AsyncGenerator[AsyncContainer]:
         UserProviderMock(),
         MissionProviderMock(),
         ArtifactProviderMock(),
+        CompetitionProviderMock(),
+        SkillProviderMock(),
+        RankProviderMock(),
         FileStorageProviderMock(),
         AuthProviderMock(),
     )
@@ -99,6 +116,14 @@ async def clear_tables(engine: AsyncEngine) -> None:
         await conn.execute(delete(MissionBranchModel))
         await conn.execute(delete(MissionTaskModel))
         await conn.execute(delete(ArtifactModel))
+        await conn.execute(delete(SkillModel))
+        # Clean competitions and relation table to avoid unique name conflicts between tests
+        await conn.execute(delete(CompetitionSkillRelationModel))
+        await conn.execute(delete(CompetitionModel))
+        # Clean ranks and their relations
+        await conn.execute(delete(RankCompetitionRequirementModel))
+        await conn.execute(delete(RankMissionRelationModel))
+        await conn.execute(delete(RankModel))
 
 
 @pytest.fixture

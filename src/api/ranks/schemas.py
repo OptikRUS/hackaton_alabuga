@@ -11,7 +11,13 @@ class RankCreateRequest(BoundaryModel):
     required_xp: int = Field(default=..., ge=0, description="Необходимый опыт")
 
     def to_schema(self) -> Rank:
-        return Rank(id=0, name=self.name, required_xp=self.required_xp)
+        return Rank(
+            id=0,
+            name=self.name,
+            required_xp=self.required_xp,
+            required_missions=[],
+            required_competitions=[],
+        )
 
 
 class RankUpdateRequest(BoundaryModel):
@@ -19,7 +25,13 @@ class RankUpdateRequest(BoundaryModel):
     required_xp: int = Field(default=..., ge=0, description="Необходимый опыт")
 
     def to_schema(self, rank_id: int) -> Rank:
-        return Rank(id=rank_id, name=self.name, required_xp=self.required_xp)
+        return Rank(
+            id=rank_id,
+            name=self.name,
+            required_xp=self.required_xp,
+            required_missions=[],
+            required_competitions=[],
+        )
 
 
 class RankResponse(BoundaryModel):

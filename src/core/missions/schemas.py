@@ -8,6 +8,18 @@ from src.core.tasks.schemas import MissionTask
 
 
 @dataclass
+class CompetitionReward:
+    competition: Competition
+    level_increase: int
+
+
+@dataclass
+class SkillReward:
+    skill: Skill
+    level_increase: int
+
+
+@dataclass
 class MissionBranch:
     id: int
     name: str
@@ -30,8 +42,8 @@ class Mission:
     category: MissionCategoryEnum
     tasks: list[MissionTask] | None = None
     reward_artifacts: list[Artifact] | None = None
-    reward_competitions: list[tuple[Competition, int]] | None = None
-    reward_skills: list[tuple[Skill, int]] | None = None
+    reward_competitions: list[CompetitionReward] | None = None
+    reward_skills: list[SkillReward] | None = None
 
 
 @dataclass

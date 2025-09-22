@@ -5,7 +5,7 @@ from src.core.artifacts.enums import ArtifactRarityEnum
 from src.core.artifacts.schemas import Artifact
 from src.core.competitions.schemas import Competition
 from src.core.missions.enums import MissionCategoryEnum
-from src.core.missions.schemas import Mission, MissionBranch
+from src.core.missions.schemas import CompetitionReward, Mission, MissionBranch, SkillReward
 from src.core.ranks.schemas import Rank, RankCompetitionRequirement
 from src.core.skills.schemas import Skill
 from src.core.tasks.schemas import MissionTask
@@ -152,9 +152,15 @@ class MissionModel(Base):
             tasks=[task.to_schema() for task in self.tasks],
             reward_artifacts=[artifact.to_schema() for artifact in self.artifacts],
             reward_competitions=[
-                (r.competition.to_schema(), r.level_increase) for r in self.competency_rewards
+                CompetitionReward(
+                    competition=r.competition.to_schema(), level_increase=r.level_increase
+                )
+                for r in self.competency_rewards
             ],
-            reward_skills=[(r.skill.to_schema(), r.level_increase) for r in self.skill_rewards],
+            reward_skills=[
+                SkillReward(skill=r.skill.to_schema(), level_increase=r.level_increase)
+                for r in self.skill_rewards
+            ],
         )
 
 

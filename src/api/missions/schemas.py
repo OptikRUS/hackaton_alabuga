@@ -134,13 +134,17 @@ class MissionResponse(BoundaryModel):
             ],
             reward_competitions=[
                 CompetitionRewardResponse(
-                    competition=CompetitionResponse.from_schema(comp), level_increase=inc
+                    competition=CompetitionResponse.from_schema(reward_competitions.competition),
+                    level_increase=reward_competitions.level_increase,
                 )
-                for comp, inc in (mission.reward_competitions or [])
+                for reward_competitions in (mission.reward_competitions or [])
             ],
             reward_skills=[
-                SkillRewardResponse(skill=SkillResponse.from_schema(skill), level_increase=inc)
-                for skill, inc in (mission.reward_skills or [])
+                SkillRewardResponse(
+                    skill=SkillResponse.from_schema(reward_skill.skill),
+                    level_increase=reward_skill.level_increase,
+                )
+                for reward_skill in (mission.reward_skills or [])
             ],
         )
 
