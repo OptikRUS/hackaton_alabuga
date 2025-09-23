@@ -11,3 +11,11 @@ class RankNameAlreadyExistError(BaseExceptionError):
 
 class RankCompetencyMinLevelTooHighError(BaseExceptionError):
     detail = "Minimum level exceeds competency max level"
+
+
+class RankCompetencyRequirementAlreadyExistsError(BaseExceptionError):
+    detail = "This competency requirement already exists for the rank"
+
+
+class RankMissionRequirementAlreadyExistsError(BaseExceptionError):
+    detail = "This mission requirement already exists for the rank"

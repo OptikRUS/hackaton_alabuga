@@ -14,13 +14,16 @@ from src.core.competencies.exceptions import (
     CompetencyLevelIncreaseTooHighError,
     CompetencyNameAlreadyExistError,
     CompetencyNotFoundError,
+    CompetencySkillRelationAlreadyExistsError,
 )
 from src.core.competencies.schemas import Competencies, Competency
 from src.core.missions.exceptions import (
     MissionBranchNameAlreadyExistError,
     MissionBranchNotFoundError,
+    MissionCompetencyRewardAlreadyExistsError,
     MissionNameAlreadyExistError,
     MissionNotFoundError,
+    MissionSkillRewardAlreadyExistsError,
 )
 from src.core.missions.schemas import (
     Mission,
@@ -30,6 +33,8 @@ from src.core.missions.schemas import (
 )
 from src.core.ranks.exceptions import (
     RankCompetencyMinLevelTooHighError,
+    RankCompetencyRequirementAlreadyExistsError,
+    RankMissionRequirementAlreadyExistsError,
     RankNameAlreadyExistError,
     RankNotFoundError,
 )
@@ -318,12 +323,24 @@ class DatabaseStorage(
         competency = await self.get_competency_by_id(competency_id=competency_id)
         if level_increase < 1 or level_increase > competency.max_level:
             raise CompetencyLevelIncreaseTooHighError
+        # Pre-check to avoid duplicate PK error
+        exists_query = select(MissionCompetencyRewardModel).where(
+            MissionCompetencyRewardModel.mission_id == mission_id,
+            MissionCompetencyRewardModel.competency_id == competency_id,
+        )
+        existing = await self.session.scalar(exists_query)
+        if existing is not None:
+            raise MissionCompetencyRewardAlreadyExistsError
         query = insert(MissionCompetencyRewardModel).values({
             "mission_id": mission_id,
             "competency_id": competency_id,
             "level_increase": level_increase,
         })
-        await self.session.execute(query)
+        try:
+            await self.session.execute(query)
+        except IntegrityError as error:
+            # Fallback in case of race condition
+            raise MissionCompetencyRewardAlreadyExistsError from error
 
     async def remove_competency_reward_from_mission(
         self, mission_id: int, competency_id: int
@@ -341,12 +358,24 @@ class DatabaseStorage(
         skill = await self.get_skill_by_id(skill_id=skill_id)
         if level_increase < 1 or level_increase > skill.max_level:
             raise SkillLevelIncreaseTooHighError
+        # Pre-check to avoid duplicate PK error
+        exists_query = select(MissionSkillRewardModel).where(
+            MissionSkillRewardModel.mission_id == mission_id,
+            MissionSkillRewardModel.skill_id == skill_id,
+        )
+        existing = await self.session.scalar(exists_query)
+        if existing is not None:
+            raise MissionSkillRewardAlreadyExistsError
         query = insert(MissionSkillRewardModel).values({
             "mission_id": mission_id,
             "skill_id": skill_id,
             "level_increase": level_increase,
         })
-        await self.session.execute(query)
+        try:
+            await self.session.execute(query)
+        except IntegrityError as error:
+            # Fallback in case of race condition
+            raise MissionSkillRewardAlreadyExistsError from error
 
     async def remove_skill_reward_from_mission(self, mission_id: int, skill_id: int) -> None:
         query = delete(MissionSkillRewardModel).where(
@@ -504,11 +533,23 @@ class DatabaseStorage(
     async def add_skill_to_competency(self, competency_id: int, skill_id: int) -> None:
         await self.get_competency_by_id(competency_id=competency_id)
         await self.get_skill_by_id(skill_id=skill_id)
+        # Pre-check to avoid duplicate PK error
+        exists_query = select(CompetencySkillRelationModel).where(
+            CompetencySkillRelationModel.competency_id == competency_id,
+            CompetencySkillRelationModel.skill_id == skill_id,
+        )
+        existing = await self.session.scalar(exists_query)
+        if existing is not None:
+            raise CompetencySkillRelationAlreadyExistsError
         query = insert(CompetencySkillRelationModel).values({
             "competency_id": competency_id,
             "skill_id": skill_id,
         })
-        await self.session.execute(query)
+        try:
+            await self.session.execute(query)
+        except IntegrityError as error:
+            # Fallback in case of race condition
+            raise CompetencySkillRelationAlreadyExistsError from error
 
     async def remove_skill_from_competency(self, competency_id: int, skill_id: int) -> None:
         query = delete(CompetencySkillRelationModel).where(
@@ -600,12 +641,24 @@ class DatabaseStorage(
         competency = await self.get_competency_by_id(competency_id=competency_id)
         if min_level < 1 or min_level > competency.max_level:
             raise RankCompetencyMinLevelTooHighError
+        # Pre-check to avoid duplicate PK error
+        exists_query = select(RankCompetencyRequirementModel).where(
+            RankCompetencyRequirementModel.rank_id == rank_id,
+            RankCompetencyRequirementModel.competency_id == competency_id,
+        )
+        existing = await self.session.scalar(exists_query)
+        if existing is not None:
+            raise RankCompetencyRequirementAlreadyExistsError
         query = insert(RankCompetencyRequirementModel).values({
             "rank_id": rank_id,
             "competency_id": competency_id,
             "min_level": min_level,
         })
-        await self.session.execute(query)
+        try:
+            await self.session.execute(query)
+        except IntegrityError as error:
+            # Fallback in case of race condition
+            raise RankCompetencyRequirementAlreadyExistsError from error
 
     async def remove_required_competency_from_rank(self, rank_id: int, competency_id: int) -> None:
         query = delete(RankCompetencyRequirementModel).where(
@@ -617,11 +670,23 @@ class DatabaseStorage(
     async def add_required_mission_to_rank(self, rank_id: int, mission_id: int) -> None:
         await self.get_rank_by_id(rank_id=rank_id)
         await self.get_mission_by_id(mission_id=mission_id)
+        # Pre-check to avoid duplicate PK error
+        exists_query = select(RankMissionRelationModel).where(
+            RankMissionRelationModel.rank_id == rank_id,
+            RankMissionRelationModel.mission_id == mission_id,
+        )
+        existing = await self.session.scalar(exists_query)
+        if existing is not None:
+            raise RankMissionRequirementAlreadyExistsError
         query = insert(RankMissionRelationModel).values({
             "rank_id": rank_id,
             "mission_id": mission_id,
         })
-        await self.session.execute(query)
+        try:
+            await self.session.execute(query)
+        except IntegrityError as error:
+            # Fallback in case of race condition
+            raise RankMissionRequirementAlreadyExistsError from error
 
     async def remove_required_mission_from_rank(self, rank_id: int, mission_id: int) -> None:
         query = delete(RankMissionRelationModel).where(

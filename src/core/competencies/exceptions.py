@@ -11,3 +11,7 @@ class CompetencyNameAlreadyExistError(BaseExceptionError):
 
 class CompetencyLevelIncreaseTooHighError(BaseExceptionError):
     detail = "Level increase exceeds competency max level"
+
+
+class CompetencySkillRelationAlreadyExistsError(BaseExceptionError):
+    detail = "This skill is already linked to the competency"
