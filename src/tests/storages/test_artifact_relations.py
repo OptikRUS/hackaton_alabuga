@@ -33,16 +33,15 @@ class TestArtifactRelations(FactoryFixture, StorageFixture):
             )
         )
         assert artifact is not None
+
         await self.storage.add_artifact_to_mission(
             mission_id=self.inserted_mission.id,
             artifact_id=artifact.id,
         )
-
         mission_model = await self.storage_helper.get_mission_by_id_with_entities(
             mission_id=self.inserted_mission.id
         )
         mission = mission_model.to_schema() if mission_model else None
-
         assert mission is not None
         assert mission.title == "TEST"
         assert mission.description == "TEST"

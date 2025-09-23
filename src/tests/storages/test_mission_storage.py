@@ -53,7 +53,6 @@ class TestMissionStorage(FactoryFixture, StorageFixture):
                 category=MissionCategoryEnum.QUEST,
             )
         )
-
         task_1 = await self.storage_helper.insert_task(
             task=self.factory.mission_task(title="TEST1", description="TEST1")
         )

@@ -29,4 +29,7 @@ class TestGetCompetenciesUseCase(FactoryFixture):
             competency_id=2, name="Web", max_level=50
         )
 
-    # TODO: добавить тест на пустой результат
+    async def test_get_competencies_empty_result(self) -> None:
+        competencies = await self.use_case.execute()
+
+        assert len(competencies.values) == 0

@@ -7,6 +7,7 @@ from sqlalchemy.orm import selectinload
 from src.core.artifacts.schemas import Artifact
 from src.core.competencies.schemas import Competency
 from src.core.missions.schemas import Mission, MissionBranch
+from src.core.ranks.schemas import Rank
 from src.core.skills.schemas import Skill
 from src.core.tasks.schemas import MissionTask
 from src.core.users.schemas import User
@@ -16,6 +17,8 @@ from src.storages.models import (
     MissionBranchModel,
     MissionModel,
     MissionTaskModel,
+    RankCompetencyRequirementModel,
+    RankModel,
     SkillModel,
     UserModel,
 )
@@ -204,4 +207,39 @@ class StorageHelper:
 
     async def get_skill_by_name(self, name: str) -> SkillModel | None:
         query = select(SkillModel).where(SkillModel.name == name)
+        return await self.session.scalar(query)  # type: ignore[no-any-return]
+
+    async def insert_rank(self, rank: Rank) -> RankModel | None:
+        query = (
+            insert(RankModel)
+            .values(
+                {
+                    "name": rank.name,
+                    "required_xp": rank.required_xp,
+                },
+            )
+            .returning(RankModel)
+        )
+        return await self.session.scalar(query)  # type: ignore[no-any-return]
+
+    async def get_rank_by_id(self, rank_id: int) -> RankModel | None:
+        query = select(RankModel).where(RankModel.id == rank_id)
+        return await self.session.scalar(query)  # type: ignore[no-any-return]
+
+    async def get_rank_by_id_with_entities(self, rank_id: int) -> RankModel | None:
+        query = (
+            select(RankModel)
+            .where(RankModel.id == rank_id)
+            .options(
+                selectinload(RankModel.required_missions),
+                selectinload(RankModel.required_competencies_rel).selectinload(
+                    RankCompetencyRequirementModel.competency
+                ),
+            )
+            .execution_options(populate_existing=True)
+        )
+        return await self.session.scalar(query)  # type: ignore[no-any-return]
+
+    async def get_rank_by_name(self, name: str) -> RankModel | None:
+        query = select(RankModel).where(RankModel.name == name)
         return await self.session.scalar(query)  # type: ignore[no-any-return]

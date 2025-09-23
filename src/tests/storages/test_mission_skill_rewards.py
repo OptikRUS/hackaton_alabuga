@@ -30,11 +30,10 @@ class TestMissionSkillRewards(FactoryFixture, StorageFixture):
         self.inserted_skill = skill
 
     async def test_add_skill_reward_to_mission(self) -> None:
-        level_increase = 10
         await self.storage.add_skill_reward_to_mission(
             mission_id=self.inserted_mission.id,
             skill_id=self.inserted_skill.id,
-            level_increase=level_increase,
+            level_increase=10,
         )
 
         mission_model = await self.storage_helper.get_mission_by_id_with_entities(
@@ -42,14 +41,12 @@ class TestMissionSkillRewards(FactoryFixture, StorageFixture):
         )
         assert mission_model is not None
         mission = mission_model.to_schema()
-
         assert mission is not None
         assert mission.title == "TEST"
         assert mission.description == "TEST"
         assert mission.reward_skills is not None
         assert len(mission.reward_skills) == 1
         assert mission.reward_skills[0].skill.id == self.inserted_skill.id
-        assert mission.reward_skills[0].level_increase == level_increase
 
     async def test_remove_skill_reward_from_mission(self) -> None:
         await self.storage.add_skill_reward_to_mission(
@@ -73,22 +70,20 @@ class TestMissionSkillRewards(FactoryFixture, StorageFixture):
         assert len(mission.reward_skills) == 0
 
     async def test_add_multiple_skill_rewards_to_mission(self) -> None:
-        skill_2 = await self.storage_helper.insert_skill(
+        skill = await self.storage_helper.insert_skill(
             skill=self.factory.skill(name="TEST_SKILL_2", max_level=50)
         )
-        assert skill_2 is not None
+        assert skill is not None
 
-        level_increase_1 = 10
-        level_increase_2 = 5
         await self.storage.add_skill_reward_to_mission(
             mission_id=self.inserted_mission.id,
             skill_id=self.inserted_skill.id,
-            level_increase=level_increase_1,
+            level_increase=10,
         )
         await self.storage.add_skill_reward_to_mission(
             mission_id=self.inserted_mission.id,
-            skill_id=skill_2.id,
-            level_increase=level_increase_2,
+            skill_id=skill.id,
+            level_increase=5,
         )
 
         mission_model = await self.storage_helper.get_mission_by_id_with_entities(
@@ -99,12 +94,12 @@ class TestMissionSkillRewards(FactoryFixture, StorageFixture):
         assert mission is not None
         assert mission.reward_skills is not None
         assert len(mission.reward_skills) == 2
-        skill_ids = [reward.skill.id for reward in mission.reward_skills]
-        level_increases = [reward.level_increase for reward in mission.reward_skills]
-        assert self.inserted_skill.id in skill_ids
-        assert skill_2.id in skill_ids
-        assert level_increase_1 in level_increases
-        assert level_increase_2 in level_increases
+
+        assert mission.reward_skills[0].skill.id == self.inserted_skill.id
+        assert mission.reward_skills[0].level_increase == 10
+
+        assert mission.reward_skills[1].skill.id == skill.id
+        assert mission.reward_skills[1].level_increase == 5
 
     async def test_skill_reward_level_increase_validation(self) -> None:
         with pytest.raises(SkillLevelIncreaseTooHighError):

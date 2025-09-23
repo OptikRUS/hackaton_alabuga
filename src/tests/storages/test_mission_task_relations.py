@@ -27,13 +27,13 @@ class TestMissionTaskRelations(FactoryFixture, StorageFixture):
             task=self.factory.mission_task(title="TEST_TASK", description="TEST_DESCRIPTION")
         )
         assert task is not None
+
         await self.storage.add_task_to_mission(mission_id=self.inserted_mission.id, task_id=task.id)
 
         mission_model = await self.storage_helper.get_mission_by_id_with_entities(
             mission_id=self.inserted_mission.id
         )
         mission = mission_model.to_schema() if mission_model else None
-
         assert mission is not None
         assert mission.title == "TEST"
         assert mission.description == "TEST"

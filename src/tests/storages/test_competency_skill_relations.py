@@ -19,16 +19,15 @@ class TestCompetencySkillRelations(FactoryFixture, StorageFixture):
             skill=self.factory.skill(name="TEST_SKILL", max_level=50)
         )
         assert skill is not None
+
         await self.storage.add_skill_to_competency(
             competency_id=self.inserted_competency.id,
             skill_id=skill.id,
         )
-
         competency_model = await self.storage_helper.get_competency_by_id_with_entities(
             competency_id=self.inserted_competency.id
         )
         competency = competency_model.to_schema() if competency_model else None
-
         assert competency is not None
         assert competency.name == "TEST_COMPETENCY"
         assert competency.max_level == 100

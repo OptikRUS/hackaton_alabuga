@@ -1,6 +1,5 @@
 import pytest
 
-from src.core.missions.schemas import Mission
 from src.core.ranks.exceptions import (
     RankCompetencyMinLevelTooHighError,
     RankNameAlreadyExistError,
@@ -14,7 +13,6 @@ class TestRankStorage(FactoryFixture, StorageFixture):
     @pytest.fixture(autouse=True)
     async def setup(self, storage: DatabaseStorage) -> None:
         self.storage = storage
-        # Create baseline data
         await self.storage.insert_rank(self.factory.rank(name="Bronze", required_xp=100))
         self.created = await self.storage.get_rank_by_name(name="Bronze")
 
@@ -76,7 +74,6 @@ class TestRankStorage(FactoryFixture, StorageFixture):
             await self.storage.delete_rank(rank_id=999)
 
     async def test_add_remove_required_mission(self) -> None:
-        # Create a branch and a mission to require (FK requires existing branch)
         branch = await self.storage_helper.insert_branch(self.factory.mission_branch(name="BR1"))
         assert branch is not None
         mission_model = await self.storage_helper.insert_mission(
@@ -88,20 +85,20 @@ class TestRankStorage(FactoryFixture, StorageFixture):
         await self.storage.add_required_mission_to_rank(
             rank_id=self.created.id, mission_id=mission.id
         )
+
         got = await self.storage.get_rank_by_id(rank_id=self.created.id)
-        assert isinstance(got.required_missions, list)
-        assert any(
-            isinstance(m, Mission) and m.id == mission.id for m in (got.required_missions or [])
-        )
+        assert got.required_missions is not None
+        assert len(got.required_missions) == 1
+        assert got.required_missions[0].id == mission.id
 
         await self.storage.remove_required_mission_from_rank(
             rank_id=self.created.id, mission_id=mission.id
         )
         got2 = await self.storage.get_rank_by_id(rank_id=self.created.id)
-        assert all(m.id != mission.id for m in (got2.required_missions or []))
+        assert got2.required_missions is not None
+        assert len(got2.required_missions) == 0
 
     async def test_add_remove_required_competency(self) -> None:
-        # Create competency to require
         await self.storage.insert_competency(self.factory.competency(name="ML", max_level=5))
         comp = await self.storage.get_competency_by_name(name="ML")
 
@@ -109,16 +106,18 @@ class TestRankStorage(FactoryFixture, StorageFixture):
             rank_id=self.created.id, competency_id=comp.id, min_level=3
         )
         got = await self.storage.get_rank_by_id(rank_id=self.created.id)
-        assert any(
-            req.competency.id == comp.id and req.min_level == 3
-            for req in (got.required_competencies or [])
-        )
+        assert got.required_competencies is not None
+        assert len(got.required_competencies) == 1
+        assert got.required_competencies[0].competency.id == comp.id
+        assert got.required_competencies[0].min_level == 3
 
         await self.storage.remove_required_competency_from_rank(
             rank_id=self.created.id, competency_id=comp.id
         )
+
         got2 = await self.storage.get_rank_by_id(rank_id=self.created.id)
-        assert all(req.competency.id != comp.id for req in (got2.required_competencies or []))
+        assert got2.required_competencies is not None
+        assert len(got2.required_competencies) == 0
 
     async def test_add_required_competency_level_too_high(self) -> None:
         await self.storage.insert_competency(self.factory.competency(name="Web", max_level=2))

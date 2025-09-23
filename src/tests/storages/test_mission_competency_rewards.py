@@ -30,11 +30,10 @@ class TestMissionCompetencyRewards(FactoryFixture, StorageFixture):
         self.inserted_competency = competency
 
     async def test_add_competency_reward_to_mission(self) -> None:
-        level_increase = 10
         await self.storage.add_competency_reward_to_mission(
             mission_id=self.inserted_mission.id,
             competency_id=self.inserted_competency.id,
-            level_increase=level_increase,
+            level_increase=10,
         )
 
         mission_model = await self.storage_helper.get_mission_by_id_with_entities(
@@ -49,14 +48,12 @@ class TestMissionCompetencyRewards(FactoryFixture, StorageFixture):
         assert mission.reward_competencies is not None
         assert len(mission.reward_competencies) == 1
         assert mission.reward_competencies[0].competency.id == self.inserted_competency.id
-        assert mission.reward_competencies[0].level_increase == level_increase
 
     async def test_remove_competency_reward_from_mission(self) -> None:
-        level_increase = 10
         await self.storage.add_competency_reward_to_mission(
             mission_id=self.inserted_mission.id,
             competency_id=self.inserted_competency.id,
-            level_increase=level_increase,
+            level_increase=10,
         )
 
         await self.storage.remove_competency_reward_from_mission(
@@ -79,17 +76,16 @@ class TestMissionCompetencyRewards(FactoryFixture, StorageFixture):
         )
         assert competency_2 is not None
 
-        level_increase_1 = 10
-        level_increase_2 = 5
         await self.storage.add_competency_reward_to_mission(
             mission_id=self.inserted_mission.id,
             competency_id=self.inserted_competency.id,
-            level_increase=level_increase_1,
+            level_increase=10,
         )
+
         await self.storage.add_competency_reward_to_mission(
             mission_id=self.inserted_mission.id,
             competency_id=competency_2.id,
-            level_increase=level_increase_2,
+            level_increase=5,
         )
 
         mission_model = await self.storage_helper.get_mission_by_id_with_entities(
@@ -100,12 +96,11 @@ class TestMissionCompetencyRewards(FactoryFixture, StorageFixture):
         assert mission is not None
         assert mission.reward_competencies is not None
         assert len(mission.reward_competencies) == 2
-        competency_ids = [reward.competency.id for reward in mission.reward_competencies]
-        level_increases = [reward.level_increase for reward in mission.reward_competencies]
-        assert self.inserted_competency.id in competency_ids
-        assert competency_2.id in competency_ids
-        assert level_increase_1 in level_increases
-        assert level_increase_2 in level_increases
+
+        assert mission.reward_competencies[0].competency.id == self.inserted_competency.id
+        assert mission.reward_competencies[0].level_increase == 10
+        assert mission.reward_competencies[1].competency.id == competency_2.id
+        assert mission.reward_competencies[1].level_increase == 5
 
     async def test_competency_reward_level_increase_validation(self) -> None:
         with pytest.raises(CompetencyLevelIncreaseTooHighError):
