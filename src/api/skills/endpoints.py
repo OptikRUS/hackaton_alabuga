@@ -18,7 +18,12 @@ from src.core.skills.use_cases import (
 router = APIRouter(tags=["skills"], route_class=DishkaRoute)
 
 
-@router.post(path="/skills", status_code=status.HTTP_201_CREATED)
+@router.post(
+    path="/skills",
+    status_code=status.HTTP_201_CREATED,
+    summary="Создать навык",
+    description="Создает новый навык в системе",
+)
 async def create_skill(
     body: SkillCreateRequest,
     use_case: FromDishka[CreateSkillUseCase],
@@ -27,7 +32,12 @@ async def create_skill(
     return SkillResponse.from_schema(skill=skill)
 
 
-@router.get(path="/skills", status_code=status.HTTP_200_OK)
+@router.get(
+    path="/skills",
+    status_code=status.HTTP_200_OK,
+    summary="Получить список навыков",
+    description="Возвращает все доступные навыки",
+)
 async def get_skills(
     use_case: FromDishka[GetSkillsUseCase],
 ) -> SkillsResponse:
@@ -35,7 +45,12 @@ async def get_skills(
     return SkillsResponse.from_schema(skills=skills)
 
 
-@router.get(path="/skills/{skill_id}", status_code=status.HTTP_200_OK)
+@router.get(
+    path="/skills/{skill_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Получить навык по ID",
+    description="Возвращает детальную информацию о навыке",
+)
 async def get_skill(
     skill_id: int,
     use_case: FromDishka[GetSkillDetailUseCase],
@@ -44,7 +59,12 @@ async def get_skill(
     return SkillResponse.from_schema(skill=skill)
 
 
-@router.put(path="/skills/{skill_id}", status_code=status.HTTP_200_OK)
+@router.put(
+    path="/skills/{skill_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Обновить навык",
+    description="Обновляет данные указанного навыка",
+)
 async def update_skill(
     skill_id: int,
     body: SkillUpdateRequest,
@@ -54,7 +74,12 @@ async def update_skill(
     return SkillResponse.from_schema(skill=skill)
 
 
-@router.delete(path="/skills/{skill_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    path="/skills/{skill_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Удалить навык",
+    description="Удаляет указанный навык",
+)
 async def delete_skill(
     skill_id: int,
     use_case: FromDishka[DeleteSkillUseCase],

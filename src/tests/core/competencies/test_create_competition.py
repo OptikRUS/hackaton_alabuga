@@ -19,7 +19,7 @@ class TestCreateCompetencyUseCase(FactoryFixture):
 
         assert competency == self.factory.competency(competency_id=1, name="ML", max_level=100)
 
-    async def test_create_competency_name_already_exist(self) -> None:
+    async def test_create_competency_name_already_exists(self) -> None:
         await self.storage.insert_competency(
             competency=self.factory.competency(competency_id=0, name="ML", max_level=100)
         )

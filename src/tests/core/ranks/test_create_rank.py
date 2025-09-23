@@ -19,7 +19,7 @@ class TestCreateRankUseCase(FactoryFixture):
 
         assert rank == self.factory.rank(rank_id=1, name="Bronze", required_xp=100)
 
-    async def test_create_rank_name_already_exist(self) -> None:
+    async def test_create_rank_name_already_exists(self) -> None:
         await self.storage.insert_rank(self.factory.rank(rank_id=0, name="Bronze", required_xp=100))
 
         with pytest.raises(RankNameAlreadyExistError):

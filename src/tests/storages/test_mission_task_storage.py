@@ -51,7 +51,7 @@ class TestMissionTaskStorage(FactoryFixture, StorageFixture):
         assert task.title == "TEST"
         assert task.description == "TEST"
 
-    async def test_insert_mission_task_already_exist(self) -> None:
+    async def test_insert_mission_task_already_exists(self) -> None:
         await self.storage_helper.insert_task(
             task=self.factory.mission_task(title="TEST", description="TEST")
         )

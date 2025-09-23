@@ -18,7 +18,12 @@ from src.core.artifacts.use_cases import (
 router = APIRouter(tags=["artifacts"], route_class=DishkaRoute)
 
 
-@router.post(path="/artifacts", status_code=status.HTTP_201_CREATED)
+@router.post(
+    path="/artifacts",
+    status_code=status.HTTP_201_CREATED,
+    summary="Создать артефакт",
+    description="Создает новый артефакт в системе",
+)
 async def create_artifact(
     body: ArtifactCreateRequest,
     use_case: FromDishka[CreateArtifactUseCase],
@@ -27,7 +32,12 @@ async def create_artifact(
     return ArtifactResponse.from_schema(artifact=artifact)
 
 
-@router.get(path="/artifacts", status_code=status.HTTP_200_OK)
+@router.get(
+    path="/artifacts",
+    status_code=status.HTTP_200_OK,
+    summary="Получить список артефактов",
+    description="Возвращает все доступные артефакты",
+)
 async def get_artifacts(
     use_case: FromDishka[GetArtifactsUseCase],
 ) -> ArtifactsResponse:
@@ -35,7 +45,12 @@ async def get_artifacts(
     return ArtifactsResponse.from_schema(artifacts=artifacts)
 
 
-@router.get(path="/artifacts/{artifact_id}", status_code=status.HTTP_200_OK)
+@router.get(
+    path="/artifacts/{artifact_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Получить артефакт по ID",
+    description="Возвращает детальную информацию об артефакте",
+)
 async def get_artifact(
     artifact_id: int,
     use_case: FromDishka[GetArtifactDetailUseCase],
@@ -44,7 +59,12 @@ async def get_artifact(
     return ArtifactResponse.from_schema(artifact=artifact)
 
 
-@router.put(path="/artifacts/{artifact_id}", status_code=status.HTTP_200_OK)
+@router.put(
+    path="/artifacts/{artifact_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Обновить артефакт",
+    description="Обновляет данные указанного артефакта",
+)
 async def update_artifact(
     artifact_id: int,
     body: ArtifactUpdateRequest,
@@ -54,7 +74,12 @@ async def update_artifact(
     return ArtifactResponse.from_schema(artifact=artifact)
 
 
-@router.delete(path="/artifacts/{artifact_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    path="/artifacts/{artifact_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Удалить артефакт",
+    description="Удаляет указанный артефакт",
+)
 async def delete_artifact(
     artifact_id: int,
     use_case: FromDishka[DeleteArtifactUseCase],

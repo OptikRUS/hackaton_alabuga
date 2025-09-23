@@ -37,7 +37,7 @@ class TestCreateTaskAPI(APIFixture, FactoryFixture, ContainerFixture):
             )
         )
 
-    def test_create_task_already_exist(self) -> None:
+    def test_create_task_already_exists(self) -> None:
         self.use_case.execute.side_effect = TaskNameAlreadyExistError
 
         response = self.api.create_task(title="TEST", description="TEST")
@@ -157,7 +157,7 @@ class TestUpdateTaskAPI(APIFixture, FactoryFixture, ContainerFixture):
             task=self.factory.mission_task(task_id=1, title="TEST", description="TEST")
         )
 
-    def test_update_task_already_exist(self) -> None:
+    def test_update_task_already_exists(self) -> None:
         self.use_case.execute.side_effect = TaskNameAlreadyExistError
 
         response = self.api.update_task(task_id=1, title="TEST", description="TEST")

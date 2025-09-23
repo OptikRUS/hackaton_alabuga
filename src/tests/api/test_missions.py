@@ -47,7 +47,7 @@ class TestMissionBranchAPI(APIFixture, FactoryFixture, ContainerFixture):
             branch=self.factory.mission_branch(branch_id=0, name="TEST")
         )
 
-    def test_create_mission_branch_already_exist(self) -> None:
+    def test_create_mission_branch_already_exists(self) -> None:
         self.use_case.execute.side_effect = MissionBranchNameAlreadyExistError
 
         response = self.api.create_mission_branch(name="TEST")
@@ -89,7 +89,7 @@ class TestUpdateMissionBranchAPI(APIFixture, FactoryFixture, ContainerFixture):
             branch=self.factory.mission_branch(branch_id=999, name="TEST")
         )
 
-    def test_update_mission_branch_name_already_exist(self) -> None:
+    def test_update_mission_branch_name_already_exists(self) -> None:
         self.use_case.execute.side_effect = MissionBranchNameAlreadyExistError
 
         response = self.api.update_mission_branch(branch_id=1, name="TEST")
@@ -224,7 +224,7 @@ class TestMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             )
         )
 
-    def test_create_mission_already_exist(self) -> None:
+    def test_create_mission_already_exists(self) -> None:
         self.use_case.execute.side_effect = MissionNameAlreadyExistError
 
         response = self.api.create_mission(
@@ -575,7 +575,7 @@ class TestUpdateMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             )
         )
 
-    def test_update_mission_already_exist(self) -> None:
+    def test_update_mission_already_exists(self) -> None:
         self.use_case.execute.side_effect = MissionNameAlreadyExistError
 
         response = self.api.update_mission(

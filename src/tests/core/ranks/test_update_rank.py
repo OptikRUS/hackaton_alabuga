@@ -21,7 +21,7 @@ class TestUpdateRankUseCase(FactoryFixture):
 
         assert updated == self.factory.rank(rank_id=1, name="Bronze+", required_xp=150)
 
-    async def test_update_rank_name_already_exist(self) -> None:
+    async def test_update_rank_name_already_exists(self) -> None:
         await self.storage.insert_rank(self.factory.rank(rank_id=1, name="Bronze", required_xp=100))
         await self.storage.insert_rank(self.factory.rank(rank_id=2, name="Silver", required_xp=200))
 

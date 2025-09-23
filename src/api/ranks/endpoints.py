@@ -22,7 +22,12 @@ from src.core.ranks.use_cases import (
 router = APIRouter(tags=["ranks"], route_class=DishkaRoute)
 
 
-@router.post(path="/ranks", status_code=status.HTTP_201_CREATED)
+@router.post(
+    path="/ranks",
+    status_code=status.HTTP_201_CREATED,
+    summary="Создать ранг",
+    description="Создает новый ранг в системе",
+)
 async def create_rank(
     body: RankCreateRequest,
     use_case: FromDishka[CreateRankUseCase],
@@ -31,7 +36,12 @@ async def create_rank(
     return RankResponse.from_schema(rank=rank)
 
 
-@router.get(path="/ranks", status_code=status.HTTP_200_OK)
+@router.get(
+    path="/ranks",
+    status_code=status.HTTP_200_OK,
+    summary="Получить список рангов",
+    description="Возвращает все доступные ранги",
+)
 async def get_ranks(
     use_case: FromDishka[GetRanksUseCase],
 ) -> RanksResponse:
@@ -39,7 +49,12 @@ async def get_ranks(
     return RanksResponse.from_schema(ranks=ranks)
 
 
-@router.get(path="/ranks/{rank_id}", status_code=status.HTTP_200_OK)
+@router.get(
+    path="/ranks/{rank_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Получить ранг по ID",
+    description="Возвращает детальную информацию о ранге",
+)
 async def get_rank(
     rank_id: int,
     use_case: FromDishka[GetRankDetailUseCase],
@@ -48,7 +63,12 @@ async def get_rank(
     return RankResponse.from_schema(rank=rank)
 
 
-@router.put(path="/ranks/{rank_id}", status_code=status.HTTP_200_OK)
+@router.put(
+    path="/ranks/{rank_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Обновить ранг",
+    description="Обновляет данные указанного ранга",
+)
 async def update_rank(
     rank_id: int,
     body: RankUpdateRequest,
@@ -58,7 +78,12 @@ async def update_rank(
     return RankResponse.from_schema(rank=rank)
 
 
-@router.delete(path="/ranks/{rank_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    path="/ranks/{rank_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Удалить ранг",
+    description="Удаляет указанный ранг",
+)
 async def delete_rank(
     rank_id: int,
     use_case: FromDishka[DeleteRankUseCase],
@@ -66,7 +91,12 @@ async def delete_rank(
     await use_case.execute(rank_id=rank_id)
 
 
-@router.post(path="/ranks/{rank_id}/missions/{mission_id}", status_code=status.HTTP_200_OK)
+@router.post(
+    path="/ranks/{rank_id}/missions/{mission_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Добавить обязательную миссию к рангу",
+    description="Назначает миссию как обязательное требование для получения ранга",
+)
 async def add_required_mission_to_rank(
     rank_id: int,
     mission_id: int,
@@ -76,7 +106,12 @@ async def add_required_mission_to_rank(
     return RankResponse.from_schema(rank=rank)
 
 
-@router.delete(path="/ranks/{rank_id}/missions/{mission_id}", status_code=status.HTTP_200_OK)
+@router.delete(
+    path="/ranks/{rank_id}/missions/{mission_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Удалить обязательную миссию из ранга",
+    description="Убирает миссию из обязательных требований для получения ранга",
+)
 async def remove_required_mission_from_rank(
     rank_id: int,
     mission_id: int,
@@ -86,7 +121,12 @@ async def remove_required_mission_from_rank(
     return RankResponse.from_schema(rank=rank)
 
 
-@router.post(path="/ranks/{rank_id}/competencies/{competency_id}", status_code=status.HTTP_200_OK)
+@router.post(
+    path="/ranks/{rank_id}/competencies/{competency_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Добавить обязательную компетенцию к рангу",
+    description="Назначает компетенцию как обязательное требование для получения ранга",
+)
 async def add_required_competency_to_rank(
     rank_id: int,
     competency_id: int,
@@ -101,7 +141,12 @@ async def add_required_competency_to_rank(
     return RankResponse.from_schema(rank=rank)
 
 
-@router.delete(path="/ranks/{rank_id}/competencies/{competency_id}", status_code=status.HTTP_200_OK)
+@router.delete(
+    path="/ranks/{rank_id}/competencies/{competency_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Удалить обязательную компетенцию из ранга",
+    description="Убирает компетенцию из обязательных требований для получения ранга",
+)
 async def remove_required_competency_from_rank(
     rank_id: int,
     competency_id: int,

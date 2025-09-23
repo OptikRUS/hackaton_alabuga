@@ -43,7 +43,7 @@ class TestCreateMissionUseCase(FactoryFixture):
             category=MissionCategoryEnum.QUEST,
         )
 
-    async def test_create_mission_name_already_exist(self) -> None:
+    async def test_create_mission_name_already_exists(self) -> None:
         await self.storage.insert_mission(
             mission=(
                 self.factory.mission(

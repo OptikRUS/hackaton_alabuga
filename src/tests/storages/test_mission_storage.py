@@ -275,7 +275,7 @@ class TestMissionStorage(FactoryFixture, StorageFixture):
         assert result.branch_id == self.created_branch.id
         assert result.category == MissionCategoryEnum.QUEST
 
-    async def test_insert_mission_already_exist(self) -> None:
+    async def test_insert_mission_already_exists(self) -> None:
         mission = self.factory.mission(
             title="TEST_MISSION",
             description="Test description",

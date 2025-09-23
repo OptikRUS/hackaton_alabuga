@@ -23,7 +23,7 @@ class TestUpdateSkillUseCase(FactoryFixture):
 
         assert updated == self.factory.skill(skill_id=1, name="Python Advanced", max_level=150)
 
-    async def test_update_skill_name_already_exist(self) -> None:
+    async def test_update_skill_name_already_exists(self) -> None:
         await self.storage.insert_skill(
             self.factory.skill(skill_id=1, name="Python", max_level=100)
         )

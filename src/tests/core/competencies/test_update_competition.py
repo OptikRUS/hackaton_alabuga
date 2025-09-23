@@ -28,7 +28,7 @@ class TestUpdateCompetencyUseCase(FactoryFixture):
             competency_id=1, name="ML Advanced", max_level=150
         )
 
-    async def test_update_competency_name_already_exist(self) -> None:
+    async def test_update_competency_name_already_exists(self) -> None:
         await self.storage.insert_competency(
             self.factory.competency(competency_id=1, name="ML", max_level=100)
         )

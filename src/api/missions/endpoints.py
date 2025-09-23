@@ -36,7 +36,12 @@ from src.core.missions.use_cases import (
 router = APIRouter(tags=["missions"], route_class=DishkaRoute)
 
 
-@router.post(path="/missions/branches", status_code=status.HTTP_201_CREATED)
+@router.post(
+    path="/missions/branches",
+    status_code=status.HTTP_201_CREATED,
+    summary="Создать ветку миссий",
+    description="Создает новую ветку миссий в системе",
+)
 async def create_mission_branch(
     body: MissionBranchCreateRequest,
     use_case: FromDishka[CreateMissionBranchUseCase],
@@ -45,7 +50,12 @@ async def create_mission_branch(
     return MissionBranchResponse.from_schema(branch=branch)
 
 
-@router.get(path="/missions/branches", status_code=status.HTTP_200_OK)
+@router.get(
+    path="/missions/branches",
+    status_code=status.HTTP_200_OK,
+    summary="Получить список веток миссий",
+    description="Возвращает все доступные ветки миссий",
+)
 async def get_mission_branches(
     use_case: FromDishka[GetMissionBranchesUseCase],
 ) -> MissionBranchesResponse:
@@ -53,7 +63,12 @@ async def get_mission_branches(
     return MissionBranchesResponse.from_schema(branches=branches)
 
 
-@router.put(path="/missions/branches/{branch_id}", status_code=status.HTTP_200_OK)
+@router.put(
+    path="/missions/branches/{branch_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Обновить ветку миссий",
+    description="Обновляет данные указанной ветки миссий",
+)
 async def update_mission_branch(
     branch_id: int,
     body: MissionBranchUpdateRequest,
@@ -63,7 +78,12 @@ async def update_mission_branch(
     return MissionBranchResponse.from_schema(branch=branch)
 
 
-@router.delete(path="/missions/branches/{branch_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    path="/missions/branches/{branch_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Удалить ветку миссий",
+    description="Удаляет указанную ветку миссий",
+)
 async def delete_mission_branch(
     branch_id: int,
     use_case: FromDishka[DeleteMissionBranchUseCase],
@@ -71,7 +91,12 @@ async def delete_mission_branch(
     await use_case.execute(branch_id=branch_id)
 
 
-@router.post(path="/missions", status_code=status.HTTP_201_CREATED)
+@router.post(
+    path="/missions",
+    status_code=status.HTTP_201_CREATED,
+    summary="Создать миссию",
+    description="Создает новую миссию в системе",
+)
 async def create_mission(
     body: MissionCreateRequest,
     use_case: FromDishka[CreateMissionUseCase],
@@ -80,7 +105,12 @@ async def create_mission(
     return MissionResponse.from_schema(mission=mission)
 
 
-@router.get(path="/missions", status_code=status.HTTP_200_OK)
+@router.get(
+    path="/missions",
+    status_code=status.HTTP_200_OK,
+    summary="Получить список миссий",
+    description="Возвращает все доступные миссии",
+)
 async def get_missions(
     use_case: FromDishka[GetMissionsUseCase],
 ) -> MissionsResponse:
@@ -88,7 +118,12 @@ async def get_missions(
     return MissionsResponse.from_schema(missions=missions)
 
 
-@router.get(path="/missions/{mission_id}", status_code=status.HTTP_200_OK)
+@router.get(
+    path="/missions/{mission_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Получить миссию по ID",
+    description="Возвращает детальную информацию о миссии",
+)
 async def get_mission(
     mission_id: int,
     use_case: FromDishka[GetMissionDetailUseCase],
@@ -97,7 +132,12 @@ async def get_mission(
     return MissionResponse.from_schema(mission=mission)
 
 
-@router.put(path="/missions/{mission_id}", status_code=status.HTTP_200_OK)
+@router.put(
+    path="/missions/{mission_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Обновить миссию",
+    description="Обновляет данные указанной миссии",
+)
 async def update_mission(
     mission_id: int,
     body: MissionUpdateRequest,
@@ -107,7 +147,12 @@ async def update_mission(
     return MissionResponse.from_schema(mission=mission)
 
 
-@router.delete(path="/missions/{mission_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    path="/missions/{mission_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Удалить миссию",
+    description="Удаляет указанную миссию",
+)
 async def delete_mission(
     mission_id: int,
     use_case: FromDishka[DeleteMissionUseCase],
@@ -115,7 +160,12 @@ async def delete_mission(
     await use_case.execute(mission_id=mission_id)
 
 
-@router.post(path="/missions/{mission_id}/tasks/{task_id}", status_code=status.HTTP_200_OK)
+@router.post(
+    path="/missions/{mission_id}/tasks/{task_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Добавить задачу к миссии",
+    description="Назначает задачу указанной миссии",
+)
 async def add_task_to_mission(
     mission_id: int,
     task_id: int,
@@ -125,7 +175,12 @@ async def add_task_to_mission(
     return MissionResponse.from_schema(mission=mission)
 
 
-@router.delete(path="/missions/{mission_id}/tasks/{task_id}", status_code=status.HTTP_200_OK)
+@router.delete(
+    path="/missions/{mission_id}/tasks/{task_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Удалить задачу из миссии",
+    description="Убирает задачу из указанной миссии",
+)
 async def remove_task_from_mission(
     mission_id: int,
     task_id: int,
@@ -136,7 +191,10 @@ async def remove_task_from_mission(
 
 
 @router.post(
-    path="/missions/{mission_id}/competencies/{competency_id}", status_code=status.HTTP_200_OK
+    path="/missions/{mission_id}/competencies/{competency_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Добавить награду компетенции к миссии",
+    description="Назначает награду в виде повышения компетенции за выполнение миссии",
 )
 async def add_competency_reward_to_mission(
     mission_id: int,
@@ -151,7 +209,10 @@ async def add_competency_reward_to_mission(
 
 
 @router.delete(
-    path="/missions/{mission_id}/competencies/{competency_id}", status_code=status.HTTP_200_OK
+    path="/missions/{mission_id}/competencies/{competency_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Удалить награду компетенции из миссии",
+    description="Убирает награду в виде повышения компетенции из миссии",
 )
 async def remove_competency_reward_from_mission(
     mission_id: int,
@@ -162,7 +223,12 @@ async def remove_competency_reward_from_mission(
     return MissionResponse.from_schema(mission=mission)
 
 
-@router.post(path="/missions/{mission_id}/skills/{skill_id}", status_code=status.HTTP_200_OK)
+@router.post(
+    path="/missions/{mission_id}/skills/{skill_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Добавить награду навыка к миссии",
+    description="Назначает награду в виде повышения навыка за выполнение миссии",
+)
 async def add_skill_reward_to_mission(
     mission_id: int,
     skill_id: int,
@@ -175,7 +241,12 @@ async def add_skill_reward_to_mission(
     return MissionResponse.from_schema(mission=mission)
 
 
-@router.delete(path="/missions/{mission_id}/skills/{skill_id}", status_code=status.HTTP_200_OK)
+@router.delete(
+    path="/missions/{mission_id}/skills/{skill_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Удалить награду навыка из миссии",
+    description="Убирает награду в виде повышения навыка из миссии",
+)
 async def remove_skill_reward_from_mission(
     mission_id: int,
     skill_id: int,
@@ -185,7 +256,12 @@ async def remove_skill_reward_from_mission(
     return MissionResponse.from_schema(mission=mission)
 
 
-@router.post(path="/missions/{mission_id}/artifacts/{artifact_id}", status_code=status.HTTP_200_OK)
+@router.post(
+    path="/missions/{mission_id}/artifacts/{artifact_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Добавить артефакт к миссии",
+    description="Назначает артефакт как награду за выполнение миссии",
+)
 async def add_artifact_to_mission(
     mission_id: int,
     artifact_id: int,
@@ -196,7 +272,10 @@ async def add_artifact_to_mission(
 
 
 @router.delete(
-    path="/missions/{mission_id}/artifacts/{artifact_id}", status_code=status.HTTP_200_OK
+    path="/missions/{mission_id}/artifacts/{artifact_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Удалить артефакт из миссии",
+    description="Убирает артефакт из наград миссии",
 )
 async def remove_artifact_from_mission(
     mission_id: int,

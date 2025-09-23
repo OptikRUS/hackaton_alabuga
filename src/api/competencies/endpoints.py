@@ -20,7 +20,12 @@ from src.core.competencies.use_cases import (
 router = APIRouter(tags=["competencies"], route_class=DishkaRoute)
 
 
-@router.post(path="/competencies", status_code=status.HTTP_201_CREATED)
+@router.post(
+    path="/competencies",
+    status_code=status.HTTP_201_CREATED,
+    summary="Создать компетенцию",
+    description="Создает новую компетенцию в системе",
+)
 async def create_competency(
     body: CompetencyCreateRequest,
     use_case: FromDishka[CreateCompetencyUseCase],
@@ -29,7 +34,12 @@ async def create_competency(
     return CompetencyResponse.from_schema(competency=competency)
 
 
-@router.get(path="/competencies", status_code=status.HTTP_200_OK)
+@router.get(
+    path="/competencies",
+    status_code=status.HTTP_200_OK,
+    summary="Получить список компетенций",
+    description="Возвращает все доступные компетенции",
+)
 async def get_competencies(
     use_case: FromDishka[GetCompetenciesUseCase],
 ) -> CompetenciesResponse:
@@ -37,7 +47,12 @@ async def get_competencies(
     return CompetenciesResponse.from_schema(competencies=competencies)
 
 
-@router.get(path="/competencies/{competency_id}", status_code=status.HTTP_200_OK)
+@router.get(
+    path="/competencies/{competency_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Получить компетенцию по ID",
+    description="Возвращает детальную информацию о компетенции",
+)
 async def get_competency(
     competency_id: int,
     use_case: FromDishka[GetCompetencyDetailUseCase],
@@ -46,7 +61,12 @@ async def get_competency(
     return CompetencyResponse.from_schema(competency=competency)
 
 
-@router.put(path="/competencies/{competency_id}", status_code=status.HTTP_200_OK)
+@router.put(
+    path="/competencies/{competency_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Обновить компетенцию",
+    description="Обновляет данные указанной компетенции",
+)
 async def update_competency(
     competency_id: int,
     body: CompetencyUpdateRequest,
@@ -56,7 +76,12 @@ async def update_competency(
     return CompetencyResponse.from_schema(competency=competency)
 
 
-@router.delete(path="/competencies/{competency_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    path="/competencies/{competency_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Удалить компетенцию",
+    description="Удаляет указанную компетенцию",
+)
 async def delete_competency(
     competency_id: int,
     use_case: FromDishka[DeleteCompetencyUseCase],
@@ -64,7 +89,12 @@ async def delete_competency(
     await use_case.execute(competency_id=competency_id)
 
 
-@router.post(path="/competencies/{competency_id}/skills/{skill_id}", status_code=status.HTTP_200_OK)
+@router.post(
+    path="/competencies/{competency_id}/skills/{skill_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Добавить навык к компетенции",
+    description="Назначает навык указанной компетенции",
+)
 async def add_skill_to_competency(
     competency_id: int,
     skill_id: int,
@@ -75,7 +105,10 @@ async def add_skill_to_competency(
 
 
 @router.delete(
-    path="/competencies/{competency_id}/skills/{skill_id}", status_code=status.HTTP_200_OK
+    path="/competencies/{competency_id}/skills/{skill_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Удалить навык из компетенции",
+    description="Убирает навык из указанной компетенции",
 )
 async def remove_skill_from_competency(
     competency_id: int,

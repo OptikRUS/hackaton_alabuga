@@ -19,7 +19,7 @@ class TestCreateMissionBranchUseCase(FactoryFixture):
 
         assert mission_branch.name == "TEST_BRANCH"
 
-    async def test_create_mission_branch_already_exist(self) -> None:
+    async def test_create_mission_branch_already_exists(self) -> None:
         await self.storage.insert_mission_branch(
             branch=(self.factory.mission_branch(branch_id=0, name="TEST_BRANCH"))
         )
