@@ -16,7 +16,7 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           port: ${{ secrets.SERVER_PORT }}
           username: ${{ secrets.SERVER_USERNAME }}
-          password: ${{ secrets.SERVER_SSH_PRIVATE_KEY }}
+          key: ${{ secrets.SERVER_SSH_PRIVATE_KEY }}
           script: |
             mkdir -p ~/.github
 
@@ -26,7 +26,7 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           port: ${{ secrets.SERVER_PORT }}
           username: ${{ secrets.SERVER_USERNAME }}
-          password: ${{ secrets.SERVER_SSH_PRIVATE_KEY }}
+          key: ${{ secrets.SERVER_SSH_PRIVATE_KEY }}
           source: ".github/docker-compose.yml"
           target: "~/.github/"
           overwrite: true
@@ -37,7 +37,7 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           port: ${{ secrets.SERVER_PORT }}
           username: ${{ secrets.SERVER_USERNAME }}
-          password: ${{ secrets.SERVER_SSH_PRIVATE_KEY }}
+          key: ${{ secrets.SERVER_SSH_PRIVATE_KEY }}
           script: |
             set -e
 
@@ -56,6 +56,16 @@ jobs:
             export DB_HOST="${{ secrets.DB_HOST }}"
             export DB_PORT="${{ secrets.DB_PORT }}"
             export MINIO_ENDPOINT="${{ secrets.MINIO_ENDPOINT }}"
+
+            echo "📁 Проверяем содержимое директории ~/.github/..."
+            ls -la ~/.github/ || echo "Директория ~/.github/ не существует"
+
+            echo "🔍 Проверяем наличие docker-compose.yml..."
+            if [ ! -f ~/.github/docker-compose.yml ]; then
+              echo "❌ Файл ~/.github/docker-compose.yml не найден!"
+              exit 1
+            fi
+            echo "✅ Файл docker-compose.yml найден"
 
             echo "🛑 Останавливаем текущий compose стек (если есть)..."
             docker compose -f ~/.github/docker-compose.yml down || true
