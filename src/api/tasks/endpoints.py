@@ -18,7 +18,12 @@ from src.core.tasks.use_cases import (
 router = APIRouter(tags=["tasks"], route_class=DishkaRoute)
 
 
-@router.post(path="/tasks", status_code=status.HTTP_201_CREATED)
+@router.post(
+    path="/tasks",
+    status_code=status.HTTP_201_CREATED,
+    summary="Создать задачу",
+    description="Создает новую задачу в системе",
+)
 async def create_task(
     body: TaskCreateRequest,
     use_case: FromDishka[CreateMissionTaskUseCase],
@@ -27,7 +32,12 @@ async def create_task(
     return TaskResponse.from_schema(task=task)
 
 
-@router.get(path="/tasks", status_code=status.HTTP_200_OK)
+@router.get(
+    path="/tasks",
+    status_code=status.HTTP_200_OK,
+    summary="Получить список задач",
+    description="Возвращает все доступные задачи",
+)
 async def get_tasks(
     use_case: FromDishka[GetMissionTasksUseCase],
 ) -> TasksResponse:
@@ -35,7 +45,12 @@ async def get_tasks(
     return TasksResponse.from_schema(tasks=tasks)
 
 
-@router.get(path="/tasks/{task_id}", status_code=status.HTTP_200_OK)
+@router.get(
+    path="/tasks/{task_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Получить задачу по ID",
+    description="Возвращает детальную информацию о задаче",
+)
 async def get_task(
     task_id: int,
     use_case: FromDishka[GetMissionTaskDetailUseCase],
@@ -44,7 +59,12 @@ async def get_task(
     return TaskResponse.from_schema(task=task)
 
 
-@router.put(path="/tasks/{task_id}", status_code=status.HTTP_200_OK)
+@router.put(
+    path="/tasks/{task_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Обновить задачу",
+    description="Обновляет данные указанной задачи",
+)
 async def update_task(
     task_id: int,
     body: TaskUpdateRequest,
@@ -54,7 +74,12 @@ async def update_task(
     return TaskResponse.from_schema(task=task)
 
 
-@router.delete(path="/tasks/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    path="/tasks/{task_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Удалить задачу",
+    description="Удаляет указанную задачу",
+)
 async def delete_task(
     task_id: int,
     use_case: FromDishka[DeleteMissionTaskUseCase],

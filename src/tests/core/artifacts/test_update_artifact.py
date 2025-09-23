@@ -42,7 +42,7 @@ class TestUpdateArtifactUseCase(FactoryFixture):
             image_url="https://example.com/updated.jpg",
         )
 
-    async def test_update_artifact_title_already_exist(self) -> None:
+    async def test_update_artifact_title_already_exists(self) -> None:
         await self.storage.insert_artifact(
             artifact=self.factory.artifact(
                 artifact_id=1,

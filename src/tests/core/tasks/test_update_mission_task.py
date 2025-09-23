@@ -35,7 +35,7 @@ class TestUpdateMissionTaskUseCase(FactoryFixture):
             description="Updated description",
         )
 
-    async def test_update_mission_task_already_exist(self) -> None:
+    async def test_update_mission_task_already_exists(self) -> None:
         await self.storage.insert_mission_task(
             task=self.factory.mission_task(
                 task_id=0,

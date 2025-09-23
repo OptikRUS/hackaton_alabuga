@@ -7,7 +7,7 @@ from src.tests.mocks.storage_stub import StorageMock
 from src.tests.mocks.user_password import UserPasswordServiceMock
 
 
-class TestLoginUserUseCaseCase(FactoryFixture):
+class TestLoginUserUseCase(FactoryFixture):
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
         self.storage = StorageMock()

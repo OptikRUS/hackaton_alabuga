@@ -42,7 +42,7 @@ class TestUsersAPI(APIFixture, FactoryFixture, ContainerFixture):
             )
         )
 
-    def test_user_registration_already_exist(self) -> None:
+    def test_user_registration_already_exists(self) -> None:
         self.use_case.execute.side_effect = UserAlreadyExistError
 
         response = self.api.register_user(

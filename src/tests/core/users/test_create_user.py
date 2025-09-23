@@ -27,7 +27,7 @@ class TestCreateUserUseCase(FactoryFixture):
             )
         )
 
-    async def test_create_user_already_exist(self) -> None:
+    async def test_create_user_already_exists(self) -> None:
         await self.storage.insert_user(
             user=self.factory.user(
                 login="TEST",

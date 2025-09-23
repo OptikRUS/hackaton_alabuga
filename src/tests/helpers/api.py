@@ -193,3 +193,90 @@ class APIHelper:
 
     def download_file(self, key: str) -> Response:
         return self.client.get(f"/media/{key}")
+
+    # Skills endpoints
+    def create_skill(self, name: str, max_level: int) -> Response:
+        return self.client.post(
+            url="/skills",
+            json={"name": name, "max_level": max_level},
+        )
+
+    def get_skills(self) -> Response:
+        return self.client.get("/skills")
+
+    def get_skill(self, skill_id: int) -> Response:
+        return self.client.get(f"/skills/{skill_id}")
+
+    def update_skill(self, skill_id: int, name: str, max_level: int) -> Response:
+        return self.client.put(
+            url=f"/skills/{skill_id}",
+            json={"name": name, "max_level": max_level},
+        )
+
+    def delete_skill(self, skill_id: int) -> Response:
+        return self.client.delete(f"/skills/{skill_id}")
+
+    def create_competency(self, name: str, max_level: int) -> Response:
+        return self.client.post(
+            url="/competencies",
+            json={"name": name, "max_level": max_level},
+        )
+
+    def get_competencies(self) -> Response:
+        return self.client.get("/competencies")
+
+    def get_competency(self, competency_id: int) -> Response:
+        return self.client.get(f"/competencies/{competency_id}")
+
+    def update_competency(self, competency_id: int, name: str, max_level: int) -> Response:
+        return self.client.put(
+            url=f"/competencies/{competency_id}",
+            json={"name": name, "max_level": max_level},
+        )
+
+    def delete_competency(self, competency_id: int) -> Response:
+        return self.client.delete(f"/competencies/{competency_id}")
+
+    def add_skill_to_competency(self, competency_id: int, skill_id: int) -> Response:
+        return self.client.post(f"/competencies/{competency_id}/skills/{skill_id}")
+
+    def remove_skill_from_competency(self, competency_id: int, skill_id: int) -> Response:
+        return self.client.delete(f"/competencies/{competency_id}/skills/{skill_id}")
+
+    def create_rank(self, name: str, required_xp: int) -> Response:
+        return self.client.post(
+            url="/ranks",
+            json={"name": name, "required_xp": required_xp},
+        )
+
+    def get_ranks(self) -> Response:
+        return self.client.get("/ranks")
+
+    def get_rank(self, rank_id: int) -> Response:
+        return self.client.get(f"/ranks/{rank_id}")
+
+    def update_rank(self, rank_id: int, name: str, required_xp: int) -> Response:
+        return self.client.put(
+            url=f"/ranks/{rank_id}",
+            json={"name": name, "required_xp": required_xp},
+        )
+
+    def delete_rank(self, rank_id: int) -> Response:
+        return self.client.delete(f"/ranks/{rank_id}")
+
+    def add_required_mission_to_rank(self, rank_id: int, mission_id: int) -> Response:
+        return self.client.post(f"/ranks/{rank_id}/missions/{mission_id}")
+
+    def remove_required_mission_from_rank(self, rank_id: int, mission_id: int) -> Response:
+        return self.client.delete(f"/ranks/{rank_id}/missions/{mission_id}")
+
+    def add_required_competency_to_rank(
+        self, rank_id: int, competency_id: int, min_level: int
+    ) -> Response:
+        return self.client.post(
+            f"/ranks/{rank_id}/competencies/{competency_id}",
+            params={"min_level": min_level},
+        )
+
+    def remove_required_competency_from_rank(self, rank_id: int, competency_id: int) -> Response:
+        return self.client.delete(f"/ranks/{rank_id}/competencies/{competency_id}")

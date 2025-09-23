@@ -2,6 +2,8 @@ from pydantic import Field
 
 from src.api.artifacts.schemas import ArtifactResponse
 from src.api.boundary import BoundaryModel
+from src.api.competencies.schemas import CompetencyResponse
+from src.api.skills.schemas import SkillResponse
 from src.core.missions.enums import MissionCategoryEnum
 from src.core.missions.schemas import Mission, MissionBranch, MissionBranches, Missions
 from src.core.tasks.schemas import MissionTask
@@ -53,7 +55,7 @@ class MissionBranchesResponse(BoundaryModel):
 class MissionCreateRequest(BoundaryModel):
     title: str = Field(default=..., description="Название миссии")
     description: str = Field(default=..., description="Описание миссии")
-    reward_xp: int = Field(default=..., description="Награда в опыте")
+    reward_xp: int = Field(default=..., ge=0, description="Награда в опыте")
     reward_mana: int = Field(default=..., description="Награда в мане")
     rank_requirement: int = Field(default=..., description="Требуемый ранг")
     branch_id: int = Field(default=..., description="ID ветки миссий")
@@ -75,7 +77,7 @@ class MissionCreateRequest(BoundaryModel):
 class MissionUpdateRequest(BoundaryModel):
     title: str = Field(default=..., description="Название миссии")
     description: str = Field(default=..., description="Описание миссии")
-    reward_xp: int = Field(default=..., description="Награда в опыте")
+    reward_xp: int = Field(default=..., ge=0, description="Награда в опыте")
     reward_mana: int = Field(default=..., description="Награда в мане")
     rank_requirement: int = Field(default=..., description="Требуемый ранг")
     branch_id: int = Field(default=..., description="ID ветки миссий")
@@ -107,6 +109,12 @@ class MissionResponse(BoundaryModel):
     reward_artifacts: list[ArtifactResponse] = Field(
         default_factory=list, description="Артефакты-награды"
     )
+    reward_competencies: list["CompetencyRewardResponse"] = Field(
+        default_factory=list, description="Награды в компетенциях"
+    )
+    reward_skills: list["SkillRewardResponse"] = Field(
+        default_factory=list, description="Награды в скиллах"
+    )
 
     @classmethod
     def from_schema(cls, mission: Mission) -> "MissionResponse":
@@ -124,7 +132,31 @@ class MissionResponse(BoundaryModel):
                 ArtifactResponse.from_schema(artifact=artifact)
                 for artifact in (mission.reward_artifacts or [])
             ],
+            reward_competencies=[
+                CompetencyRewardResponse(
+                    competency=CompetencyResponse.from_schema(reward_competencies.competency),
+                    level_increase=reward_competencies.level_increase,
+                )
+                for reward_competencies in (mission.reward_competencies or [])
+            ],
+            reward_skills=[
+                SkillRewardResponse(
+                    skill=SkillResponse.from_schema(reward_skill.skill),
+                    level_increase=reward_skill.level_increase,
+                )
+                for reward_skill in (mission.reward_skills or [])
+            ],
         )
+
+
+class CompetencyRewardResponse(BoundaryModel):
+    competency: CompetencyResponse
+    level_increase: int
+
+
+class SkillRewardResponse(BoundaryModel):
+    skill: SkillResponse
+    level_increase: int
 
 
 class MissionsResponse(BoundaryModel):

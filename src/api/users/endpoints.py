@@ -22,7 +22,11 @@ from src.core.users.use_cases import (
 router = APIRouter(tags=["users"], route_class=DishkaRoute)
 
 
-@router.post(path="/users/register")
+@router.post(
+    path="/users/register",
+    summary="Регистрация пользователя",
+    description="Создает нового пользователя в системе с указанными данными",
+)
 async def register_user(
     body: UserRegistrationRequest,
     use_case: FromDishka[CreateUserUseCase],
@@ -31,7 +35,11 @@ async def register_user(
     return Response(status_code=status.HTTP_201_CREATED)
 
 
-@router.post(path="/users/login")
+@router.post(
+    path="/users/login",
+    summary="Вход в систему",
+    description="Аутентификация пользователя и получение JWT токена",
+)
 async def user_login(
     body: UserLoginRequest,
     use_case: FromDishka[LoginUserUseCase],
@@ -40,13 +48,23 @@ async def user_login(
     return UserTokenResponse(token=token)
 
 
-@router.get(path="/users/me", openapi_extra=openapi_extra)
+@router.get(
+    path="/users/me",
+    openapi_extra=openapi_extra,
+    summary="Получить информацию о текущем пользователе",
+    description="Возвращает данные авторизованного пользователя",
+)
 async def get_me(user: FromDishka[JwtUser], use_case: FromDishka[GetUserUseCase]) -> UserResponse:
     registered_user = await use_case.execute(login=user.login)
     return UserResponse.from_schema(user=registered_user)
 
 
-@router.post(path="/users/{user_login}/artifacts/{artifact_id}", status_code=status.HTTP_200_OK)
+@router.post(
+    path="/users/{user_login}/artifacts/{artifact_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Добавить артефакт пользователю",
+    description="Назначает артефакт указанному пользователю",
+)
 async def add_artifact_to_user(
     user_login: str,
     artifact_id: int,
@@ -56,7 +74,12 @@ async def add_artifact_to_user(
     return UserResponse.from_schema(user=user)
 
 
-@router.delete(path="/users/{user_login}/artifacts/{artifact_id}", status_code=status.HTTP_200_OK)
+@router.delete(
+    path="/users/{user_login}/artifacts/{artifact_id}",
+    status_code=status.HTTP_200_OK,
+    summary="Удалить артефакт у пользователя",
+    description="Убирает артефакт у указанного пользователя",
+)
 async def remove_artifact_from_user(
     user_login: str,
     artifact_id: int,

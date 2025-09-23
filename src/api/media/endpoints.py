@@ -10,7 +10,12 @@ from src.services.minio import MinioService
 router = APIRouter(tags=["media"], route_class=DishkaRoute)
 
 
-@router.post(path="/media", status_code=status.HTTP_201_CREATED)
+@router.post(
+    path="/media",
+    status_code=status.HTTP_201_CREATED,
+    summary="Загрузить файл",
+    description="Загружает файл в систему хранения медиа",
+)
 async def upload_file(
     file: Annotated[UploadFile, File(...)],
     minio_service: FromDishka[MinioService],
@@ -24,7 +29,11 @@ async def upload_file(
     return FileObjectResponse.from_schema(file_object=file_object)
 
 
-@router.get(path="/media/{key:path}")
+@router.get(
+    path="/media/{key:path}",
+    summary="Скачать файл",
+    description="Скачивает файл из системы хранения медиа по ключу",
+)
 async def download_file(
     key: str,
     minio_service: FromDishka[MinioService],

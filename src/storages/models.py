@@ -3,8 +3,11 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 from src.core.artifacts.enums import ArtifactRarityEnum
 from src.core.artifacts.schemas import Artifact
+from src.core.competencies.schemas import Competency
 from src.core.missions.enums import MissionCategoryEnum
-from src.core.missions.schemas import Mission, MissionBranch
+from src.core.missions.schemas import CompetencyReward, Mission, MissionBranch, SkillReward
+from src.core.ranks.schemas import Rank, RankCompetencyRequirement
+from src.core.skills.schemas import Skill
 from src.core.tasks.schemas import MissionTask
 from src.core.users.enums import UserRoleEnum
 from src.core.users.schemas import User
@@ -110,6 +113,20 @@ class MissionModel(Base):
         lazy="selectin",
     )
 
+    competency_rewards: Mapped[list["MissionCompetencyRewardModel"]] = relationship(
+        "MissionCompetencyRewardModel",
+        back_populates="mission",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
+    skill_rewards: Mapped[list["MissionSkillRewardModel"]] = relationship(
+        "MissionSkillRewardModel",
+        back_populates="mission",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
     @classmethod
     def from_schema(cls, mission: Mission) -> "MissionModel":
         return cls(
@@ -134,6 +151,16 @@ class MissionModel(Base):
             category=MissionCategoryEnum(self.category),
             tasks=[task.to_schema() for task in self.tasks],
             reward_artifacts=[artifact.to_schema() for artifact in self.artifacts],
+            reward_competencies=[
+                CompetencyReward(
+                    competency=r.competency.to_schema(), level_increase=r.level_increase
+                )
+                for r in self.competency_rewards
+            ],
+            reward_skills=[
+                SkillReward(skill=r.skill.to_schema(), level_increase=r.level_increase)
+                for r in self.skill_rewards
+            ],
         )
 
 
@@ -182,6 +209,113 @@ class MissionTaskRelationModel(Base):
         ForeignKey(MissionModel.id, ondelete="CASCADE"),
         primary_key=True,
     )
+
+
+class CompetencyModel(Base):
+    __tablename__ = "competencies_competency"
+    __table_args__ = (UniqueConstraint("name", name="uq_competencies_name"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(255))
+    max_level: Mapped[int] = mapped_column()
+
+    skills: Mapped[list["SkillModel"]] = relationship(
+        "SkillModel",
+        secondary="competencies_competencies_skills",
+        lazy="selectin",
+    )
+
+    @classmethod
+    def from_schema(cls, competency: Competency) -> "CompetencyModel":
+        return cls(id=competency.id, name=competency.name, max_level=competency.max_level)
+
+    def to_schema(self) -> Competency:
+        return Competency(
+            id=self.id,
+            name=self.name,
+            max_level=self.max_level,
+            skills=[skill.to_schema() for skill in self.skills],
+        )
+
+
+class RankModel(Base):
+    __tablename__ = "ranks_rank"
+    __table_args__ = (UniqueConstraint("name", name="uq_ranks_name"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(255))
+    required_xp: Mapped[int] = mapped_column()
+
+    required_missions: Mapped[list["MissionModel"]] = relationship(
+        "MissionModel",
+        secondary="rank_required_mission",
+        lazy="selectin",
+    )
+
+    required_competencies_rel: Mapped[list["RankCompetencyRequirementModel"]] = relationship(
+        "RankCompetencyRequirementModel",
+        back_populates="rank",
+        lazy="selectin",
+        cascade="all, delete-orphan",
+    )
+
+    @classmethod
+    def from_schema(cls, rank: Rank) -> "RankModel":
+        return cls(id=rank.id, name=rank.name, required_xp=rank.required_xp)
+
+    def to_schema(self) -> Rank:
+        return Rank(
+            id=self.id,
+            name=self.name,
+            required_xp=self.required_xp,
+            required_missions=[mission.to_schema() for mission in self.required_missions],
+            required_competencies=[
+                RankCompetencyRequirement(
+                    competency=rel.competency.to_schema(), min_level=rel.min_level
+                )
+                for rel in self.required_competencies_rel
+            ],
+        )
+
+
+class RankCompetencyRequirementModel(Base):
+    __tablename__ = "ranks_competencies_requirements"
+    __table_args__ = (
+        PrimaryKeyConstraint(
+            "rank_id",
+            "competency_id",
+            name="pk_ranks_competencies_requirements",
+        ),
+    )
+
+    rank_id: Mapped[int] = mapped_column(
+        ForeignKey(RankModel.id, ondelete="CASCADE"),
+        primary_key=True,
+    )
+    competency_id: Mapped[int] = mapped_column(
+        ForeignKey(CompetencyModel.id, ondelete="CASCADE"),
+        primary_key=True,
+    )
+    min_level: Mapped[int] = mapped_column()
+
+    competency: Mapped["CompetencyModel"] = relationship()
+    rank: Mapped["RankModel"] = relationship(back_populates="required_competencies_rel")
+
+
+class SkillModel(Base):
+    __tablename__ = "skills_skill"
+    __table_args__ = (UniqueConstraint("name", name="uq_skills_name"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(255))
+    max_level: Mapped[int] = mapped_column()
+
+    @classmethod
+    def from_schema(cls, skill: Skill) -> "SkillModel":
+        return cls(id=skill.id, name=skill.name, max_level=skill.max_level)
+
+    def to_schema(self) -> Skill:
+        return Skill(id=self.id, name=self.name, max_level=self.max_level)
 
 
 class ArtifactModel(Base):
@@ -265,3 +399,87 @@ class ArtifactUserRelationModel(Base):
         ForeignKey(UserModel.login, ondelete="CASCADE"),
         primary_key=True,
     )
+
+
+class RankMissionRelationModel(Base):
+    __tablename__ = "rank_required_mission"
+    __table_args__ = (
+        PrimaryKeyConstraint(
+            "rank_id",
+            "mission_id",
+            name="pk_rank_required_mission",
+        ),
+    )
+
+    rank_id: Mapped[int] = mapped_column(
+        ForeignKey(RankModel.id, ondelete="CASCADE"),
+        primary_key=True,
+    )
+    mission_id: Mapped[int] = mapped_column(
+        ForeignKey(MissionModel.id, ondelete="CASCADE"),
+        primary_key=True,
+    )
+
+
+class CompetencySkillRelationModel(Base):
+    __tablename__ = "competencies_competencies_skills"
+    __table_args__ = (
+        PrimaryKeyConstraint(
+            "competency_id",
+            "skill_id",
+            name="pk_competencies_competencies_skills",
+        ),
+    )
+
+    competency_id: Mapped[int] = mapped_column(
+        ForeignKey(CompetencyModel.id, ondelete="CASCADE"),
+        primary_key=True,
+    )
+    skill_id: Mapped[int] = mapped_column(
+        ForeignKey(SkillModel.id, ondelete="CASCADE"),
+        primary_key=True,
+    )
+
+
+class MissionCompetencyRewardModel(Base):
+    __tablename__ = "missions_competencies_rewards"
+    __table_args__ = (
+        PrimaryKeyConstraint(
+            "mission_id",
+            "competency_id",
+            name="pk_missions_competencies_rewards",
+        ),
+    )
+
+    mission_id: Mapped[int] = mapped_column(
+        ForeignKey(MissionModel.id, ondelete="CASCADE"), primary_key=True
+    )
+    competency_id: Mapped[int] = mapped_column(
+        ForeignKey(CompetencyModel.id, ondelete="CASCADE"), primary_key=True
+    )
+    level_increase: Mapped[int] = mapped_column()
+
+    mission: Mapped["MissionModel"] = relationship(back_populates="competency_rewards")
+    competency: Mapped["CompetencyModel"] = relationship()
+
+
+class MissionSkillRewardModel(Base):
+    __tablename__ = "missions_skills_rewards"
+    __table_args__ = (
+        PrimaryKeyConstraint(
+            "mission_id",
+            "skill_id",
+            name="pk_missions_skills_rewards",
+        ),
+    )
+
+    mission_id: Mapped[int] = mapped_column(
+        ForeignKey(MissionModel.id, ondelete="CASCADE"), primary_key=True
+    )
+    skill_id: Mapped[int] = mapped_column(
+        ForeignKey(SkillModel.id, ondelete="CASCADE"), primary_key=True
+    )
+    level_increase: Mapped[int] = mapped_column()
+
+    mission: Mapped["MissionModel"] = relationship(back_populates="skill_rewards")
+    skill: Mapped["SkillModel"] = relationship()

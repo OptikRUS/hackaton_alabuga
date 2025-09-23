@@ -133,3 +133,47 @@ class RemoveTaskFromMissionUseCase(UseCase):
         await self.storage.get_mission_task_by_id(task_id=task_id)
         await self.storage.remove_task_from_mission(mission_id=mission_id, task_id=task_id)
         return await self.storage.get_mission_by_id(mission_id=mission_id)
+
+
+@dataclass
+class AddCompetencyRewardToMissionUseCase(UseCase):
+    storage: MissionStorage
+
+    async def execute(self, mission_id: int, competency_id: int, level_increase: int) -> Mission:
+        await self.storage.add_competency_reward_to_mission(
+            mission_id=mission_id, competency_id=competency_id, level_increase=level_increase
+        )
+        return await self.storage.get_mission_by_id(mission_id=mission_id)
+
+
+@dataclass
+class RemoveCompetencyRewardFromMissionUseCase(UseCase):
+    storage: MissionStorage
+
+    async def execute(self, mission_id: int, competency_id: int) -> Mission:
+        await self.storage.remove_competency_reward_from_mission(
+            mission_id=mission_id, competency_id=competency_id
+        )
+        return await self.storage.get_mission_by_id(mission_id=mission_id)
+
+
+@dataclass
+class AddSkillRewardToMissionUseCase(UseCase):
+    storage: MissionStorage
+
+    async def execute(self, mission_id: int, skill_id: int, level_increase: int) -> Mission:
+        await self.storage.add_skill_reward_to_mission(
+            mission_id=mission_id, skill_id=skill_id, level_increase=level_increase
+        )
+        return await self.storage.get_mission_by_id(mission_id=mission_id)
+
+
+@dataclass
+class RemoveSkillRewardFromMissionUseCase(UseCase):
+    storage: MissionStorage
+
+    async def execute(self, mission_id: int, skill_id: int) -> Mission:
+        await self.storage.remove_skill_reward_from_mission(
+            mission_id=mission_id, skill_id=skill_id
+        )
+        return await self.storage.get_mission_by_id(mission_id=mission_id)

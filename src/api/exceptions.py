@@ -5,13 +5,33 @@ from fastapi import Request, status
 from fastapi.responses import JSONResponse, Response
 
 from src.core.artifacts.exceptions import ArtifactNotFoundError, ArtifactTitleAlreadyExistError
+from src.core.competencies.exceptions import (
+    CompetencyLevelIncreaseTooHighError,
+    CompetencyNameAlreadyExistError,
+    CompetencyNotFoundError,
+    CompetencySkillRelationAlreadyExistsError,
+)
 from src.core.exceptions import BaseExceptionError, InvalidJWTTokenError
 from src.core.media.exceptions import MediaNotFoundError
 from src.core.missions.exceptions import (
     MissionBranchNameAlreadyExistError,
     MissionBranchNotFoundError,
+    MissionCompetencyRewardAlreadyExistsError,
     MissionNameAlreadyExistError,
     MissionNotFoundError,
+    MissionSkillRewardAlreadyExistsError,
+)
+from src.core.ranks.exceptions import (
+    RankCompetencyMinLevelTooHighError,
+    RankCompetencyRequirementAlreadyExistsError,
+    RankMissionRequirementAlreadyExistsError,
+    RankNameAlreadyExistError,
+    RankNotFoundError,
+)
+from src.core.skills.exceptions import (
+    SkillLevelIncreaseTooHighError,
+    SkillNameAlreadyExistError,
+    SkillNotFoundError,
 )
 from src.core.tasks.exceptions import (
     TaskNameAlreadyExistError,
@@ -58,9 +78,23 @@ exception_handlers: (
     MissionBranchNotFoundError: handler(status_code=status.HTTP_404_NOT_FOUND),
     MissionNameAlreadyExistError: handler(status_code=status.HTTP_409_CONFLICT),
     MissionNotFoundError: handler(status_code=status.HTTP_404_NOT_FOUND),
+    MissionCompetencyRewardAlreadyExistsError: handler(status_code=status.HTTP_409_CONFLICT),
+    MissionSkillRewardAlreadyExistsError: handler(status_code=status.HTTP_409_CONFLICT),
     TaskNameAlreadyExistError: handler(status_code=status.HTTP_409_CONFLICT),
     TaskNotFoundError: handler(status_code=status.HTTP_404_NOT_FOUND),
     MediaNotFoundError: handler(status_code=status.HTTP_404_NOT_FOUND),
     ArtifactNotFoundError: handler(status_code=status.HTTP_404_NOT_FOUND),
     ArtifactTitleAlreadyExistError: handler(status_code=status.HTTP_409_CONFLICT),
+    CompetencyNameAlreadyExistError: handler(status_code=status.HTTP_409_CONFLICT),
+    CompetencyNotFoundError: handler(status_code=status.HTTP_404_NOT_FOUND),
+    CompetencyLevelIncreaseTooHighError: handler(status_code=status.HTTP_400_BAD_REQUEST),
+    CompetencySkillRelationAlreadyExistsError: handler(status_code=status.HTTP_409_CONFLICT),
+    RankNameAlreadyExistError: handler(status_code=status.HTTP_409_CONFLICT),
+    RankNotFoundError: handler(status_code=status.HTTP_404_NOT_FOUND),
+    RankCompetencyMinLevelTooHighError: handler(status_code=status.HTTP_400_BAD_REQUEST),
+    RankCompetencyRequirementAlreadyExistsError: handler(status_code=status.HTTP_409_CONFLICT),
+    RankMissionRequirementAlreadyExistsError: handler(status_code=status.HTTP_409_CONFLICT),
+    SkillNameAlreadyExistError: handler(status_code=status.HTTP_409_CONFLICT),
+    SkillNotFoundError: handler(status_code=status.HTTP_404_NOT_FOUND),
+    SkillLevelIncreaseTooHighError: handler(status_code=status.HTTP_400_BAD_REQUEST),
 }

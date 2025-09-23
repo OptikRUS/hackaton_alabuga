@@ -16,6 +16,15 @@ from src.core.artifacts.use_cases import (
     RemoveArtifactFromUserUseCase,
     UpdateArtifactUseCase,
 )
+from src.core.competencies.use_cases import (
+    AddSkillToCompetencyUseCase,
+    CreateCompetencyUseCase,
+    DeleteCompetencyUseCase,
+    GetCompetenciesUseCase,
+    GetCompetencyDetailUseCase,
+    RemoveSkillFromCompetencyUseCase,
+    UpdateCompetencyUseCase,
+)
 from src.core.exceptions import InvalidJWTTokenError
 from src.core.missions.use_cases import (
     AddTaskToMissionUseCase,
@@ -31,6 +40,24 @@ from src.core.missions.use_cases import (
     UpdateMissionUseCase,
 )
 from src.core.password import PasswordService
+from src.core.ranks.use_cases import (
+    AddRequiredCompetencyToRankUseCase,
+    AddRequiredMissionToRankUseCase,
+    CreateRankUseCase,
+    DeleteRankUseCase,
+    GetRankDetailUseCase,
+    GetRanksUseCase,
+    RemoveRequiredCompetencyFromRankUseCase,
+    RemoveRequiredMissionFromRankUseCase,
+    UpdateRankUseCase,
+)
+from src.core.skills.use_cases import (
+    CreateSkillUseCase,
+    DeleteSkillUseCase,
+    GetSkillDetailUseCase,
+    GetSkillsUseCase,
+    UpdateSkillUseCase,
+)
 from src.core.tasks.use_cases import (
     CreateMissionTaskUseCase,
     DeleteMissionTaskUseCase,
@@ -189,3 +216,105 @@ class AuthProviderMock(Provider):
         if not auth:
             raise InvalidJWTTokenError
         return JwtUser.decode(payload=auth.credentials)
+
+
+class SkillProviderMock(Provider):
+    scope: Scope = Scope.APP
+
+    @provide
+    def override_create_skill_use_case(self) -> CreateSkillUseCase:
+        return AsyncMock(spec=CreateSkillUseCase)
+
+    @provide
+    def override_get_skills_use_case(self) -> GetSkillsUseCase:
+        return AsyncMock(spec=GetSkillsUseCase)
+
+    @provide
+    def override_get_skill_detail_use_case(self) -> GetSkillDetailUseCase:
+        return AsyncMock(spec=GetSkillDetailUseCase)
+
+    @provide
+    def override_update_skill_use_case(self) -> UpdateSkillUseCase:
+        return AsyncMock(spec=UpdateSkillUseCase)
+
+    @provide
+    def override_delete_skill_use_case(self) -> DeleteSkillUseCase:
+        return AsyncMock(spec=DeleteSkillUseCase)
+
+
+class CompetencyProviderMock(Provider):
+    scope: Scope = Scope.APP
+
+    @provide
+    def override_create_competency_use_case(self) -> CreateCompetencyUseCase:
+        return AsyncMock(spec=CreateCompetencyUseCase)
+
+    @provide
+    def override_get_competencies_use_case(self) -> GetCompetenciesUseCase:
+        return AsyncMock(spec=GetCompetenciesUseCase)
+
+    @provide
+    def override_get_competency_detail_use_case(self) -> GetCompetencyDetailUseCase:
+        return AsyncMock(spec=GetCompetencyDetailUseCase)
+
+    @provide
+    def override_update_competency_use_case(self) -> UpdateCompetencyUseCase:
+        return AsyncMock(spec=UpdateCompetencyUseCase)
+
+    @provide
+    def override_delete_competency_use_case(self) -> DeleteCompetencyUseCase:
+        return AsyncMock(spec=DeleteCompetencyUseCase)
+
+    @provide
+    def override_add_skill_to_competency_use_case(self) -> AddSkillToCompetencyUseCase:
+        return AsyncMock(spec=AddSkillToCompetencyUseCase)
+
+    @provide
+    def override_remove_skill_from_competency_use_case(self) -> RemoveSkillFromCompetencyUseCase:
+        return AsyncMock(spec=RemoveSkillFromCompetencyUseCase)
+
+
+class RankProviderMock(Provider):
+    scope: Scope = Scope.APP
+
+    @provide
+    def override_create_rank_use_case(self) -> CreateRankUseCase:
+        return AsyncMock(spec=CreateRankUseCase)
+
+    @provide
+    def override_get_ranks_use_case(self) -> GetRanksUseCase:
+        return AsyncMock(spec=GetRanksUseCase)
+
+    @provide
+    def override_get_rank_detail_use_case(self) -> GetRankDetailUseCase:
+        return AsyncMock(spec=GetRankDetailUseCase)
+
+    @provide
+    def override_update_rank_use_case(self) -> UpdateRankUseCase:
+        return AsyncMock(spec=UpdateRankUseCase)
+
+    @provide
+    def override_delete_rank_use_case(self) -> DeleteRankUseCase:
+        return AsyncMock(spec=DeleteRankUseCase)
+
+    @provide
+    def override_add_required_mission_to_rank_use_case(self) -> AddRequiredMissionToRankUseCase:
+        return AsyncMock(spec=AddRequiredMissionToRankUseCase)
+
+    @provide
+    def override_remove_required_mission_from_rank_use_case(
+        self,
+    ) -> RemoveRequiredMissionFromRankUseCase:
+        return AsyncMock(spec=RemoveRequiredMissionFromRankUseCase)
+
+    @provide
+    def override_add_required_competency_to_rank_use_case(
+        self,
+    ) -> AddRequiredCompetencyToRankUseCase:
+        return AsyncMock(spec=AddRequiredCompetencyToRankUseCase)
+
+    @provide
+    def override_remove_required_competency_from_rank_use_case(
+        self,
+    ) -> RemoveRequiredCompetencyFromRankUseCase:
+        return AsyncMock(spec=RemoveRequiredCompetencyFromRankUseCase)

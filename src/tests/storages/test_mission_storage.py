@@ -53,7 +53,6 @@ class TestMissionStorage(FactoryFixture, StorageFixture):
                 category=MissionCategoryEnum.QUEST,
             )
         )
-
         task_1 = await self.storage_helper.insert_task(
             task=self.factory.mission_task(title="TEST1", description="TEST1")
         )
@@ -80,6 +79,8 @@ class TestMissionStorage(FactoryFixture, StorageFixture):
             category=MissionCategoryEnum.QUEST,
             tasks=[task_1.to_schema(), task_2.to_schema()],
             reward_artifacts=[],
+            reward_competencies=[],
+            reward_skills=[],
         )
 
     async def test_get_mission_by_id_with_artifacts(self) -> None:
@@ -139,6 +140,8 @@ class TestMissionStorage(FactoryFixture, StorageFixture):
             category=MissionCategoryEnum.QUEST,
             tasks=[],
             reward_artifacts=[artifact_1.to_schema(), artifact_2.to_schema()],
+            reward_competencies=[],
+            reward_skills=[],
         )
 
     async def test_get_mission_by_id_with_entities(self) -> None:
@@ -208,6 +211,8 @@ class TestMissionStorage(FactoryFixture, StorageFixture):
             category=MissionCategoryEnum.QUEST,
             tasks=[task_1.to_schema(), task_2.to_schema()],
             reward_artifacts=[artifact_1.to_schema(), artifact_2.to_schema()],
+            reward_competencies=[],
+            reward_skills=[],
         )
 
     async def test_get_mission_by_id_not_found(self) -> None:
@@ -270,7 +275,7 @@ class TestMissionStorage(FactoryFixture, StorageFixture):
         assert result.branch_id == self.created_branch.id
         assert result.category == MissionCategoryEnum.QUEST
 
-    async def test_insert_mission_already_exist(self) -> None:
+    async def test_insert_mission_already_exists(self) -> None:
         mission = self.factory.mission(
             title="TEST_MISSION",
             description="Test description",

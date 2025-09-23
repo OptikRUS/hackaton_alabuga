@@ -5,6 +5,11 @@ from src.core.artifacts.exceptions import (
     ArtifactTitleAlreadyExistError,
 )
 from src.core.artifacts.schemas import Artifact, Artifacts
+from src.core.competencies.exceptions import (
+    CompetencyNameAlreadyExistError,
+    CompetencyNotFoundError,
+)
+from src.core.competencies.schemas import Competencies, Competency
 from src.core.missions.exceptions import (
     MissionBranchNameAlreadyExistError,
     MissionBranchNotFoundError,
@@ -17,7 +22,25 @@ from src.core.missions.schemas import (
     MissionBranches,
     Missions,
 )
-from src.core.storages import ArtifactStorage, MissionStorage, UserStorage
+from src.core.ranks.exceptions import (
+    RankCompetencyMinLevelTooHighError,
+    RankNameAlreadyExistError,
+    RankNotFoundError,
+)
+from src.core.ranks.schemas import Rank, RankCompetencyRequirement, Ranks
+from src.core.skills.exceptions import (
+    SkillNameAlreadyExistError,
+    SkillNotFoundError,
+)
+from src.core.skills.schemas import Skill, Skills
+from src.core.storages import (
+    ArtifactStorage,
+    CompetencyStorage,
+    MissionStorage,
+    RankStorage,
+    SkillStorage,
+    UserStorage,
+)
 from src.core.tasks.exceptions import (
     TaskNameAlreadyExistError,
     TaskNotFoundError,
@@ -31,15 +54,25 @@ from src.core.users.schemas import User
 
 
 @dataclass
-class StorageMock(UserStorage, MissionStorage, ArtifactStorage):
+class StorageMock(
+    UserStorage, MissionStorage, ArtifactStorage, CompetencyStorage, SkillStorage, RankStorage
+):
     user_table: dict[str, User] = field(default_factory=dict)
     mission_branch_table: dict[str, MissionBranch] = field(default_factory=dict)
     mission_table: dict[int, Mission] = field(default_factory=dict)
     task_table: dict[int, MissionTask] = field(default_factory=dict)
     artifact_table: dict[int, Artifact] = field(default_factory=dict)
+    competencies_table: dict[int, Competency] = field(default_factory=dict)
+    skill_table: dict[int, Skill] = field(default_factory=dict)
+    rank_table: dict[int, Rank] = field(default_factory=dict)
     missions_tasks_relations: dict[int, set[int]] = field(default_factory=dict)
     missions_artifacts_relations: dict[int, set[int]] = field(default_factory=dict)
     users_artifacts_relations: dict[str, set[int]] = field(default_factory=dict)
+    missions_competencies_rewards: dict[int, dict[int, int]] = field(default_factory=dict)
+    missions_skills_rewards: dict[int, dict[int, int]] = field(default_factory=dict)
+    competencies_skills_relations: dict[int, set[int]] = field(default_factory=dict)
+    ranks_missions_requirements: dict[int, set[int]] = field(default_factory=dict)
+    ranks_competencies_requirements: dict[int, dict[int, int]] = field(default_factory=dict)
 
     async def insert_user(self, user: User) -> None:
         try:
@@ -283,3 +316,226 @@ class StorageMock(UserStorage, MissionStorage, ArtifactStorage):
             self.users_artifacts_relations[user_login].discard(artifact_id)
             if not self.users_artifacts_relations[user_login]:
                 del self.users_artifacts_relations[user_login]
+
+    # New methods for competency and skill rewards
+    async def add_competency_reward_to_mission(
+        self, mission_id: int, competency_id: int, level_increase: int
+    ) -> None:
+        if mission_id not in self.mission_table:
+            raise MissionNotFoundError
+        if mission_id not in self.missions_competencies_rewards:
+            self.missions_competencies_rewards[mission_id] = {}
+        self.missions_competencies_rewards[mission_id][competency_id] = level_increase
+
+    async def remove_competency_reward_from_mission(
+        self, mission_id: int, competency_id: int
+    ) -> None:
+        if mission_id not in self.mission_table:
+            raise MissionNotFoundError
+        if mission_id in self.missions_competencies_rewards:
+            self.missions_competencies_rewards[mission_id].pop(competency_id, None)
+            if not self.missions_competencies_rewards[mission_id]:
+                del self.missions_competencies_rewards[mission_id]
+
+    async def add_skill_reward_to_mission(
+        self, mission_id: int, skill_id: int, level_increase: int
+    ) -> None:
+        if mission_id not in self.mission_table:
+            raise MissionNotFoundError
+        if mission_id not in self.missions_skills_rewards:
+            self.missions_skills_rewards[mission_id] = {}
+        self.missions_skills_rewards[mission_id][skill_id] = level_increase
+
+    async def remove_skill_reward_from_mission(self, mission_id: int, skill_id: int) -> None:
+        if mission_id not in self.mission_table:
+            raise MissionNotFoundError
+        if mission_id in self.missions_skills_rewards:
+            self.missions_skills_rewards[mission_id].pop(skill_id, None)
+            if not self.missions_skills_rewards[mission_id]:
+                del self.missions_skills_rewards[mission_id]
+
+    # CompetencyStorage methods
+    async def insert_competency(self, competency: Competency) -> None:
+        for existing in self.competencies_table.values():
+            if existing.name == competency.name:
+                raise CompetencyNameAlreadyExistError
+        self.competencies_table[competency.id] = competency
+
+    async def get_competency_by_id(self, competency_id: int) -> Competency:
+        try:
+            return self.competencies_table[competency_id]
+        except KeyError as error:
+            raise CompetencyNotFoundError from error
+
+    async def get_competency_by_name(self, name: str) -> Competency:
+        for competency in self.competencies_table.values():
+            if competency.name == name:
+                return competency
+        raise CompetencyNotFoundError
+
+    async def list_competencies(self) -> Competencies:
+        return Competencies(values=list(self.competencies_table.values()))
+
+    async def update_competency(self, competency: Competency) -> None:
+        if competency.id not in self.competencies_table:
+            raise CompetencyNotFoundError
+        self.competencies_table[competency.id] = competency
+
+    async def delete_competency(self, competency_id: int) -> None:
+        try:
+            del self.competencies_table[competency_id]
+        except KeyError as error:
+            raise CompetencyNotFoundError from error
+        self.competencies_skills_relations.pop(competency_id, None)
+
+    async def add_skill_to_competency(self, competency_id: int, skill_id: int) -> None:
+        if competency_id not in self.competencies_table:
+            raise CompetencyNotFoundError
+        if skill_id not in self.skill_table:
+            raise SkillNotFoundError
+        if competency_id not in self.competencies_skills_relations:
+            self.competencies_skills_relations[competency_id] = set()
+        self.competencies_skills_relations[competency_id].add(skill_id)
+
+    async def remove_skill_from_competency(self, competency_id: int, skill_id: int) -> None:
+        if competency_id not in self.competencies_table:
+            raise CompetencyNotFoundError
+        if skill_id not in self.skill_table:
+            raise SkillNotFoundError
+        if competency_id in self.competencies_skills_relations:
+            self.competencies_skills_relations[competency_id].discard(skill_id)
+            if not self.competencies_skills_relations[competency_id]:
+                del self.competencies_skills_relations[competency_id]
+
+    async def insert_skill(self, skill: Skill) -> None:
+        for existing in self.skill_table.values():
+            if existing.name == skill.name:
+                raise SkillNameAlreadyExistError
+        self.skill_table[skill.id] = skill
+
+    async def get_skill_by_id(self, skill_id: int) -> Skill:
+        try:
+            return self.skill_table[skill_id]
+        except KeyError as error:
+            raise SkillNotFoundError from error
+
+    async def get_skill_by_name(self, name: str) -> Skill:
+        for skill in self.skill_table.values():
+            if skill.name == name:
+                return skill
+        raise SkillNotFoundError
+
+    async def list_skills(self) -> Skills:
+        return Skills(values=list(self.skill_table.values()))
+
+    async def update_skill(self, skill: Skill) -> None:
+        if skill.id not in self.skill_table:
+            raise SkillNotFoundError
+        self.skill_table[skill.id] = skill
+
+    async def delete_skill(self, skill_id: int) -> None:
+        try:
+            del self.skill_table[skill_id]
+        except KeyError as error:
+            raise SkillNotFoundError from error
+        # Remove from any competency relations
+        for comp_id, skills in list(self.competencies_skills_relations.items()):
+            skills.discard(skill_id)
+            if not skills:
+                del self.competencies_skills_relations[comp_id]
+
+    # RankStorage methods
+    async def insert_rank(self, rank: Rank) -> None:
+        for existing in self.rank_table.values():
+            if existing.name == rank.name:
+                raise RankNameAlreadyExistError
+        self.rank_table[rank.id] = rank
+
+    async def get_rank_by_id(self, rank_id: int) -> Rank:
+        try:
+            rank = self.rank_table[rank_id]
+        except KeyError as error:
+            raise RankNotFoundError from error
+
+        mission_ids = self.ranks_missions_requirements.get(rank_id, set())
+        missions = [self.mission_table[mid] for mid in mission_ids if mid in self.mission_table]
+
+        comp_reqs = self.ranks_competencies_requirements.get(rank_id, {})
+        reqs: list[RankCompetencyRequirement] = []
+        for comp_id, min_level in comp_reqs.items():
+            if comp_id in self.competencies_table:
+                comp = self.competencies_table[comp_id]
+                reqs.append(RankCompetencyRequirement(competency=comp, min_level=min_level))
+
+        return Rank(
+            id=rank.id,
+            name=rank.name,
+            required_xp=rank.required_xp,
+            required_missions=missions,
+            required_competencies=reqs,
+        )
+
+    async def get_rank_by_name(self, name: str) -> Rank:
+        for rank in self.rank_table.values():
+            if rank.name == name:
+                return await self.get_rank_by_id(rank.id)
+        raise RankNotFoundError
+
+    async def list_ranks(self) -> Ranks:
+        return Ranks(values=list(self.rank_table.values()))
+
+    async def update_rank(self, rank: Rank) -> None:
+        if rank.id not in self.rank_table:
+            raise RankNotFoundError
+        self.rank_table[rank.id] = rank
+
+    async def delete_rank(self, rank_id: int) -> None:
+        try:
+            del self.rank_table[rank_id]
+        except KeyError as error:
+            raise RankNotFoundError from error
+        self.ranks_missions_requirements.pop(rank_id, None)
+        self.ranks_competencies_requirements.pop(rank_id, None)
+
+    async def add_required_mission_to_rank(self, rank_id: int, mission_id: int) -> None:
+        if rank_id not in self.rank_table:
+            raise RankNotFoundError
+        if mission_id not in self.mission_table:
+            raise MissionNotFoundError
+        if rank_id not in self.ranks_missions_requirements:
+            self.ranks_missions_requirements[rank_id] = set()
+        self.ranks_missions_requirements[rank_id].add(mission_id)
+
+    async def remove_required_mission_from_rank(self, rank_id: int, mission_id: int) -> None:
+        if rank_id not in self.rank_table:
+            raise RankNotFoundError
+        if mission_id not in self.mission_table:
+            raise MissionNotFoundError
+        if rank_id in self.ranks_missions_requirements:
+            self.ranks_missions_requirements[rank_id].discard(mission_id)
+            if not self.ranks_missions_requirements[rank_id]:
+                del self.ranks_missions_requirements[rank_id]
+
+    async def add_required_competency_to_rank(
+        self, rank_id: int, competency_id: int, min_level: int
+    ) -> None:
+        if rank_id not in self.rank_table:
+            raise RankNotFoundError
+        if competency_id not in self.competencies_table:
+            raise CompetencyNotFoundError
+        competency = self.competencies_table[competency_id]
+        if min_level > competency.max_level:
+            raise RankCompetencyMinLevelTooHighError
+        if rank_id not in self.ranks_competencies_requirements:
+            self.ranks_competencies_requirements[rank_id] = {}
+        self.ranks_competencies_requirements[rank_id][competency_id] = min_level
+
+    async def remove_required_competency_from_rank(self, rank_id: int, competency_id: int) -> None:
+        if rank_id not in self.rank_table:
+            raise RankNotFoundError
+        if competency_id not in self.competencies_table:
+            raise CompetencyNotFoundError
+        if rank_id in self.ranks_competencies_requirements:
+            self.ranks_competencies_requirements[rank_id].pop(competency_id, None)
+            if not self.ranks_competencies_requirements[rank_id]:
+                del self.ranks_competencies_requirements[rank_id]

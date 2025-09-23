@@ -47,7 +47,7 @@ class TestMissionBranchAPI(APIFixture, FactoryFixture, ContainerFixture):
             branch=self.factory.mission_branch(branch_id=0, name="TEST")
         )
 
-    def test_create_mission_branch_already_exist(self) -> None:
+    def test_create_mission_branch_already_exists(self) -> None:
         self.use_case.execute.side_effect = MissionBranchNameAlreadyExistError
 
         response = self.api.create_mission_branch(name="TEST")
@@ -89,7 +89,7 @@ class TestUpdateMissionBranchAPI(APIFixture, FactoryFixture, ContainerFixture):
             branch=self.factory.mission_branch(branch_id=999, name="TEST")
         )
 
-    def test_update_mission_branch_name_already_exist(self) -> None:
+    def test_update_mission_branch_name_already_exists(self) -> None:
         self.use_case.execute.side_effect = MissionBranchNameAlreadyExistError
 
         response = self.api.update_mission_branch(branch_id=1, name="TEST")
@@ -178,6 +178,8 @@ class TestMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             rank_requirement=1,
             branch_id=1,
             category=MissionCategoryEnum.QUEST,
+            reward_competencies=[],
+            reward_skills=[],
         )
 
         response = self.api.create_mission(
@@ -202,6 +204,8 @@ class TestMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             "category": MissionCategoryEnum.QUEST,
             "tasks": [],
             "rewardArtifacts": [],
+            "rewardSkills": [],
+            "rewardCompetencies": [],
         }
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(
@@ -213,10 +217,14 @@ class TestMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
                 rank_requirement=1,
                 branch_id=1,
                 category=MissionCategoryEnum.QUEST,
+                tasks=None,
+                reward_artifacts=None,
+                reward_competencies=None,
+                reward_skills=None,
             )
         )
 
-    def test_create_mission_already_exist(self) -> None:
+    def test_create_mission_already_exists(self) -> None:
         self.use_case.execute.side_effect = MissionNameAlreadyExistError
 
         response = self.api.create_mission(
@@ -320,6 +328,8 @@ class TestGetMissionsAPI(APIFixture, FactoryFixture, ContainerFixture):
                     "category": MissionCategoryEnum.QUEST,
                     "tasks": [],
                     "rewardArtifacts": [],
+                    "rewardSkills": [],
+                    "rewardCompetencies": [],
                 },
                 {
                     "id": 2,
@@ -332,6 +342,8 @@ class TestGetMissionsAPI(APIFixture, FactoryFixture, ContainerFixture):
                     "category": MissionCategoryEnum.SIMULATOR,
                     "tasks": [],
                     "rewardArtifacts": [],
+                    "rewardSkills": [],
+                    "rewardCompetencies": [],
                 },
             ]
         }
@@ -379,6 +391,8 @@ class TestGetMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             "category": MissionCategoryEnum.QUEST,
             "tasks": [],
             "rewardArtifacts": [],
+            "rewardSkills": [],
+            "rewardCompetencies": [],
         }
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(mission_id=1)
@@ -419,6 +433,8 @@ class TestGetMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             "rankRequirement": 1,
             "branchId": 1,
             "category": "quest",
+            "rewardSkills": [],
+            "rewardCompetencies": [],
             "tasks": [
                 {"id": 1, "title": "TEST1", "description": "TEST1"},
                 {"id": 2, "title": "TEST2", "description": "TEST2"},
@@ -469,6 +485,8 @@ class TestGetMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             "branchId": 1,
             "category": "quest",
             "tasks": [],
+            "rewardSkills": [],
+            "rewardCompetencies": [],
             "rewardArtifacts": [
                 {
                     "id": 1,
@@ -540,6 +558,8 @@ class TestUpdateMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             "category": MissionCategoryEnum.QUEST,
             "tasks": [],
             "rewardArtifacts": [],
+            "rewardSkills": [],
+            "rewardCompetencies": [],
         }
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(
@@ -555,7 +575,7 @@ class TestUpdateMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             )
         )
 
-    def test_update_mission_already_exist(self) -> None:
+    def test_update_mission_already_exists(self) -> None:
         self.use_case.execute.side_effect = MissionNameAlreadyExistError
 
         response = self.api.update_mission(
@@ -672,6 +692,8 @@ class TestAddTaskToMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             "category": MissionCategoryEnum.QUEST,
             "tasks": [],
             "rewardArtifacts": [],
+            "rewardSkills": [],
+            "rewardCompetencies": [],
         }
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(mission_id=1, task_id=1)
@@ -728,6 +750,8 @@ class TestRemoveTaskFromMissionAPI(APIFixture, FactoryFixture, ContainerFixture)
             "category": MissionCategoryEnum.QUEST,
             "tasks": [],
             "rewardArtifacts": [],
+            "rewardSkills": [],
+            "rewardCompetencies": [],
         }
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(mission_id=1, task_id=1)
@@ -768,6 +792,8 @@ class TestRemoveTaskFromMissionAPI(APIFixture, FactoryFixture, ContainerFixture)
             "rankRequirement": 1,
             "branchId": 1,
             "category": MissionCategoryEnum.QUEST,
+            "rewardSkills": [],
+            "rewardCompetencies": [],
             "tasks": [
                 {"id": 1, "title": "TEST1", "description": "TEST1"},
                 {"id": 2, "title": "TEST2", "description": "TEST2"},
@@ -825,6 +851,8 @@ class TestAddArtifactToMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             "category": "quest",
             "tasks": [],
             "rewardArtifacts": [],
+            "rewardSkills": [],
+            "rewardCompetencies": [],
         }
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(mission_id=1, artifact_id=1)
@@ -857,6 +885,8 @@ class TestRemoveArtifactFromMissionAPI(APIFixture, FactoryFixture, ContainerFixt
             "category": "quest",
             "tasks": [],
             "rewardArtifacts": [],
+            "rewardSkills": [],
+            "rewardCompetencies": [],
         }
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(mission_id=1, artifact_id=1)
