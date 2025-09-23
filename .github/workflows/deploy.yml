@@ -17,87 +17,33 @@ jobs:
           script: |
             set -e
 
-            HEALTHCHECK_RETRIES=10
-            HEALTHCHECK_DELAY=10
-
             echo "🚀 Логин в Docker Hub..."
             echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ vars.DOCKERHUB_USERNAME }}" --password-stdin
 
-            echo "📥 Скачиваем новый образ..."
-            docker image pull ${{ vars.DOCKERHUB_USERNAME }}/${{ vars.DOCKERHUB_REPONAME }}:latest
+            echo "📥 Обновляем docker image..."
+            docker image pull ${{ vars.DOCKERHUB_USERNAME }}/${{ vars.DOCKERHUB_REPONAME }}:latest || true
 
-            echo "🔄 Запускаем новый контейнер для healthcheck..."
-            docker container run -d \
-              --name ${{ vars.DOCKERHUB_REPONAME }}_new \
-              --label app=${{ vars.DOCKERHUB_REPONAME }} \
-              -e TZ=Europe/Moscow \
-              -p 8081:8080 \
-              -e DB_NAME=${{ secrets.DB_NAME }} \
-              -e DB_USER=${{ secrets.DB_USER }} \
-              -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-              -e DB_HOST=${{ secrets.DB_HOST }} \
-              -e DB_PORT=${{ secrets.DB_PORT }} \
-              -e MINIO_ENDPOINT=${{ secrets.MINIO_ENDPOINT }} \
-              ${{ vars.DOCKERHUB_USERNAME }}/${{ vars.DOCKERHUB_REPONAME }}
+            echo "🔧 Экспортируем переменные окружения..."
+            export DOCKERHUB_USERNAME="${{ vars.DOCKERHUB_USERNAME }}"
+            export DOCKERHUB_REPONAME="${{ vars.DOCKERHUB_REPONAME }}"
+            export DB_NAME="${{ secrets.DB_NAME }}"
+            export DB_USER="${{ secrets.DB_USER }}"
+            export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
+            export DB_HOST="${{ secrets.DB_HOST }}"
+            export DB_PORT="${{ secrets.DB_PORT }}"
+            export MINIO_ENDPOINT="${{ secrets.MINIO_ENDPOINT }}"
 
-            echo "⏳ Проверяем healthcheck нового контейнера..."
-            success=false
-            for i in $(seq 1 $HEALTHCHECK_RETRIES); do
-              if curl -sSf http://localhost:8081/health > /dev/null; then
-                echo "✅ Healthcheck passed!"
-                success=true
-                break
-              else
-                echo "⚠️ Попытка $i неудачна, ждём $HEALTHCHECK_DELAY сек..."
-                sleep $HEALTHCHECK_DELAY
-              fi
-            done
+            echo "🛑 Останавливаем текущий compose стек (если есть)..."
+            docker compose -f .github/docker-compose.yml down || true
 
-            if [ "$success" = true ]; then
-              echo "🛑 Останавливаем и удаляем старый контейнер..."
-              docker container stop ${{ vars.DOCKERHUB_REPONAME }} || true
-              docker container rm ${{ vars.DOCKERHUB_REPONAME }} || true
+            echo "🚀 Запускаем стек через docker compose (ожидаем готовности)..."
+            docker compose -f .github/docker-compose.yml up -d --pull always --wait --wait-timeout 180
 
-              echo "🔄 Перезапускаем новый контейнер на порту 80..."
-              docker container stop ${{ vars.DOCKERHUB_REPONAME }}_new || true
-              docker container rm ${{ vars.DOCKERHUB_REPONAME }}_new || true
-              docker container run -d \
-                --name ${{ vars.DOCKERHUB_REPONAME }} \
-                --label app=${{ vars.DOCKERHUB_REPONAME }} \
-                -e TZ=Europe/Moscow \
-                -p 80:8080 \
-                -e DB_NAME=${{ secrets.DB_NAME }} \
-                -e DB_USER=${{ secrets.DB_USER }} \
-                -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-                -e DB_HOST=${{ secrets.DB_HOST }} \
-                -e DB_PORT=${{ secrets.DB_PORT }} \
-                -e MINIO_ENDPOINT=${{ secrets.MINIO_ENDPOINT }} \
-                ${{ vars.DOCKERHUB_USERNAME }}/${{ vars.DOCKERHUB_REPONAME }}
+            echo "🧹 Чистим dangling images..."
+            docker image prune -f
 
-              echo "🧹 Чистим dangling images..."
-              docker image prune -f
-
-              echo "✅ Деплой успешно завершён!"
-              echo "⏳ Ждём 10 секунд перед снятием логов..."
-              sleep 10
-              echo "📋 Логи контейнера:"
-              docker logs ${{ vars.DOCKERHUB_REPONAME }}
-
-            else
-              echo "❌ Healthcheck не прошёл! Новый контейнер не будет запущен."
-              echo "⏳ Ждём 10 секунд перед снятием логов..."
-              sleep 10
-              echo "📋 Логи нового контейнера:"
-              docker logs ${{ vars.DOCKERHUB_REPONAME }}_new
-
-              echo "🧹 Удаляем новый контейнер и оставляем старый работать..."
-              docker container stop ${{ vars.DOCKERHUB_REPONAME }}_new || true
-              docker container rm ${{ vars.DOCKERHUB_REPONAME }}_new || true
-
-              if ! docker ps --filter "name=${{ vars.DOCKERHUB_REPONAME }}" --format '{{.Names}}' | grep -q ${{ vars.DOCKERHUB_REPONAME }}; then
-                echo "🔄 Перезапускаем старый контейнер..."
-                docker container start ${{ vars.DOCKERHUB_REPONAME }} || true
-              fi
-
-              exit 1
-            fi
+            echo "✅ Деплой успешно завершён!"
+            echo "⏳ Ждём 10 секунд перед снятием логов..."
+            sleep 10
+            echo "📋 Логи контейнера:"
+            docker logs ${{ vars.DOCKERHUB_REPONAME }}
