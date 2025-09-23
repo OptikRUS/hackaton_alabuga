@@ -7,6 +7,27 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Prepare remote directory
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          port: ${{ secrets.SERVER_PORT }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          password: ${{ secrets.SERVER_SSH_PRIVATE_KEY }}
+          script: |
+            mkdir -p ~/.github
+
+      - name: Upload docker-compose to server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          port: ${{ secrets.SERVER_PORT }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          password: ${{ secrets.SERVER_SSH_PRIVATE_KEY }}
+          source: ".github/docker-compose.yml"
+          target: "~/.github/"
+          overwrite: true
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@master
         with:
@@ -34,10 +55,10 @@ jobs:
             export MINIO_ENDPOINT="${{ secrets.MINIO_ENDPOINT }}"
 
             echo "🛑 Останавливаем текущий compose стек (если есть)..."
-            docker compose -f .github/docker-compose.yml down || true
+            docker compose -f ~/.github/docker-compose.yml down || true
 
             echo "🚀 Запускаем стек через docker compose (ожидаем готовности)..."
-            docker compose -f .github/docker-compose.yml up -d --pull always --wait --wait-timeout 180
+            docker compose -f ~/.github/docker-compose.yml up -d --pull always --wait --wait-timeout 180
 
             echo "🧹 Чистим dangling images..."
             docker image prune -f
