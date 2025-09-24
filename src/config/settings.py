@@ -15,10 +15,15 @@ class AppSettings(BaseSettings):
 
 
 class ServerSettings(BaseSettings):
+    PROTOCOL: str = "http"
     HOST: str = "http://0.0.0.0"
     PORT: int = 22
 
     model_config = SettingsConfigDict(env_prefix="SERVER_")
+
+    @property
+    def URL(self) -> str:  # noqa: N802
+        return f"{self.PROTOCOL}://{self.HOST}"
 
 
 class DatabaseSettings(BaseSettings):

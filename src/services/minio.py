@@ -16,7 +16,7 @@ from src.core.media.schemas import FileMetadata, FileObject
 @dataclass
 class MinioService(FileStorage):
     minio_connection: AioBaseClient
-    server_url: str = settings.SERVER.HOST
+    server_url: str = settings.SERVER.URL
     region_name: str = settings.MINIO.REGION
     bucket: str = settings.MINIO.BUCKET
     chunck_size: int = 65536
