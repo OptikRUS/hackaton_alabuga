@@ -62,7 +62,7 @@ from src.core.tasks.schemas import (
     MissionTasks,
 )
 from src.core.users.exceptions import UserAlreadyExistError, UserNotFoundError
-from src.core.users.schemas import User
+from src.core.users.schemas import CandidateUser, User
 from src.storages.models import (
     ArtifactMissionRelationModel,
     ArtifactModel,
@@ -98,13 +98,13 @@ class DatabaseStorage(
         query = insert(UserModel).values(
             {
                 "login": user.login,
-                "password": user.password,
-                "role": user.role,
-                "rank_id": user.rank_id,
-                "exp": user.exp,
-                "mana": user.mana,
                 "first_name": user.first_name,
                 "last_name": user.last_name,
+                "password": user.password,
+                "role": user.role,
+                "rank_id": 0,
+                "exp": 0,
+                "mana": 0,
             },
         )
         try:
@@ -123,6 +123,17 @@ class DatabaseStorage(
         if user is None:
             raise UserNotFoundError
         return user.to_schema()
+
+    async def get_candidate_by_login(self, login: str) -> CandidateUser:
+        query = (
+            select(UserModel)
+            .where(UserModel.login == login)
+            .options(selectinload(UserModel.artifacts))
+        )
+        candidate = await self.session.scalar(query)
+        if candidate is None:
+            raise UserNotFoundError
+        return candidate.to_candidate_schema()
 
     async def insert_mission_branch(self, branch: MissionBranch) -> None:
         query = (

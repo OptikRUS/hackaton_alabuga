@@ -11,11 +11,7 @@ from src.core.users.enums import UserRoleEnum
 
 class JwtUser(BoundaryModel):
     login: str = Field(default="", alias="login", examples=["user123"])
-    role: UserRoleEnum = Field(
-        default=UserRoleEnum.CANDIDATE,
-        alias="role",
-        examples=[UserRoleEnum.CANDIDATE],
-    )
+    role: UserRoleEnum = Field(..., alias="role", examples=[UserRoleEnum.CANDIDATE])
 
     @classmethod
     def decode(
@@ -34,3 +30,11 @@ class JwtUser(BoundaryModel):
             return cls.model_validate(message)
         except Exception as ex:
             raise InvalidJWTTokenError from ex
+
+
+class JwtHRUser(JwtUser):
+    role: UserRoleEnum = UserRoleEnum.HR
+
+
+class JwtCandidateUser(JwtUser):
+    role: UserRoleEnum = UserRoleEnum.CANDIDATE

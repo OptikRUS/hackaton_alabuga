@@ -1,5 +1,6 @@
 import pytest
 
+from src.core.users.enums import UserRoleEnum
 from src.core.users.exceptions import UserIncorrectCredentialsError, UserNotFoundError
 from src.core.users.use_cases import LoginUserUseCase
 from src.tests.fixtures import FactoryFixture
@@ -17,19 +18,35 @@ class TestLoginUserUseCase(FactoryFixture):
             password_service=self.password_service,
         )
 
-    async def test_login_user(self) -> None:
+    async def test_login_hr(self) -> None:
         await self.storage.insert_user(
             user=self.factory.user(
                 login="TEST",
                 password="TEST",
                 first_name="TEST",
                 last_name="TEST",
+                role=UserRoleEnum.HR,
             )
         )
 
         token = await self.use_case.execute(login="TEST", password="TEST")
 
-        assert token == "{'login': 'TEST'}"  # noqa: S105
+        assert token == "{'login': 'TEST', 'role': <UserRoleEnum.HR: 'hr'>}"  # noqa: S105
+
+    async def test_login_candidate(self) -> None:
+        await self.storage.insert_user(
+            user=self.factory.user(
+                login="TEST",
+                password="TEST",
+                first_name="TEST",
+                last_name="TEST",
+                role=UserRoleEnum.CANDIDATE,
+            )
+        )
+
+        token = await self.use_case.execute(login="TEST", password="TEST")
+
+        assert token == "{'login': 'TEST', 'role': <UserRoleEnum.CANDIDATE: 'candidate'>}"  # noqa: S105
 
     async def test_login_user_not_found(self) -> None:
         with pytest.raises(UserNotFoundError):

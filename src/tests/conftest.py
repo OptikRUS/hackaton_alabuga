@@ -63,14 +63,29 @@ def app() -> FastAPI:
 
 
 @pytest.fixture(scope="session")
-def jwt_user() -> JwtUser:
-    return JwtUser(login="test_user", role=UserRoleEnum.CANDIDATE)
+def hr_jwt_user() -> JwtUser:
+    return JwtUser(login="hr_user", role=UserRoleEnum.HR)
 
 
 @pytest.fixture(scope="session")
-def auth_token(jwt_user: JwtUser) -> str:
+def candidate_jwt_user() -> JwtUser:
+    return JwtUser(login="candidate_user", role=UserRoleEnum.CANDIDATE)
+
+
+@pytest.fixture(scope="session")
+def hr_auth_token(hr_jwt_user: JwtUser) -> str:
     token = pyjwt.encode(
-        jwt_user.model_dump(),
+        hr_jwt_user.model_dump(),
+        key=settings.AUTH.PRIVATE_KEY.get_secret_value(),
+        algorithm=settings.AUTH.ALGORITHM,
+    )
+    return f"Bearer {token}"
+
+
+@pytest.fixture(scope="session")
+def candidate_auth_token(candidate_jwt_user: JwtUser) -> str:
+    token = pyjwt.encode(
+        candidate_jwt_user.model_dump(),
         key=settings.AUTH.PRIVATE_KEY.get_secret_value(),
         algorithm=settings.AUTH.ALGORITHM,
     )
@@ -85,9 +100,20 @@ def no_auth_client(app: FastAPI, container: AsyncContainer) -> Generator[TestCli
 
 
 @pytest.fixture
-def client(no_auth_client: TestClient, auth_token: str) -> Generator[TestClient]:
+def hr_client(no_auth_client: TestClient, hr_auth_token: str) -> Generator[TestClient]:
     client = copy(no_auth_client)
-    client.headers = Headers({"Authorization": auth_token})
+    client.headers = Headers({"Authorization": hr_auth_token})
+    yield client
+    client.headers = Headers()
+
+
+@pytest.fixture
+def candidate_client(
+    no_auth_client: TestClient,
+    candidate_auth_token: str,
+) -> Generator[TestClient]:
+    client = copy(no_auth_client)
+    client.headers = Headers({"Authorization": candidate_auth_token})
     yield client
     client.headers = Headers()
 

@@ -38,12 +38,12 @@ class StorageHelper:
                 {
                     "login": user.login,
                     "password": user.password,
-                    "role": user.role,
-                    "rank_id": user.rank_id,
-                    "exp": user.exp,
-                    "mana": user.mana,
                     "first_name": user.first_name,
                     "last_name": user.last_name,
+                    "role": user.role,
+                    "rank_id": 0,
+                    "exp": 0,
+                    "mana": 0,
                 },
             )
             .returning(UserModel)

@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from typing import cast
 
 from src.core.artifacts.exceptions import (
     ArtifactNotFoundError,
@@ -50,14 +51,14 @@ from src.core.tasks.schemas import (
     MissionTasks,
 )
 from src.core.users.exceptions import UserAlreadyExistError, UserNotFoundError
-from src.core.users.schemas import User
+from src.core.users.schemas import CandidateUser, HRUser, User
 
 
 @dataclass
 class StorageMock(
     UserStorage, MissionStorage, ArtifactStorage, CompetencyStorage, SkillStorage, RankStorage
 ):
-    user_table: dict[str, User] = field(default_factory=dict)
+    user_table: dict[str, User | CandidateUser | HRUser] = field(default_factory=dict)
     mission_branch_table: dict[str, MissionBranch] = field(default_factory=dict)
     mission_table: dict[int, Mission] = field(default_factory=dict)
     task_table: dict[int, MissionTask] = field(default_factory=dict)
@@ -84,6 +85,12 @@ class StorageMock(
     async def get_user_by_login(self, login: str) -> User:
         try:
             return self.user_table[login]
+        except KeyError as error:
+            raise UserNotFoundError from error
+
+    async def get_candidate_by_login(self, login: str) -> CandidateUser:
+        try:
+            return cast("CandidateUser", self.user_table[login])
         except KeyError as error:
             raise UserNotFoundError from error
 
@@ -230,7 +237,6 @@ class StorageMock(
             if not self.missions_tasks_relations[mission_id]:
                 del self.missions_tasks_relations[mission_id]
 
-    # ArtifactStorage methods
     async def insert_artifact(self, artifact: Artifact) -> None:
         for existing_artifact in self.artifact_table.values():
             if existing_artifact.title == artifact.title:

@@ -5,7 +5,7 @@ from src.core.artifacts.use_cases import (
     AddArtifactToUserUseCase,
     RemoveArtifactFromUserUseCase,
 )
-from src.core.exceptions import InvalidJWTTokenError
+from src.core.exceptions import InvalidJWTTokenError, PermissionDeniedError
 from src.core.users.enums import UserRoleEnum
 from src.core.users.exceptions import (
     UserAlreadyExistError,
@@ -21,10 +21,10 @@ class TestUsersAPI(APIFixture, FactoryFixture, ContainerFixture):
     async def setup(self) -> None:
         self.use_case = await self.container.override_use_case(CreateUserUseCase)
 
-    def test_user_registration(self) -> None:
+    def test_hr_registration(self) -> None:
         self.use_case.execute.return_value = None
 
-        response = self.api.register_user(
+        response = self.api.register_hr_user(
             login="TEST",
             first_name="TEST",
             last_name="TEST",
@@ -34,7 +34,7 @@ class TestUsersAPI(APIFixture, FactoryFixture, ContainerFixture):
         assert response.status_code == codes.CREATED
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(
-            user=self.factory.user(
+            user=self.factory.hr_user(
                 login="TEST",
                 first_name="TEST",
                 last_name="TEST",
@@ -42,10 +42,31 @@ class TestUsersAPI(APIFixture, FactoryFixture, ContainerFixture):
             )
         )
 
-    def test_user_registration_already_exists(self) -> None:
+    def test_candidate_registration(self) -> None:
+        self.use_case.execute.return_value = None
+
+        response = self.api.register_candidate_user(
+            login="TEST",
+            first_name="TEST",
+            last_name="TEST",
+            password="TEST",
+        )
+
+        assert response.status_code == codes.CREATED
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(
+            user=self.factory.candidate(
+                login="TEST",
+                first_name="TEST",
+                last_name="TEST",
+                password="TEST",
+            )
+        )
+
+    def test_hr_registration_already_exists(self) -> None:
         self.use_case.execute.side_effect = UserAlreadyExistError
 
-        response = self.api.register_user(
+        response = self.api.register_hr_user(
             login="TEST",
             first_name="TEST",
             last_name="TEST",
@@ -56,7 +77,29 @@ class TestUsersAPI(APIFixture, FactoryFixture, ContainerFixture):
         assert response.json() == {"detail": UserAlreadyExistError.detail}
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(
-            user=self.factory.user(
+            user=self.factory.hr_user(
+                login="TEST",
+                first_name="TEST",
+                last_name="TEST",
+                password="TEST",
+            )
+        )
+
+    def test_candidate_registration_already_exists(self) -> None:
+        self.use_case.execute.side_effect = UserAlreadyExistError
+
+        response = self.api.register_candidate_user(
+            login="TEST",
+            first_name="TEST",
+            last_name="TEST",
+            password="TEST",
+        )
+
+        assert response.status_code == codes.CONFLICT
+        assert response.json() == {"detail": UserAlreadyExistError.detail}
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(
+            user=self.factory.candidate(
                 login="TEST",
                 first_name="TEST",
                 last_name="TEST",
@@ -110,6 +153,16 @@ class TestUserLoginAPI(APIFixture, FactoryFixture, ContainerFixture):
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(login="TEST", password="TEST")
 
+    def test_user_permission_denied_error(self) -> None:
+        self.use_case.execute.side_effect = PermissionDeniedError
+
+        response = self.api.login_user(login="TEST", password="TEST")
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": PermissionDeniedError.detail}
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(login="TEST", password="TEST")
+
 
 class TestGetMeAPI(APIFixture, FactoryFixture, ContainerFixture):
     @pytest.fixture(autouse=True)
@@ -117,47 +170,20 @@ class TestGetMeAPI(APIFixture, FactoryFixture, ContainerFixture):
         self.use_case = await self.container.override_use_case(GetUserUseCase)
 
     async def test_get_me_no_auth(self) -> None:
-        response = self.no_auth_api.get_me()
+        response = self.api.get_me()
 
         assert response.status_code == codes.FORBIDDEN
         assert response.json() == {"detail": "Not authenticated"}
 
-    def test_get(self) -> None:
-        self.use_case.execute.return_value = self.factory.user(
-            login="TEST",
-            first_name="TEST",
-            last_name="TEST",
-            password="TEST",
-            role=UserRoleEnum.CANDIDATE,
-            exp=100,
-            mana=150,
-            rank_id=0,
-        )
-
-        response = self.api.get_me()
-
-        assert response.status_code == codes.OK
-        assert response.json() == {
-            "login": "TEST",
-            "firstName": "TEST",
-            "lastName": "TEST",
-            "role": "candidate",
-            "rankId": 0,
-            "exp": 100,
-            "mana": 150,
-        }
-        self.use_case.execute.assert_called_once()
-        self.use_case.execute.assert_awaited_once_with(login="test_user")
-
     def test_get_user_not_found(self) -> None:
         self.use_case.execute.side_effect = UserNotFoundError
 
-        response = self.api.get_me()
+        response = self.hr_api.get_me()
 
         assert response.status_code == codes.NOT_FOUND
         assert response.json() == {"detail": UserNotFoundError.detail}
         self.use_case.execute.assert_called_once()
-        self.use_case.execute.assert_awaited_once_with(login="test_user")
+        self.use_case.execute.assert_awaited_once_with(login="hr_user")
 
 
 class TestAddArtifactToUserAPI(APIFixture, FactoryFixture, ContainerFixture):
@@ -169,6 +195,7 @@ class TestAddArtifactToUserAPI(APIFixture, FactoryFixture, ContainerFixture):
         self.use_case.execute.return_value = self.factory.user(
             login="testuser",
             password="password",
+            role=UserRoleEnum.CANDIDATE,
         )
 
         response = self.api.add_artifact_to_user(user_login="testuser", artifact_id=1)
@@ -179,9 +206,6 @@ class TestAddArtifactToUserAPI(APIFixture, FactoryFixture, ContainerFixture):
             "firstName": "TEST",
             "lastName": "TEST",
             "role": "candidate",
-            "rankId": 0,
-            "exp": 0,
-            "mana": 0,
         }
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(user_login="testuser", artifact_id=1)
@@ -196,6 +220,7 @@ class TestRemoveArtifactFromUserAPI(APIFixture, FactoryFixture, ContainerFixture
         self.use_case.execute.return_value = self.factory.user(
             login="testuser",
             password="password",
+            role=UserRoleEnum.CANDIDATE,
         )
 
         response = self.api.remove_artifact_from_user(user_login="testuser", artifact_id=1)
@@ -206,9 +231,6 @@ class TestRemoveArtifactFromUserAPI(APIFixture, FactoryFixture, ContainerFixture
             "firstName": "TEST",
             "lastName": "TEST",
             "role": "candidate",
-            "rankId": 0,
-            "exp": 0,
-            "mana": 0,
         }
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(user_login="testuser", artifact_id=1)

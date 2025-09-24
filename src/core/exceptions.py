@@ -8,3 +8,7 @@ class BaseExceptionError(Exception):
 
 class InvalidJWTTokenError(BaseExceptionError):
     detail: str = "INVALID_JWT_TOKEN_ERROR"
+
+
+class PermissionDeniedError(BaseExceptionError):
+    detail: str = "PERMISSION_DENIED_ERROR"

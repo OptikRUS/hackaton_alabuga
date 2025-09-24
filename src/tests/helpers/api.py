@@ -12,9 +12,24 @@ class APIHelper:
     def get_health(self) -> Response:
         return self.client.get("/health")
 
-    def register_user(self, login: str, first_name: str, last_name: str, password: str) -> Response:
+    def register_hr_user(
+        self, login: str, first_name: str, last_name: str, password: str
+    ) -> Response:
         return self.client.post(
             url="/users/register",
+            json={
+                "login": login,
+                "firstName": first_name,
+                "lastName": last_name,
+                "password": password,
+            },
+        )
+
+    def register_candidate_user(
+        self, login: str, first_name: str, last_name: str, password: str
+    ) -> Response:
+        return self.client.post(
+            url="/mobile/users/register",
             json={
                 "login": login,
                 "firstName": first_name,

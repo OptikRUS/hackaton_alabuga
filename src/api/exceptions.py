@@ -11,7 +11,7 @@ from src.core.competencies.exceptions import (
     CompetencyNotFoundError,
     CompetencySkillRelationAlreadyExistsError,
 )
-from src.core.exceptions import BaseExceptionError, InvalidJWTTokenError
+from src.core.exceptions import BaseExceptionError, InvalidJWTTokenError, PermissionDeniedError
 from src.core.media.exceptions import MediaNotFoundError
 from src.core.missions.exceptions import (
     MissionBranchNameAlreadyExistError,
@@ -71,6 +71,7 @@ exception_handlers: (
     status.HTTP_500_INTERNAL_SERVER_ERROR: internal_server_error_exception_handler,
     BaseExceptionError: internal_server_error_exception_handler,
     InvalidJWTTokenError: handler(status_code=status.HTTP_401_UNAUTHORIZED),
+    PermissionDeniedError: handler(status_code=status.HTTP_403_FORBIDDEN),
     UserNotFoundError: handler(status_code=status.HTTP_404_NOT_FOUND),
     UserAlreadyExistError: handler(status_code=status.HTTP_409_CONFLICT),
     UserIncorrectCredentialsError: handler(status_code=status.HTTP_401_UNAUTHORIZED),
