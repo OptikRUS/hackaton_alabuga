@@ -6,6 +6,7 @@ from src.core.artifacts.use_cases import (
     AddArtifactToMissionUseCase,
     RemoveArtifactFromMissionUseCase,
 )
+from src.core.exceptions import PermissionDeniedError
 from src.core.missions.enums import MissionCategoryEnum
 from src.core.missions.exceptions import (
     MissionBranchNameAlreadyExistError,
@@ -35,10 +36,22 @@ class TestMissionBranchAPI(APIFixture, FactoryFixture, ContainerFixture):
     async def setup(self) -> None:
         self.use_case = await self.container.override_use_case(CreateMissionBranchUseCase)
 
+    def test_not_auth(self) -> None:
+        response = self.api.create_mission_branch(name="TEST")
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_candidate_forbidden(self) -> None:
+        response = self.candidate_api.create_mission_branch(name="TEST")
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": PermissionDeniedError.detail}
+
     def test_create_mission_branch(self) -> None:
         self.use_case.execute.return_value = self.factory.mission_branch(branch_id=1, name="TEST")
 
-        response = self.api.create_mission_branch(name="TEST")
+        response = self.hr_api.create_mission_branch(name="TEST")
 
         assert response.status_code == codes.CREATED
         assert response.json() == {"id": 1, "name": "TEST"}
@@ -50,7 +63,7 @@ class TestMissionBranchAPI(APIFixture, FactoryFixture, ContainerFixture):
     def test_create_mission_branch_already_exists(self) -> None:
         self.use_case.execute.side_effect = MissionBranchNameAlreadyExistError
 
-        response = self.api.create_mission_branch(name="TEST")
+        response = self.hr_api.create_mission_branch(name="TEST")
 
         assert response.status_code == codes.CONFLICT
         assert response.json() == {"detail": MissionBranchNameAlreadyExistError.detail}
@@ -65,10 +78,22 @@ class TestUpdateMissionBranchAPI(APIFixture, FactoryFixture, ContainerFixture):
     async def setup(self) -> None:
         self.use_case = await self.container.override_use_case(UpdateMissionBranchUseCase)
 
+    def test_not_auth(self) -> None:
+        response = self.api.update_mission_branch(branch_id=1, name="TEST")
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_candidate_forbidden(self) -> None:
+        response = self.candidate_api.update_mission_branch(branch_id=1, name="TEST")
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": PermissionDeniedError.detail}
+
     def test_update_mission_branch(self) -> None:
         self.use_case.execute.return_value = self.factory.mission_branch(branch_id=1, name="TEST")
 
-        response = self.api.update_mission_branch(branch_id=1, name="TEST")
+        response = self.hr_api.update_mission_branch(branch_id=1, name="TEST")
 
         assert response.status_code == codes.OK
         assert response.json() == {"id": 1, "name": "TEST"}
@@ -80,7 +105,7 @@ class TestUpdateMissionBranchAPI(APIFixture, FactoryFixture, ContainerFixture):
     def test_update_mission_branch_not_found(self) -> None:
         self.use_case.execute.side_effect = MissionBranchNotFoundError
 
-        response = self.api.update_mission_branch(branch_id=999, name="TEST")
+        response = self.hr_api.update_mission_branch(branch_id=999, name="TEST")
 
         assert response.status_code == codes.NOT_FOUND
         assert response.json() == {"detail": MissionBranchNotFoundError.detail}
@@ -92,7 +117,7 @@ class TestUpdateMissionBranchAPI(APIFixture, FactoryFixture, ContainerFixture):
     def test_update_mission_branch_name_already_exists(self) -> None:
         self.use_case.execute.side_effect = MissionBranchNameAlreadyExistError
 
-        response = self.api.update_mission_branch(branch_id=1, name="TEST")
+        response = self.hr_api.update_mission_branch(branch_id=1, name="TEST")
 
         assert response.status_code == codes.CONFLICT
         assert response.json() == {"detail": MissionBranchNameAlreadyExistError.detail}
@@ -107,6 +132,12 @@ class TestGetMissionBranchesAPI(APIFixture, FactoryFixture, ContainerFixture):
     async def setup(self) -> None:
         self.use_case = await self.container.override_use_case(GetMissionBranchesUseCase)
 
+    def test_not_auth(self) -> None:
+        response = self.api.get_mission_branches()
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
     def test_get_mission_branches(self) -> None:
         self.use_case.execute.return_value = self.factory.mission_branches(
             values=[
@@ -115,7 +146,7 @@ class TestGetMissionBranchesAPI(APIFixture, FactoryFixture, ContainerFixture):
             ]
         )
 
-        response = self.api.get_mission_branches()
+        response = self.hr_api.get_mission_branches()
 
         assert response.status_code == codes.OK
         assert response.json() == {
@@ -130,7 +161,7 @@ class TestGetMissionBranchesAPI(APIFixture, FactoryFixture, ContainerFixture):
     def test_get_mission_branches_empty(self) -> None:
         self.use_case.execute.return_value = self.factory.mission_branches(values=[])
 
-        response = self.api.get_mission_branches()
+        response = self.candidate_api.get_mission_branches()
 
         assert response.status_code == codes.OK
         assert response.json() == {"values": []}
@@ -143,10 +174,22 @@ class TestDeleteMissionBranchAPI(APIFixture, FactoryFixture, ContainerFixture):
     async def setup(self) -> None:
         self.use_case = await self.container.override_use_case(DeleteMissionBranchUseCase)
 
+    def test_not_auth(self) -> None:
+        response = self.api.delete_mission_branch(branch_id=1)
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_candidate_forbidden(self) -> None:
+        response = self.candidate_api.delete_mission_branch(branch_id=1)
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": PermissionDeniedError.detail}
+
     def test_delete_mission_branch(self) -> None:
         self.use_case.execute.return_value = None
 
-        response = self.api.delete_mission_branch(branch_id=1)
+        response = self.hr_api.delete_mission_branch(branch_id=1)
 
         assert response.status_code == codes.NO_CONTENT
         self.use_case.execute.assert_called_once()
@@ -155,7 +198,7 @@ class TestDeleteMissionBranchAPI(APIFixture, FactoryFixture, ContainerFixture):
     def test_delete_mission_branch_not_found(self) -> None:
         self.use_case.execute.side_effect = MissionBranchNotFoundError
 
-        response = self.api.delete_mission_branch(branch_id=999)
+        response = self.hr_api.delete_mission_branch(branch_id=999)
 
         assert response.status_code == codes.NOT_FOUND
         assert response.json() == {"detail": MissionBranchNotFoundError.detail}
@@ -167,6 +210,34 @@ class TestMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
     @pytest.fixture(autouse=True)
     async def setup(self) -> None:
         self.use_case = await self.container.override_use_case(CreateMissionUseCase)
+
+    def test_not_auth(self) -> None:
+        response = self.api.create_mission(
+            title="TEST",
+            description="TEST",
+            reward_xp=100,
+            reward_mana=50,
+            rank_requirement=1,
+            branch_id=1,
+            category=MissionCategoryEnum.QUEST,
+        )
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_candidate_forbidden(self) -> None:
+        response = self.candidate_api.create_mission(
+            title="TEST",
+            description="TEST",
+            reward_xp=100,
+            reward_mana=50,
+            rank_requirement=1,
+            branch_id=1,
+            category=MissionCategoryEnum.QUEST,
+        )
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": PermissionDeniedError.detail}
 
     def test_create_mission(self) -> None:
         self.use_case.execute.return_value = self.factory.mission(
@@ -182,7 +253,7 @@ class TestMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             reward_skills=[],
         )
 
-        response = self.api.create_mission(
+        response = self.hr_api.create_mission(
             title="TEST",
             description="TEST",
             reward_xp=100,
@@ -227,7 +298,7 @@ class TestMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
     def test_create_mission_already_exists(self) -> None:
         self.use_case.execute.side_effect = MissionNameAlreadyExistError
 
-        response = self.api.create_mission(
+        response = self.hr_api.create_mission(
             title="TEST",
             description="TEST",
             reward_xp=100,
@@ -255,7 +326,7 @@ class TestMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
     def test_create_mission_branch_not_found(self) -> None:
         self.use_case.execute.side_effect = MissionBranchNotFoundError
 
-        response = self.api.create_mission(
+        response = self.hr_api.create_mission(
             title="TEST",
             description="TEST",
             reward_xp=100,
@@ -286,6 +357,12 @@ class TestGetMissionsAPI(APIFixture, FactoryFixture, ContainerFixture):
     async def setup(self) -> None:
         self.use_case = await self.container.override_use_case(GetMissionsUseCase)
 
+    def test_not_auth(self) -> None:
+        response = self.api.get_missions()
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
     def test_get_missions(self) -> None:
         self.use_case.execute.return_value = self.factory.missions(
             values=[
@@ -312,7 +389,7 @@ class TestGetMissionsAPI(APIFixture, FactoryFixture, ContainerFixture):
             ]
         )
 
-        response = self.api.get_missions()
+        response = self.hr_api.get_missions()
 
         assert response.status_code == codes.OK
         assert response.json() == {
@@ -353,7 +430,7 @@ class TestGetMissionsAPI(APIFixture, FactoryFixture, ContainerFixture):
     def test_get_missions_empty(self) -> None:
         self.use_case.execute.return_value = self.factory.missions(values=[])
 
-        response = self.api.get_missions()
+        response = self.candidate_api.get_missions()
 
         assert response.status_code == codes.OK
         assert response.json() == {"values": []}
@@ -364,6 +441,12 @@ class TestGetMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
     @pytest.fixture(autouse=True)
     async def setup(self) -> None:
         self.use_case = await self.container.override_use_case(GetMissionDetailUseCase)
+
+    def test_not_auth(self) -> None:
+        response = self.api.get_mission(mission_id=1)
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
 
     def test_get_mission(self) -> None:
         self.use_case.execute.return_value = self.factory.mission(
@@ -377,7 +460,7 @@ class TestGetMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             category=MissionCategoryEnum.QUEST,
         )
 
-        response = self.api.get_mission(mission_id=1)
+        response = self.hr_api.get_mission(mission_id=1)
 
         assert response.status_code == codes.OK
         assert response.json() == {
@@ -421,7 +504,7 @@ class TestGetMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             ],
         )
 
-        response = self.api.get_mission(mission_id=1)
+        response = self.candidate_api.get_mission(mission_id=1)
 
         assert response.status_code == codes.OK
         assert response.json() == {
@@ -472,7 +555,7 @@ class TestGetMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             ],
         )
 
-        response = self.api.get_mission(mission_id=1)
+        response = self.hr_api.get_mission(mission_id=1)
 
         assert response.status_code == codes.OK
         assert response.json() == {
@@ -510,7 +593,7 @@ class TestGetMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
     def test_get_mission_not_found(self) -> None:
         self.use_case.execute.side_effect = MissionNotFoundError
 
-        response = self.api.get_mission(mission_id=999)
+        response = self.hr_api.get_mission(mission_id=999)
 
         assert response.status_code == codes.NOT_FOUND
         assert response.json() == {"detail": MissionNotFoundError.detail}
@@ -522,6 +605,36 @@ class TestUpdateMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
     @pytest.fixture(autouse=True)
     async def setup(self) -> None:
         self.use_case = await self.container.override_use_case(UpdateMissionUseCase)
+
+    def test_not_auth(self) -> None:
+        response = self.api.update_mission(
+            mission_id=1,
+            title="TEST",
+            description="TEST",
+            reward_xp=150,
+            reward_mana=75,
+            rank_requirement=2,
+            branch_id=1,
+            category=MissionCategoryEnum.QUEST,
+        )
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_candidate_forbidden(self) -> None:
+        response = self.candidate_api.update_mission(
+            mission_id=1,
+            title="TEST",
+            description="TEST",
+            reward_xp=150,
+            reward_mana=75,
+            rank_requirement=2,
+            branch_id=1,
+            category=MissionCategoryEnum.QUEST,
+        )
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": PermissionDeniedError.detail}
 
     def test_update_mission(self) -> None:
         self.use_case.execute.return_value = self.factory.mission(
@@ -535,7 +648,7 @@ class TestUpdateMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             category=MissionCategoryEnum.QUEST,
         )
 
-        response = self.api.update_mission(
+        response = self.hr_api.update_mission(
             mission_id=1,
             title="TEST",
             description="TEST",
@@ -578,7 +691,7 @@ class TestUpdateMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
     def test_update_mission_already_exists(self) -> None:
         self.use_case.execute.side_effect = MissionNameAlreadyExistError
 
-        response = self.api.update_mission(
+        response = self.hr_api.update_mission(
             mission_id=1,
             title="TEST",
             description="TEST",
@@ -608,7 +721,7 @@ class TestUpdateMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
     def test_update_mission_not_found(self) -> None:
         self.use_case.execute.side_effect = MissionNotFoundError
 
-        response = self.api.update_mission(
+        response = self.hr_api.update_mission(
             mission_id=999,
             title="TEST",
             description="TEST",
@@ -641,10 +754,22 @@ class TestDeleteMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
     async def setup(self) -> None:
         self.use_case = await self.container.override_use_case(DeleteMissionUseCase)
 
+    def test_not_auth(self) -> None:
+        response = self.api.delete_mission(mission_id=1)
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_candidate_forbidden(self) -> None:
+        response = self.candidate_api.delete_mission(mission_id=1)
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": PermissionDeniedError.detail}
+
     def test_delete_mission(self) -> None:
         self.use_case.execute.return_value = None
 
-        response = self.api.delete_mission(mission_id=1)
+        response = self.hr_api.delete_mission(mission_id=1)
 
         assert response.status_code == codes.NO_CONTENT
         self.use_case.execute.assert_called_once()
@@ -653,7 +778,7 @@ class TestDeleteMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
     def test_delete_mission_not_found(self) -> None:
         self.use_case.execute.side_effect = MissionNotFoundError
 
-        response = self.api.delete_mission(mission_id=999)
+        response = self.hr_api.delete_mission(mission_id=999)
 
         assert response.status_code == codes.NOT_FOUND
         assert response.json() == {"detail": MissionNotFoundError.detail}
@@ -665,6 +790,18 @@ class TestAddTaskToMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
     @pytest.fixture(autouse=True)
     async def setup(self) -> None:
         self.use_case = await self.container.override_use_case(AddTaskToMissionUseCase)
+
+    def test_not_auth(self) -> None:
+        response = self.api.add_task_to_mission(mission_id=1, task_id=1)
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_candidate_forbidden(self) -> None:
+        response = self.candidate_api.add_task_to_mission(mission_id=1, task_id=1)
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": PermissionDeniedError.detail}
 
     def test_add_task_to_mission(self) -> None:
         self.use_case.execute.return_value = self.factory.mission(
@@ -678,7 +815,7 @@ class TestAddTaskToMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             category=MissionCategoryEnum.QUEST,
         )
 
-        response = self.api.add_task_to_mission(mission_id=1, task_id=1)
+        response = self.hr_api.add_task_to_mission(mission_id=1, task_id=1)
 
         assert response.status_code == codes.OK
         assert response.json() == {
@@ -701,7 +838,7 @@ class TestAddTaskToMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
     def test_add_task_to_mission_not_found(self) -> None:
         self.use_case.execute.side_effect = MissionNotFoundError
 
-        response = self.api.add_task_to_mission(mission_id=999, task_id=1)
+        response = self.hr_api.add_task_to_mission(mission_id=999, task_id=1)
 
         assert response.status_code == codes.NOT_FOUND
         assert response.json() == {"detail": MissionNotFoundError.detail}
@@ -711,7 +848,7 @@ class TestAddTaskToMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
     def test_add_task_to_mission_task_not_found(self) -> None:
         self.use_case.execute.side_effect = TaskNotFoundError
 
-        response = self.api.add_task_to_mission(mission_id=1, task_id=999)
+        response = self.hr_api.add_task_to_mission(mission_id=1, task_id=999)
 
         assert response.status_code == codes.NOT_FOUND
         assert response.json() == {"detail": TaskNotFoundError.detail}
@@ -723,6 +860,18 @@ class TestRemoveTaskFromMissionAPI(APIFixture, FactoryFixture, ContainerFixture)
     @pytest.fixture(autouse=True)
     async def setup(self) -> None:
         self.use_case = await self.container.override_use_case(RemoveTaskFromMissionUseCase)
+
+    def test_not_auth(self) -> None:
+        response = self.api.remove_task_from_mission(mission_id=1, task_id=1)
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_candidate_forbidden(self) -> None:
+        response = self.candidate_api.remove_task_from_mission(mission_id=1, task_id=1)
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": PermissionDeniedError.detail}
 
     def test_remove_task_from_mission(self) -> None:
         self.use_case.execute.return_value = self.factory.mission(
@@ -736,7 +885,7 @@ class TestRemoveTaskFromMissionAPI(APIFixture, FactoryFixture, ContainerFixture)
             category=MissionCategoryEnum.QUEST,
         )
 
-        response = self.api.remove_task_from_mission(mission_id=1, task_id=1)
+        response = self.hr_api.remove_task_from_mission(mission_id=1, task_id=1)
 
         assert response.status_code == codes.OK
         assert response.json() == {
@@ -780,7 +929,7 @@ class TestRemoveTaskFromMissionAPI(APIFixture, FactoryFixture, ContainerFixture)
             ],
         )
 
-        response = self.api.remove_task_from_mission(mission_id=1, task_id=1)
+        response = self.hr_api.remove_task_from_mission(mission_id=1, task_id=1)
 
         assert response.status_code == codes.OK
         assert response.json() == {
@@ -806,7 +955,7 @@ class TestRemoveTaskFromMissionAPI(APIFixture, FactoryFixture, ContainerFixture)
     def test_remove_task_from_mission_not_found(self) -> None:
         self.use_case.execute.side_effect = MissionNotFoundError
 
-        response = self.api.remove_task_from_mission(mission_id=999, task_id=1)
+        response = self.hr_api.remove_task_from_mission(mission_id=999, task_id=1)
 
         assert response.status_code == codes.NOT_FOUND
         assert response.json() == {"detail": MissionNotFoundError.detail}
@@ -816,7 +965,7 @@ class TestRemoveTaskFromMissionAPI(APIFixture, FactoryFixture, ContainerFixture)
     def test_remove_task_from_mission_task_not_found(self) -> None:
         self.use_case.execute.side_effect = TaskNotFoundError
 
-        response = self.api.remove_task_from_mission(mission_id=1, task_id=999)
+        response = self.hr_api.remove_task_from_mission(mission_id=1, task_id=999)
 
         assert response.status_code == codes.NOT_FOUND
         assert response.json() == {"detail": TaskNotFoundError.detail}
@@ -829,7 +978,19 @@ class TestAddArtifactToMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
     async def setup(self) -> None:
         self.use_case = await self.container.override_use_case(AddArtifactToMissionUseCase)
 
-    async def test_add_artifact_to_mission(self) -> None:
+    def test_not_auth(self) -> None:
+        response = self.api.add_artifact_to_mission(mission_id=1, artifact_id=1)
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_candidate_forbidden(self) -> None:
+        response = self.candidate_api.add_artifact_to_mission(mission_id=1, artifact_id=1)
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": PermissionDeniedError.detail}
+
+    def test_add_artifact_to_mission(self) -> None:
         self.use_case.execute.return_value = self.factory.mission(
             mission_id=1,
             title="Test Mission",
@@ -837,7 +998,7 @@ class TestAddArtifactToMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             branch_id=1,
         )
 
-        response = self.api.add_artifact_to_mission(mission_id=1, artifact_id=1)
+        response = self.hr_api.add_artifact_to_mission(mission_id=1, artifact_id=1)
 
         assert response.status_code == codes.OK
         assert response.json() == {
@@ -856,6 +1017,9 @@ class TestAddArtifactToMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
         }
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(mission_id=1, artifact_id=1)
+
+    # TODO: Добавить тест на MissionNotFoundError
+    # TODO: Добавить тест на ArtifactNotFoundError
 
 
 class TestRemoveArtifactFromMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
@@ -863,7 +1027,19 @@ class TestRemoveArtifactFromMissionAPI(APIFixture, FactoryFixture, ContainerFixt
     async def setup(self) -> None:
         self.use_case = await self.container.override_use_case(RemoveArtifactFromMissionUseCase)
 
-    async def test_remove_artifact_from_mission(self) -> None:
+    def test_not_auth(self) -> None:
+        response = self.api.remove_artifact_from_mission(mission_id=1, artifact_id=1)
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_candidate_forbidden(self) -> None:
+        response = self.candidate_api.remove_artifact_from_mission(mission_id=1, artifact_id=1)
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": PermissionDeniedError.detail}
+
+    def test_remove_artifact_from_mission(self) -> None:
         self.use_case.execute.return_value = self.factory.mission(
             mission_id=1,
             title="Test Mission",
@@ -871,7 +1047,7 @@ class TestRemoveArtifactFromMissionAPI(APIFixture, FactoryFixture, ContainerFixt
             branch_id=1,
         )
 
-        response = self.api.remove_artifact_from_mission(mission_id=1, artifact_id=1)
+        response = self.hr_api.remove_artifact_from_mission(mission_id=1, artifact_id=1)
 
         assert response.status_code == codes.OK
         assert response.json() == {
@@ -890,3 +1066,6 @@ class TestRemoveArtifactFromMissionAPI(APIFixture, FactoryFixture, ContainerFixt
         }
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(mission_id=1, artifact_id=1)
+
+    # TODO: Добавить тест на MissionNotFoundError
+    # TODO: Добавить тест на ArtifactNotFoundError

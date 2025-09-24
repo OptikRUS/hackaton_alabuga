@@ -232,6 +232,7 @@ class TestDeleteCompetencyAPI(APIFixture, FactoryFixture, ContainerFixture):
         self.use_case.execute.assert_awaited_once_with(competency_id=999)
 
 
+# TODO: Нужно разбить на два класса Add и Remove
 class TestCompetencySkillsAPI(APIFixture, FactoryFixture, ContainerFixture):
     @pytest.fixture(autouse=True)
     async def setup(self) -> None:
