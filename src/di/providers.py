@@ -6,7 +6,7 @@ from fastapi import Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.auth.schemas import CandidateJwtUser, HRJwtUser, JwtUser
+from src.api.auth.schemas import JwtCandidateUser, JwtHRUser, JwtUser
 from src.clients.minio import get_minio_client
 from src.core.artifacts.use_cases import (
     AddArtifactToMissionUseCase,
@@ -472,14 +472,16 @@ class AuthProvider(Provider):
         return JwtUser.decode(payload=auth.credentials)
 
     @provide(scope=Scope.REQUEST)
-    async def hr_auth(self, jwt_user: JwtUser) -> HRJwtUser:
-        return HRJwtUser(login=jwt_user.login, role=jwt_user.role)
+    async def hr_auth(self, jwt_user: JwtUser) -> JwtHRUser:
+        if jwt_user.role == UserRoleEnum.HR:
+            return JwtHRUser(login=jwt_user.login, role=jwt_user.role)
+        raise PermissionDeniedError
 
     @provide(scope=Scope.REQUEST)
-    async def candidate_auth(self, jwt_user: JwtUser) -> CandidateJwtUser:
-        if jwt_user.role != UserRoleEnum.CANDIDATE:
-            raise PermissionDeniedError
-        return CandidateJwtUser(login=jwt_user.login, role=jwt_user.role)
+    async def candidate_auth(self, jwt_user: JwtUser) -> JwtCandidateUser:
+        if jwt_user.role == UserRoleEnum.CANDIDATE:
+            return JwtCandidateUser(login=jwt_user.login, role=jwt_user.role)
+        raise PermissionDeniedError
 
 
 class FileStorageProvider(Provider):

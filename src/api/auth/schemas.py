@@ -32,9 +32,9 @@ class JwtUser(BoundaryModel):
             raise InvalidJWTTokenError from ex
 
 
-class HRJwtUser(JwtUser):
+class JwtHRUser(JwtUser):
     role: UserRoleEnum = UserRoleEnum.HR
 
 
-class CandidateJwtUser(JwtUser):
+class JwtCandidateUser(JwtUser):
     role: UserRoleEnum = UserRoleEnum.CANDIDATE
