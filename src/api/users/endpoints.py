@@ -1,7 +1,7 @@
 from dishka.integrations.fastapi import DishkaRoute, FromDishka
 from fastapi import APIRouter, Response, status
 
-from src.api.auth.schemas import JwtUser
+from src.api.auth.schemas import JwtHRUser, JwtUser
 from src.api.openapi import openapi_extra
 from src.api.users.schemas import (
     CandidateUserRegistrationRequest,
@@ -75,6 +75,7 @@ async def get_me(user: FromDishka[JwtUser], use_case: FromDishka[GetUserUseCase]
 
 @router.post(
     path="/users/{user_login}/artifacts/{artifact_id}",
+    openapi_extra=openapi_extra,
     status_code=status.HTTP_200_OK,
     summary="Добавить артефакт пользователю",
     description="Назначает артефакт указанному пользователю",
@@ -82,14 +83,17 @@ async def get_me(user: FromDishka[JwtUser], use_case: FromDishka[GetUserUseCase]
 async def add_artifact_to_user(
     user_login: str,
     artifact_id: int,
+    user: FromDishka[JwtHRUser],
     use_case: FromDishka[AddArtifactToUserUseCase],
 ) -> UserResponse:
-    user = await use_case.execute(user_login=user_login, artifact_id=artifact_id)
-    return UserResponse.from_schema(user=user)
+    _ = user
+    user_with_artifact = await use_case.execute(user_login=user_login, artifact_id=artifact_id)
+    return UserResponse.from_schema(user=user_with_artifact)
 
 
 @router.delete(
     path="/users/{user_login}/artifacts/{artifact_id}",
+    openapi_extra=openapi_extra,
     status_code=status.HTTP_200_OK,
     summary="Удалить артефакт у пользователя",
     description="Убирает артефакт у указанного пользователя",
@@ -97,7 +101,9 @@ async def add_artifact_to_user(
 async def remove_artifact_from_user(
     user_login: str,
     artifact_id: int,
+    user: FromDishka[JwtHRUser],
     use_case: FromDishka[RemoveArtifactFromUserUseCase],
 ) -> UserResponse:
-    user = await use_case.execute(user_login=user_login, artifact_id=artifact_id)
-    return UserResponse.from_schema(user=user)
+    _ = user
+    user_with_artifact = await use_case.execute(user_login=user_login, artifact_id=artifact_id)
+    return UserResponse.from_schema(user=user_with_artifact)
