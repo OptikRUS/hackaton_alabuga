@@ -30,7 +30,7 @@ class TestCreateArtifactAPI(APIFixture, FactoryFixture, ContainerFixture):
             image_url="https://example.com/image.jpg",
         )
 
-        response = self.api.create_artifact(
+        response = self.hr_api.create_artifact(
             title="Test Artifact",
             description="Test Description",
             rarity="common",
@@ -59,7 +59,7 @@ class TestCreateArtifactAPI(APIFixture, FactoryFixture, ContainerFixture):
     def test_create_artifact_title_already_exists(self) -> None:
         self.use_case.execute.side_effect = ArtifactTitleAlreadyExistError
 
-        response = self.api.create_artifact(
+        response = self.hr_api.create_artifact(
             title="Test Artifact",
             description="Test Description",
             rarity="common",
@@ -104,7 +104,7 @@ class TestGetArtifactsAPI(APIFixture, FactoryFixture, ContainerFixture):
             ]
         )
 
-        response = self.api.get_artifacts()
+        response = self.hr_api.get_artifacts()
 
         assert response.status_code == codes.OK
         assert response.json() == {
@@ -142,7 +142,7 @@ class TestGetArtifactDetailAPI(APIFixture, FactoryFixture, ContainerFixture):
             image_url="https://example.com/image.jpg",
         )
 
-        response = self.api.get_artifact(artifact_id=1)
+        response = self.hr_api.get_artifact(artifact_id=1)
 
         assert response.status_code == codes.OK
         assert response.json() == {
@@ -159,7 +159,7 @@ class TestGetArtifactDetailAPI(APIFixture, FactoryFixture, ContainerFixture):
         use_case = await self.container.override_use_case(GetArtifactDetailUseCase)
         use_case.execute.side_effect = ArtifactNotFoundError
 
-        response = self.api.get_artifact(artifact_id=999)
+        response = self.hr_api.get_artifact(artifact_id=999)
 
         assert response.status_code == codes.NOT_FOUND
         assert response.json() == {"detail": ArtifactNotFoundError.detail}
@@ -181,7 +181,7 @@ class TestUpdateArtifactAPI(APIFixture, FactoryFixture, ContainerFixture):
             image_url="https://example.com/updated.jpg",
         )
 
-        response = self.api.update_artifact(
+        response = self.hr_api.update_artifact(
             artifact_id=1,
             title="Updated Artifact",
             description="Updated Description",
@@ -204,7 +204,7 @@ class TestUpdateArtifactAPI(APIFixture, FactoryFixture, ContainerFixture):
     async def test_update_artifact_title_already_exists(self) -> None:
         self.use_case.execute.side_effect = ArtifactTitleAlreadyExistError
 
-        response = self.api.update_artifact(
+        response = self.hr_api.update_artifact(
             artifact_id=1,
             title="Updated Artifact",
             description="Updated Description",
@@ -227,7 +227,7 @@ class TestUpdateArtifactAPI(APIFixture, FactoryFixture, ContainerFixture):
     async def test_update_artifact_not_found(self) -> None:
         self.use_case.execute.side_effect = ArtifactNotFoundError
 
-        response = self.api.update_artifact(
+        response = self.hr_api.update_artifact(
             artifact_id=999,
             title="Updated Artifact",
             description="Updated Description",
@@ -257,7 +257,7 @@ class TestDeleteArtifactAPI(APIFixture, FactoryFixture, ContainerFixture):
     async def test_delete_artifact(self) -> None:
         self.use_case.execute.return_value = None
 
-        response = self.api.delete_artifact(artifact_id=1)
+        response = self.hr_api.delete_artifact(artifact_id=1)
 
         assert response.status_code == codes.NO_CONTENT
         self.use_case.execute.assert_called_once()
@@ -266,7 +266,7 @@ class TestDeleteArtifactAPI(APIFixture, FactoryFixture, ContainerFixture):
     async def test_delete_artifact_not_found(self) -> None:
         self.use_case.execute.side_effect = ArtifactNotFoundError
 
-        response = self.api.delete_artifact(artifact_id=999)
+        response = self.hr_api.delete_artifact(artifact_id=999)
 
         assert response.status_code == codes.NOT_FOUND
         assert response.json() == {"detail": ArtifactNotFoundError.detail}

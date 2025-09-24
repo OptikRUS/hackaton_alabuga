@@ -10,6 +10,16 @@ class User:
     first_name: str
     last_name: str
     password: str
+    role: UserRoleEnum
+
+
+@dataclass
+class HRUser(User):
+    role: UserRoleEnum = UserRoleEnum.HR
+
+
+@dataclass
+class CandidateUser(User):
     role: UserRoleEnum = UserRoleEnum.CANDIDATE
     rank_id: int = 0
     exp: int = 0

@@ -27,7 +27,7 @@ class TestCreateCompetencyAPI(APIFixture, FactoryFixture, ContainerFixture):
             competency_id=1, name="ML", max_level=100
         )
 
-        response = self.api.create_competency(name="ML", max_level=100)
+        response = self.hr_api.create_competency(name="ML", max_level=100)
 
         assert response.status_code == codes.CREATED
         assert response.json() == {"id": 1, "name": "ML", "maxLevel": 100, "skills": []}
@@ -39,7 +39,7 @@ class TestCreateCompetencyAPI(APIFixture, FactoryFixture, ContainerFixture):
     def test_create_competency_name_already_exists(self) -> None:
         self.use_case.execute.side_effect = CompetencyNameAlreadyExistError
 
-        response = self.api.create_competency(name="ML", max_level=100)
+        response = self.hr_api.create_competency(name="ML", max_level=100)
 
         assert response.status_code == codes.CONFLICT
         assert response.json() == {"detail": CompetencyNameAlreadyExistError.detail}
@@ -112,7 +112,7 @@ class TestUpdateCompetencyAPI(APIFixture, FactoryFixture, ContainerFixture):
             competency_id=1, name="ML Advanced", max_level=150
         )
 
-        response = self.api.update_competency(competency_id=1, name="ML Advanced", max_level=150)
+        response = self.hr_api.update_competency(competency_id=1, name="ML Advanced", max_level=150)
 
         assert response.status_code == codes.OK
         self.use_case.execute.assert_called_once()
@@ -123,7 +123,7 @@ class TestUpdateCompetencyAPI(APIFixture, FactoryFixture, ContainerFixture):
     async def test_update_competency_name_already_exists(self) -> None:
         self.use_case.execute.side_effect = CompetencyNameAlreadyExistError
 
-        response = self.api.update_competency(competency_id=1, name="ML Advanced", max_level=150)
+        response = self.hr_api.update_competency(competency_id=1, name="ML Advanced", max_level=150)
 
         assert response.status_code == codes.CONFLICT
         self.use_case.execute.assert_called_once()
@@ -134,7 +134,7 @@ class TestUpdateCompetencyAPI(APIFixture, FactoryFixture, ContainerFixture):
     async def test_update_competency_not_found(self) -> None:
         self.use_case.execute.side_effect = CompetencyNotFoundError
 
-        response = self.api.update_competency(competency_id=999, name="Unknown", max_level=10)
+        response = self.hr_api.update_competency(competency_id=999, name="Unknown", max_level=10)
 
         assert response.status_code == codes.NOT_FOUND
         assert response.json() == {"detail": CompetencyNotFoundError.detail}
@@ -152,7 +152,7 @@ class TestDeleteCompetencyAPI(APIFixture, FactoryFixture, ContainerFixture):
     async def test_delete_competency(self) -> None:
         self.use_case.execute.return_value = None
 
-        response = self.api.delete_competency(competency_id=1)
+        response = self.hr_api.delete_competency(competency_id=1)
 
         assert response.status_code == codes.NO_CONTENT
         self.use_case.execute.assert_called_once()
@@ -161,7 +161,7 @@ class TestDeleteCompetencyAPI(APIFixture, FactoryFixture, ContainerFixture):
     async def test_delete_competency_not_found(self) -> None:
         self.use_case.execute.side_effect = CompetencyNotFoundError
 
-        response = self.api.delete_competency(competency_id=999)
+        response = self.hr_api.delete_competency(competency_id=999)
 
         assert response.status_code == codes.NOT_FOUND
         assert response.json() == {"detail": CompetencyNotFoundError.detail}
@@ -184,7 +184,7 @@ class TestCompetencySkillsAPI(APIFixture, FactoryFixture, ContainerFixture):
             max_level=100,
         )
 
-        response = self.api.add_skill_to_competency(competency_id=1, skill_id=10)
+        response = self.hr_api.add_skill_to_competency(competency_id=1, skill_id=10)
 
         assert response.status_code == codes.OK
         self.add_use_case.execute.assert_called_once()

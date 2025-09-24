@@ -14,7 +14,7 @@ from src.core.tasks.schemas import (
     MissionTask,
     MissionTasks,
 )
-from src.core.users.schemas import User
+from src.core.users.schemas import CandidateUser, User
 
 
 class UserStorage(metaclass=ABCMeta):
@@ -24,6 +24,10 @@ class UserStorage(metaclass=ABCMeta):
 
     @abstractmethod
     async def get_user_by_login(self, login: str) -> User:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_candidate_by_login(self, login: str) -> CandidateUser:
         raise NotImplementedError
 
 

@@ -6,7 +6,7 @@ from fastapi import Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.api.auth.schemas import JwtUser
+from src.api.auth.schemas import CandidateJwtUser, HRJwtUser, JwtUser
 from src.clients.minio import get_minio_client
 from src.core.artifacts.use_cases import (
     AddArtifactToMissionUseCase,
@@ -28,7 +28,7 @@ from src.core.competencies.use_cases import (
     RemoveSkillFromCompetencyUseCase,
     UpdateCompetencyUseCase,
 )
-from src.core.exceptions import InvalidJWTTokenError
+from src.core.exceptions import InvalidJWTTokenError, PermissionDeniedError
 from src.core.missions.use_cases import (
     AddCompetencyRewardToMissionUseCase,
     AddSkillRewardToMissionUseCase,
@@ -80,6 +80,7 @@ from src.core.tasks.use_cases import (
     GetMissionTasksUseCase,
     UpdateMissionTaskUseCase,
 )
+from src.core.users.enums import UserRoleEnum
 from src.core.users.use_cases import CreateUserUseCase, GetUserUseCase, LoginUserUseCase
 from src.services.minio import MinioService
 from src.services.user_password_service import UserPasswordService
@@ -469,6 +470,16 @@ class AuthProvider(Provider):
     @provide(scope=Scope.REQUEST)
     async def get_jwt_user(self, auth: HTTPAuthorizationCredentials) -> JwtUser:
         return JwtUser.decode(payload=auth.credentials)
+
+    @provide(scope=Scope.REQUEST)
+    async def hr_auth(self, jwt_user: JwtUser) -> HRJwtUser:
+        return HRJwtUser(login=jwt_user.login, role=jwt_user.role)
+
+    @provide(scope=Scope.REQUEST)
+    async def candidate_auth(self, jwt_user: JwtUser) -> CandidateJwtUser:
+        if jwt_user.role != UserRoleEnum.CANDIDATE:
+            raise PermissionDeniedError
+        return CandidateJwtUser(login=jwt_user.login, role=jwt_user.role)
 
 
 class FileStorageProvider(Provider):

@@ -4,8 +4,9 @@ from fastapi import APIRouter, Response, status
 from src.api.auth.schemas import JwtUser
 from src.api.openapi import openapi_extra
 from src.api.users.schemas import (
+    CandidateUserRegistrationRequest,
+    HRUserRegistrationRequest,
     UserLoginRequest,
-    UserRegistrationRequest,
     UserResponse,
     UserTokenResponse,
 )
@@ -28,7 +29,20 @@ router = APIRouter(tags=["users"], route_class=DishkaRoute)
     description="Создает нового пользователя в системе с указанными данными",
 )
 async def register_user(
-    body: UserRegistrationRequest,
+    body: HRUserRegistrationRequest,
+    use_case: FromDishka[CreateUserUseCase],
+) -> Response:
+    await use_case.execute(user=body.to_schema())
+    return Response(status_code=status.HTTP_201_CREATED)
+
+
+@router.post(
+    path="/mobile/users/register",
+    summary="Регистрация кандидата",
+    description="Создает нового кандидата в системе с указанными данными",
+)
+async def register_candidate(
+    body: CandidateUserRegistrationRequest,
     use_case: FromDishka[CreateUserUseCase],
 ) -> Response:
     await use_case.execute(user=body.to_schema())

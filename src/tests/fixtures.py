@@ -12,12 +12,20 @@ from src.tests.helpers.storage import StorageHelper
 
 class APIFixture:
     api: APIHelper
-    no_auth_api: APIHelper
+    hr_api: APIHelper
+    candidate_api: APIHelper
 
     @pytest.fixture(autouse=True)
-    def _api_setup(self, app: FastAPI, no_auth_client: TestClient, client: TestClient) -> None:
-        self.api = APIHelper(client=client)
-        self.no_auth_api = APIHelper(client=no_auth_client)
+    def _api_setup(
+        self,
+        app: FastAPI,
+        no_auth_client: TestClient,
+        hr_client: TestClient,
+        candidate_client: TestClient,
+    ) -> None:
+        self.hr_api = APIHelper(client=hr_client)
+        self.candidate_api = APIHelper(client=candidate_client)
+        self.api = APIHelper(client=no_auth_client)
 
 
 class FactoryFixture:

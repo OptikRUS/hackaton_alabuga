@@ -81,7 +81,7 @@ class TestUploadFileAPI(APIFixture, ContainerFixture):
             content_type="image/jpeg",
         )
 
-        response = self.no_auth_api.upload_file(
+        response = self.api.upload_file(
             file_content=b"fake image content",
             filename="test.jpg",
             content_type="image/jpeg",

@@ -29,7 +29,7 @@ class LoginUserUseCase(UseCase):
     async def execute(self, login: str, password: str) -> str:
         user = await self.storage.get_user_by_login(login=login)
         self.password_service.verify_password_hash(password=password, hashed_password=user.password)
-        return self.password_service.encode(payload={"login": user.login})
+        return self.password_service.encode(payload={"login": user.login, "role": user.role})
 
 
 @dataclass

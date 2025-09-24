@@ -47,7 +47,6 @@ class TestMissionTaskRelations(FactoryFixture, StorageFixture):
         )
         assert task is not None
         await self.storage.add_task_to_mission(mission_id=self.inserted_mission.id, task_id=task.id)
-        await self.storage.session.commit()
 
         await self.storage.remove_task_from_mission(
             mission_id=self.inserted_mission.id,

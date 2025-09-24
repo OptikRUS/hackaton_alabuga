@@ -10,7 +10,7 @@ from src.core.ranks.schemas import Rank, RankCompetencyRequirement
 from src.core.skills.schemas import Skill
 from src.core.tasks.schemas import MissionTask
 from src.core.users.enums import UserRoleEnum
-from src.core.users.schemas import User
+from src.core.users.schemas import CandidateUser, User
 
 
 class Base(DeclarativeBase): ...
@@ -45,17 +45,23 @@ class UserModel(Base):
     def from_schema(cls, user: User) -> "UserModel":
         return cls(
             login=user.login,
-            password=user.password,
-            role=user.role,
-            rank_id=user.rank_id,
-            exp=user.exp,
-            mana=user.mana,
             first_name=user.first_name,
             last_name=user.last_name,
+            password=user.password,
+            role=user.role,
         )
 
     def to_schema(self) -> User:
         return User(
+            login=self.login,
+            password=self.password,
+            role=UserRoleEnum(self.role),
+            first_name=self.first_name,
+            last_name=self.last_name,
+        )
+
+    def to_candidate_schema(self) -> CandidateUser:
+        return CandidateUser(
             login=self.login,
             password=self.password,
             role=UserRoleEnum(self.role),

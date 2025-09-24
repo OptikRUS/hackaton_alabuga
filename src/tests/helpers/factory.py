@@ -17,7 +17,7 @@ from src.core.tasks.schemas import (
     MissionTasks,
 )
 from src.core.users.enums import UserRoleEnum
-from src.core.users.schemas import User
+from src.core.users.schemas import CandidateUser, HRUser, User
 
 
 class FactoryHelper:
@@ -28,13 +28,46 @@ class FactoryHelper:
         first_name: str = "TEST",
         last_name: str = "TEST",
         password: str = "TEST",  # noqa: S107
+        role: UserRoleEnum = UserRoleEnum.HR,
+    ) -> User:
+        return User(
+            login=login,
+            first_name=first_name,
+            last_name=last_name,
+            password=password,
+            role=role,
+        )
+
+    @classmethod
+    def hr_user(
+        cls,
+        login: str = "TEST",
+        first_name: str = "TEST",
+        last_name: str = "TEST",
+        password: str = "TEST",  # noqa: S107
+    ) -> HRUser:
+        return HRUser(
+            login=login,
+            first_name=first_name,
+            last_name=last_name,
+            password=password,
+            role=UserRoleEnum.HR,
+        )
+
+    @classmethod
+    def candidate(
+        cls,
+        login: str = "TEST",
+        first_name: str = "TEST",
+        last_name: str = "TEST",
+        password: str = "TEST",  # noqa: S107
         role: UserRoleEnum = UserRoleEnum.CANDIDATE,
         rank_id: int = 0,
         exp: int = 0,
         mana: int = 0,
         artifacts: list[Artifact] | None = None,
-    ) -> User:
-        return User(
+    ) -> CandidateUser:
+        return CandidateUser(
             login=login,
             first_name=first_name,
             last_name=last_name,
