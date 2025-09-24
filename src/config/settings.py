@@ -13,9 +13,17 @@ class AppSettings(BaseSettings):
 
     model_config = SettingsConfigDict(env_prefix="APP_")
 
+
+class ServerSettings(BaseSettings):
+    PROTOCOL: str = "http"
+    HOST: str = "http://0.0.0.0"
+    PORT: int = 22
+
+    model_config = SettingsConfigDict(env_prefix="SERVER_")
+
     @property
-    def MEDIA_URL(self) -> str:  # noqa: N802
-        return f"{self.PROTOCOL}://{self.ADDRESS}:{self.PORT}/media"
+    def URL(self) -> str:  # noqa: N802
+        return f"{self.PROTOCOL}://{self.HOST}"
 
 
 class DatabaseSettings(BaseSettings):
@@ -64,6 +72,7 @@ class LoggingConfig(BaseSettings):
 
 class Settings(BaseSettings):
     APP: AppSettings = AppSettings()
+    SERVER: ServerSettings = ServerSettings()
     DATABASE: DatabaseSettings = DatabaseSettings()
     AUTH: AuthSettings = AuthSettings()
     MINIO: MinioSettings = MinioSettings()
