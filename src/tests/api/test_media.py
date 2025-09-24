@@ -12,6 +12,16 @@ class TestUploadFileAPI(APIFixture, ContainerFixture):
     async def setup(self) -> None:
         self.minio_service = await self.container.override_minio_service(MinioService)
 
+    def test_not_auth(self) -> None:
+        response = self.api.upload_file(
+            file_content=b"test file content",
+            filename="test.txt",
+            content_type="text/plain",
+        )
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
     def test_upload_file(self) -> None:
         self.minio_service.upload_file_stream.return_value = FileObject(
             key="TEST",
@@ -21,7 +31,7 @@ class TestUploadFileAPI(APIFixture, ContainerFixture):
             content_type="text/plain",
         )
 
-        response = self.api.upload_file(
+        response = self.hr_api.upload_file(
             file_content=b"test file content",
             filename="test.txt",
             content_type="text/plain",
@@ -51,7 +61,7 @@ class TestUploadFileAPI(APIFixture, ContainerFixture):
             content_type="application/pdf",
         )
 
-        response = self.api.upload_file(
+        response = self.candidate_api.upload_file(
             file_content=b"test file content",
             filename="document.pdf",
             content_type="application/pdf",
@@ -81,7 +91,7 @@ class TestUploadFileAPI(APIFixture, ContainerFixture):
             content_type="image/jpeg",
         )
 
-        response = self.api.upload_file(
+        response = self.hr_api.upload_file(
             file_content=b"fake image content",
             filename="test.jpg",
             content_type="image/jpeg",
@@ -108,6 +118,12 @@ class TestDownloadFileAPI(APIFixture, ContainerFixture):
     async def setup(self) -> None:
         self.minio_service = await self.container.override_minio_service(MinioService)
 
+    def test_not_auth(self) -> None:
+        response = self.api.download_file(key="test-file.txt")
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
     def test_download_file(self) -> None:
         self.minio_service.get_file_metadata.return_value = FileMetadata(
             file_size=(len(b"test file content")),
@@ -115,7 +131,7 @@ class TestDownloadFileAPI(APIFixture, ContainerFixture):
         )
         self.minio_service.download_file.return_value = iter([b"test file content"])
 
-        response = self.api.download_file(key="test-file.txt")
+        response = self.hr_api.download_file(key="test-file.txt")
 
         assert response.status_code == codes.OK
         assert response.content == b"test file content"
@@ -135,7 +151,7 @@ class TestDownloadFileAPI(APIFixture, ContainerFixture):
         )
         self.minio_service.download_file.return_value = iter([b"fake image content"])
 
-        response = self.api.download_file(key="test-image.jpg")
+        response = self.candidate_api.download_file(key="test-image.jpg")
 
         assert response.status_code == codes.OK
         assert response.content == b"fake image content"
@@ -155,7 +171,7 @@ class TestDownloadFileAPI(APIFixture, ContainerFixture):
         )
         self.minio_service.download_file.return_value = iter([b"test file content"])
 
-        response = self.api.download_file(key="folder/subfolder/test-file.txt")
+        response = self.hr_api.download_file(key="folder/subfolder/test-file.txt")
 
         assert response.status_code == codes.OK
         assert response.content == b"test file content"
@@ -169,7 +185,7 @@ class TestDownloadFileAPI(APIFixture, ContainerFixture):
     def test_download_file_not_found(self) -> None:
         self.minio_service.get_file_metadata.side_effect = MediaNotFoundError
 
-        response = self.api.download_file(key="non-existent-file.txt")
+        response = self.candidate_api.download_file(key="non-existent-file.txt")
 
         assert response.status_code == codes.NOT_FOUND
         assert response.json() == {"detail": MediaNotFoundError.detail}
