@@ -16,10 +16,14 @@ from src.core.media.schemas import FileMetadata, FileObject
 @dataclass
 class MinioService(FileStorage):
     minio_connection: AioBaseClient
-    media_url_prefix: str = settings.APP.MEDIA_URL
+    server_url: str = settings.SERVER.HOST
     region_name: str = settings.MINIO.REGION
     bucket: str = settings.MINIO.BUCKET
     chunck_size: int = 65536
+
+    @property
+    def media_url_prefix(self) -> str:
+        return f"{self.server_url}/media"
 
     async def get_file_metadata(self, key: str) -> FileMetadata:
         response = await self.minio_connection.head_object(Bucket=self.bucket, Key=key)
