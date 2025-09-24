@@ -153,7 +153,7 @@ class TestUserLoginAPI(APIFixture, FactoryFixture, ContainerFixture):
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(login="TEST", password="TEST")
 
-    def test_user_permission_deniederror(self) -> None:
+    def test_user_permission_denied_error(self) -> None:
         self.use_case.execute.side_effect = PermissionDeniedError
 
         response = self.api.login_user(login="TEST", password="TEST")
