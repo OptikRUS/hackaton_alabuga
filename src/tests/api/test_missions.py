@@ -2,6 +2,7 @@ import pytest
 from httpx import codes
 
 from src.core.artifacts.enums import ArtifactRarityEnum
+from src.core.artifacts.exceptions import ArtifactNotFoundError
 from src.core.artifacts.use_cases import (
     AddArtifactToMissionUseCase,
     RemoveArtifactFromMissionUseCase,
@@ -15,6 +16,8 @@ from src.core.missions.exceptions import (
     MissionNotFoundError,
 )
 from src.core.missions.use_cases import (
+    AddCompetencyRewardToMissionUseCase,
+    AddSkillRewardToMissionUseCase,
     AddTaskToMissionUseCase,
     CreateMissionBranchUseCase,
     CreateMissionUseCase,
@@ -23,6 +26,8 @@ from src.core.missions.use_cases import (
     GetMissionBranchesUseCase,
     GetMissionDetailUseCase,
     GetMissionsUseCase,
+    RemoveCompetencyRewardFromMissionUseCase,
+    RemoveSkillRewardFromMissionUseCase,
     RemoveTaskFromMissionUseCase,
     UpdateMissionBranchUseCase,
     UpdateMissionUseCase,
@@ -1018,8 +1023,25 @@ class TestAddArtifactToMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(mission_id=1, artifact_id=1)
 
-    # TODO: Добавить тест на MissionNotFoundError
-    # TODO: Добавить тест на ArtifactNotFoundError
+    def test_add_artifact_to_mission_not_found(self) -> None:
+        self.use_case.execute.side_effect = MissionNotFoundError
+
+        response = self.hr_api.add_artifact_to_mission(mission_id=999, artifact_id=1)
+
+        assert response.status_code == codes.NOT_FOUND
+        assert response.json() == {"detail": MissionNotFoundError.detail}
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(mission_id=999, artifact_id=1)
+
+    def test_add_artifact_to_mission_artifact_not_found(self) -> None:
+        self.use_case.execute.side_effect = ArtifactNotFoundError
+
+        response = self.hr_api.add_artifact_to_mission(mission_id=1, artifact_id=999)
+
+        assert response.status_code == codes.NOT_FOUND
+        assert response.json() == {"detail": ArtifactNotFoundError.detail}
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(mission_id=1, artifact_id=999)
 
 
 class TestRemoveArtifactFromMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
@@ -1067,5 +1089,278 @@ class TestRemoveArtifactFromMissionAPI(APIFixture, FactoryFixture, ContainerFixt
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(mission_id=1, artifact_id=1)
 
-    # TODO: Добавить тест на MissionNotFoundError
-    # TODO: Добавить тест на ArtifactNotFoundError
+    def test_remove_artifact_from_mission_not_found(self) -> None:
+        self.use_case.execute.side_effect = MissionNotFoundError
+
+        response = self.hr_api.remove_artifact_from_mission(mission_id=999, artifact_id=1)
+
+        assert response.status_code == codes.NOT_FOUND
+        assert response.json() == {"detail": MissionNotFoundError.detail}
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(mission_id=999, artifact_id=1)
+
+    def test_remove_artifact_from_mission_artifact_not_found(self) -> None:
+        self.use_case.execute.side_effect = ArtifactNotFoundError
+
+        response = self.hr_api.remove_artifact_from_mission(mission_id=1, artifact_id=999)
+
+        assert response.status_code == codes.NOT_FOUND
+        assert response.json() == {"detail": ArtifactNotFoundError.detail}
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(mission_id=1, artifact_id=999)
+
+
+class TestAddCompetencyRewardToMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
+    @pytest.fixture(autouse=True)
+    async def setup(self) -> None:
+        self.use_case = await self.container.override_use_case(AddCompetencyRewardToMissionUseCase)
+
+    def test_not_auth(self) -> None:
+        response = self.api.add_competency_reward_to_mission(
+            mission_id=1,
+            competency_id=1,
+            level_increase=2,
+        )
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_candidate_forbidden(self) -> None:
+        response = self.candidate_api.add_competency_reward_to_mission(
+            mission_id=1,
+            competency_id=1,
+            level_increase=2,
+        )
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": PermissionDeniedError.detail}
+
+    def test_add_competency_reward_to_mission(self) -> None:
+        self.use_case.execute.return_value = self.factory.mission(
+            mission_id=1,
+            title="Test Mission",
+            description="Test Description",
+            branch_id=1,
+        )
+
+        response = self.hr_api.add_competency_reward_to_mission(
+            mission_id=1,
+            competency_id=1,
+            level_increase=2,
+        )
+
+        assert response.status_code == codes.OK
+        assert response.json() == {
+            "id": 1,
+            "title": "Test Mission",
+            "description": "Test Description",
+            "rewardXp": 100,
+            "rewardMana": 50,
+            "rankRequirement": 1,
+            "branchId": 1,
+            "category": "quest",
+            "tasks": [],
+            "rewardArtifacts": [],
+            "rewardSkills": [],
+            "rewardCompetencies": [],
+        }
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(
+            mission_id=1, competency_id=1, level_increase=2
+        )
+
+    def test_add_competency_reward_to_mission_not_found(self) -> None:
+        self.use_case.execute.side_effect = MissionNotFoundError
+
+        response = self.hr_api.add_competency_reward_to_mission(
+            mission_id=999, competency_id=1, level_increase=2
+        )
+
+        assert response.status_code == codes.NOT_FOUND
+        assert response.json() == {"detail": MissionNotFoundError.detail}
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(
+            mission_id=999, competency_id=1, level_increase=2
+        )
+
+
+class TestRemoveCompetencyRewardFromMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
+    @pytest.fixture(autouse=True)
+    async def setup(self) -> None:
+        self.use_case = await self.container.override_use_case(
+            RemoveCompetencyRewardFromMissionUseCase
+        )
+
+    def test_not_auth(self) -> None:
+        response = self.api.remove_competency_reward_from_mission(mission_id=1, competency_id=1)
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_candidate_forbidden(self) -> None:
+        response = self.candidate_api.remove_competency_reward_from_mission(
+            mission_id=1,
+            competency_id=1,
+        )
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": PermissionDeniedError.detail}
+
+    def test_remove_competency_reward_from_mission(self) -> None:
+        self.use_case.execute.return_value = self.factory.mission(
+            mission_id=1,
+            title="Test Mission",
+            description="Test Description",
+            branch_id=1,
+        )
+
+        response = self.hr_api.remove_competency_reward_from_mission(mission_id=1, competency_id=1)
+
+        assert response.status_code == codes.OK
+        assert response.json() == {
+            "id": 1,
+            "title": "Test Mission",
+            "description": "Test Description",
+            "rewardXp": 100,
+            "rewardMana": 50,
+            "rankRequirement": 1,
+            "branchId": 1,
+            "category": "quest",
+            "tasks": [],
+            "rewardArtifacts": [],
+            "rewardSkills": [],
+            "rewardCompetencies": [],
+        }
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(mission_id=1, competency_id=1)
+
+    def test_remove_competency_reward_from_mission_not_found(self) -> None:
+        self.use_case.execute.side_effect = MissionNotFoundError
+
+        response = self.hr_api.remove_competency_reward_from_mission(
+            mission_id=999,
+            competency_id=1,
+        )
+
+        assert response.status_code == codes.NOT_FOUND
+        assert response.json() == {"detail": MissionNotFoundError.detail}
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(mission_id=999, competency_id=1)
+
+
+class TestAddSkillRewardToMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
+    @pytest.fixture(autouse=True)
+    async def setup(self) -> None:
+        self.use_case = await self.container.override_use_case(AddSkillRewardToMissionUseCase)
+
+    def test_not_auth(self) -> None:
+        response = self.api.add_skill_reward_to_mission(mission_id=1, skill_id=1, level_increase=3)
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_candidate_forbidden(self) -> None:
+        response = self.candidate_api.add_skill_reward_to_mission(
+            mission_id=1, skill_id=1, level_increase=3
+        )
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": PermissionDeniedError.detail}
+
+    def test_add_skill_reward_to_mission(self) -> None:
+        self.use_case.execute.return_value = self.factory.mission(
+            mission_id=1,
+            title="Test Mission",
+            description="Test Description",
+            branch_id=1,
+        )
+
+        response = self.hr_api.add_skill_reward_to_mission(
+            mission_id=1, skill_id=1, level_increase=3
+        )
+
+        assert response.status_code == codes.OK
+        assert response.json() == {
+            "id": 1,
+            "title": "Test Mission",
+            "description": "Test Description",
+            "rewardXp": 100,
+            "rewardMana": 50,
+            "rankRequirement": 1,
+            "branchId": 1,
+            "category": "quest",
+            "tasks": [],
+            "rewardArtifacts": [],
+            "rewardSkills": [],
+            "rewardCompetencies": [],
+        }
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(mission_id=1, skill_id=1, level_increase=3)
+
+    def test_add_skill_reward_to_mission_not_found(self) -> None:
+        self.use_case.execute.side_effect = MissionNotFoundError
+
+        response = self.hr_api.add_skill_reward_to_mission(
+            mission_id=999, skill_id=1, level_increase=3
+        )
+
+        assert response.status_code == codes.NOT_FOUND
+        assert response.json() == {"detail": MissionNotFoundError.detail}
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(mission_id=999, skill_id=1, level_increase=3)
+
+
+class TestRemoveSkillRewardFromMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
+    @pytest.fixture(autouse=True)
+    async def setup(self) -> None:
+        self.use_case = await self.container.override_use_case(RemoveSkillRewardFromMissionUseCase)
+
+    def test_not_auth(self) -> None:
+        response = self.api.remove_skill_reward_from_mission(mission_id=1, skill_id=1)
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_candidate_forbidden(self) -> None:
+        response = self.candidate_api.remove_skill_reward_from_mission(mission_id=1, skill_id=1)
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": PermissionDeniedError.detail}
+
+    def test_remove_skill_reward_from_mission(self) -> None:
+        self.use_case.execute.return_value = self.factory.mission(
+            mission_id=1,
+            title="Test Mission",
+            description="Test Description",
+            branch_id=1,
+        )
+
+        response = self.hr_api.remove_skill_reward_from_mission(mission_id=1, skill_id=1)
+
+        assert response.status_code == codes.OK
+        assert response.json() == {
+            "id": 1,
+            "title": "Test Mission",
+            "description": "Test Description",
+            "rewardXp": 100,
+            "rewardMana": 50,
+            "rankRequirement": 1,
+            "branchId": 1,
+            "category": "quest",
+            "tasks": [],
+            "rewardArtifacts": [],
+            "rewardSkills": [],
+            "rewardCompetencies": [],
+        }
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(mission_id=1, skill_id=1)
+
+    def test_remove_skill_reward_from_mission_not_found(self) -> None:
+        self.use_case.execute.side_effect = MissionNotFoundError
+
+        response = self.hr_api.remove_skill_reward_from_mission(mission_id=999, skill_id=1)
+
+        assert response.status_code == codes.NOT_FOUND
+        assert response.json() == {"detail": MissionNotFoundError.detail}
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(mission_id=999, skill_id=1)

@@ -114,6 +114,38 @@ class APIHelper:
     def delete_mission(self, mission_id: int) -> Response:
         return self.client.delete(f"/missions/{mission_id}")
 
+    def add_competency_reward_to_mission(
+        self,
+        mission_id: int,
+        competency_id: int,
+        level_increase: int,
+    ) -> Response:
+        return self.client.post(
+            f"/missions/{mission_id}/competencies/{competency_id}",
+            json={"level_increase": level_increase},
+        )
+
+    def remove_competency_reward_from_mission(
+        self,
+        mission_id: int,
+        competency_id: int,
+    ) -> Response:
+        return self.client.delete(f"/missions/{mission_id}/competencies/{competency_id}")
+
+    def add_skill_reward_to_mission(
+        self,
+        mission_id: int,
+        skill_id: int,
+        level_increase: int,
+    ) -> Response:
+        return self.client.post(
+            f"/missions/{mission_id}/skills/{skill_id}",
+            json={"level_increase": level_increase},
+        )
+
+    def remove_skill_reward_from_mission(self, mission_id: int, skill_id: int) -> Response:
+        return self.client.delete(f"/missions/{mission_id}/skills/{skill_id}")
+
     def create_task(self, title: str, description: str) -> Response:
         return self.client.post(
             url="/tasks",
@@ -211,7 +243,6 @@ class APIHelper:
     def download_file(self, key: str) -> Response:
         return self.client.get(f"/media/{key}")
 
-    # Skills endpoints
     def create_skill(self, name: str, max_level: int) -> Response:
         return self.client.post(
             url="/skills",

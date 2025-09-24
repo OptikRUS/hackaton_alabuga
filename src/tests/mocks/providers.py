@@ -27,6 +27,8 @@ from src.core.competencies.use_cases import (
 )
 from src.core.exceptions import InvalidJWTTokenError, PermissionDeniedError
 from src.core.missions.use_cases import (
+    AddCompetencyRewardToMissionUseCase,
+    AddSkillRewardToMissionUseCase,
     AddTaskToMissionUseCase,
     CreateMissionBranchUseCase,
     CreateMissionUseCase,
@@ -35,6 +37,8 @@ from src.core.missions.use_cases import (
     GetMissionBranchesUseCase,
     GetMissionDetailUseCase,
     GetMissionsUseCase,
+    RemoveCompetencyRewardFromMissionUseCase,
+    RemoveSkillRewardFromMissionUseCase,
     RemoveTaskFromMissionUseCase,
     UpdateMissionBranchUseCase,
     UpdateMissionUseCase,
@@ -153,6 +157,16 @@ class MissionProviderMock(Provider):
     @provide
     def override_remove_task_from_mission_use_case(self) -> RemoveTaskFromMissionUseCase:
         return AsyncMock(spec=RemoveTaskFromMissionUseCase)
+
+    @provide
+    def override_add_skill_reward_to_mission_use_case(self) -> AddSkillRewardToMissionUseCase:
+        return AsyncMock(spec=AddSkillRewardToMissionUseCase)
+
+    @provide
+    def override_remove_skill_reward_from_mission_use_case(
+        self,
+    ) -> RemoveSkillRewardFromMissionUseCase:
+        return AsyncMock(spec=RemoveSkillRewardFromMissionUseCase)
 
 
 class ArtifactProviderMock(Provider):
@@ -285,6 +299,18 @@ class CompetencyProviderMock(Provider):
     @provide
     def override_remove_skill_from_competency_use_case(self) -> RemoveSkillFromCompetencyUseCase:
         return AsyncMock(spec=RemoveSkillFromCompetencyUseCase)
+
+    @provide
+    def override_add_competency_reward_to_mission_use_case(
+        self,
+    ) -> AddCompetencyRewardToMissionUseCase:
+        return AsyncMock(spec=AddCompetencyRewardToMissionUseCase)
+
+    @provide
+    def override_remove_competency_reward_from_mission_use_case(
+        self,
+    ) -> RemoveCompetencyRewardFromMissionUseCase:
+        return AsyncMock(spec=RemoveCompetencyRewardFromMissionUseCase)
 
 
 class RankProviderMock(Provider):

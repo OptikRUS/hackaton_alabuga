@@ -15,6 +15,7 @@ from src.core.competencies.use_cases import (
     UpdateCompetencyUseCase,
 )
 from src.core.exceptions import PermissionDeniedError
+from src.core.skills.exceptions import SkillNotFoundError
 from src.tests.fixtures import APIFixture, ContainerFixture, FactoryFixture
 
 
@@ -232,41 +233,25 @@ class TestDeleteCompetencyAPI(APIFixture, FactoryFixture, ContainerFixture):
         self.use_case.execute.assert_awaited_once_with(competency_id=999)
 
 
-# TODO: Нужно разбить на два класса Add и Remove
-class TestCompetencySkillsAPI(APIFixture, FactoryFixture, ContainerFixture):
+class TestAddSkillToCompetencyAPI(APIFixture, FactoryFixture, ContainerFixture):
     @pytest.fixture(autouse=True)
     async def setup(self) -> None:
-        self.add_use_case = await self.container.override_use_case(AddSkillToCompetencyUseCase)
-        self.remove_use_case = await self.container.override_use_case(
-            RemoveSkillFromCompetencyUseCase
-        )
+        self.use_case = await self.container.override_use_case(AddSkillToCompetencyUseCase)
 
-    def test_add_skill_to_competency_not_auth(self) -> None:
+    def test_not_auth(self) -> None:
         response = self.api.add_skill_to_competency(competency_id=1, skill_id=10)
 
         assert response.status_code == codes.FORBIDDEN
         assert response.json() == {"detail": "Not authenticated"}
 
-    def test_add_skill_to_competency_candidate_forbidden(self) -> None:
+    def test_candidate_forbidden(self) -> None:
         response = self.candidate_api.add_skill_to_competency(competency_id=1, skill_id=10)
 
         assert response.status_code == codes.FORBIDDEN
         assert response.json() == {"detail": PermissionDeniedError.detail}
 
-    def test_remove_skill_from_competency_not_auth(self) -> None:
-        response = self.api.remove_skill_from_competency(competency_id=1, skill_id=10)
-
-        assert response.status_code == codes.FORBIDDEN
-        assert response.json() == {"detail": "Not authenticated"}
-
-    def test_remove_skill_from_competency_candidate_forbidden(self) -> None:
-        response = self.candidate_api.remove_skill_from_competency(competency_id=1, skill_id=10)
-
-        assert response.status_code == codes.FORBIDDEN
-        assert response.json() == {"detail": PermissionDeniedError.detail}
-
-    async def test_add_skill_to_competency(self) -> None:
-        self.add_use_case.execute.return_value = self.factory.competency(
+    def test_add_skill_to_competency(self) -> None:
+        self.use_case.execute.return_value = self.factory.competency(
             competency_id=1,
             name="ML",
             max_level=100,
@@ -275,11 +260,49 @@ class TestCompetencySkillsAPI(APIFixture, FactoryFixture, ContainerFixture):
         response = self.hr_api.add_skill_to_competency(competency_id=1, skill_id=10)
 
         assert response.status_code == codes.OK
-        self.add_use_case.execute.assert_called_once()
-        self.add_use_case.execute.assert_awaited_once_with(competency_id=1, skill_id=10)
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(competency_id=1, skill_id=10)
+
+    def test_add_skill_to_competency_not_found(self) -> None:
+        self.use_case.execute.side_effect = CompetencyNotFoundError
+
+        response = self.hr_api.add_skill_to_competency(competency_id=999, skill_id=10)
+
+        assert response.status_code == codes.NOT_FOUND
+        assert response.json() == {"detail": CompetencyNotFoundError.detail}
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(competency_id=999, skill_id=10)
+
+    def test_add_skill_to_competency_skill_not_found(self) -> None:
+        self.use_case.execute.side_effect = SkillNotFoundError
+
+        response = self.hr_api.add_skill_to_competency(competency_id=1, skill_id=999)
+
+        assert response.status_code == codes.NOT_FOUND
+        assert response.json() == {"detail": SkillNotFoundError.detail}
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(competency_id=1, skill_id=999)
+
+
+class TestRemoveSkillFromCompetencyAPI(APIFixture, FactoryFixture, ContainerFixture):
+    @pytest.fixture(autouse=True)
+    async def setup(self) -> None:
+        self.use_case = await self.container.override_use_case(RemoveSkillFromCompetencyUseCase)
+
+    def test_not_auth(self) -> None:
+        response = self.api.remove_skill_from_competency(competency_id=1, skill_id=10)
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_candidate_forbidden(self) -> None:
+        response = self.candidate_api.remove_skill_from_competency(competency_id=1, skill_id=10)
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": PermissionDeniedError.detail}
 
     async def test_remove_skill_from_competency(self) -> None:
-        self.remove_use_case.execute.return_value = self.factory.competency(
+        self.use_case.execute.return_value = self.factory.competency(
             competency_id=1,
             name="ML",
             max_level=100,
@@ -288,5 +311,25 @@ class TestCompetencySkillsAPI(APIFixture, FactoryFixture, ContainerFixture):
         response = self.hr_api.remove_skill_from_competency(competency_id=1, skill_id=10)
 
         assert response.status_code == codes.OK
-        self.remove_use_case.execute.assert_called_once()
-        self.remove_use_case.execute.assert_awaited_once_with(competency_id=1, skill_id=10)
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(competency_id=1, skill_id=10)
+
+    def test_remove_skill_from_competency_not_found(self) -> None:
+        self.use_case.execute.side_effect = CompetencyNotFoundError
+
+        response = self.hr_api.remove_skill_from_competency(competency_id=999, skill_id=10)
+
+        assert response.status_code == codes.NOT_FOUND
+        assert response.json() == {"detail": CompetencyNotFoundError.detail}
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(competency_id=999, skill_id=10)
+
+    def test_remove_skill_from_competency_skill_not_found(self) -> None:
+        self.use_case.execute.side_effect = SkillNotFoundError
+
+        response = self.hr_api.remove_skill_from_competency(competency_id=1, skill_id=999)
+
+        assert response.status_code == codes.NOT_FOUND
+        assert response.json() == {"detail": SkillNotFoundError.detail}
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(competency_id=1, skill_id=999)

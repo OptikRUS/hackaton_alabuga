@@ -3,6 +3,7 @@ from fastapi import APIRouter, status
 
 from src.api.auth.schemas import JwtHRUser, JwtUser
 from src.api.missions.schemas import (
+    CompetencyRewardAddRequest,
     MissionBranchCreateRequest,
     MissionBranchesResponse,
     MissionBranchResponse,
@@ -11,6 +12,7 @@ from src.api.missions.schemas import (
     MissionResponse,
     MissionsResponse,
     MissionUpdateRequest,
+    SkillRewardAddRequest,
 )
 from src.api.openapi import openapi_extra
 from src.core.artifacts.use_cases import (
@@ -225,7 +227,6 @@ async def remove_task_from_mission(
     return MissionResponse.from_schema(mission=mission)
 
 
-# TODO: нужно исправить на отправку параметров в теле по аналогии
 @router.post(
     path="/missions/{mission_id}/competencies/{competency_id}",
     openapi_extra=openapi_extra,
@@ -236,7 +237,7 @@ async def remove_task_from_mission(
 async def add_competency_reward_to_mission(
     mission_id: int,
     competency_id: int,
-    level_increase: int,
+    body: CompetencyRewardAddRequest,
     user: FromDishka[JwtHRUser],
     use_case: FromDishka[AddCompetencyRewardToMissionUseCase],
 ) -> MissionResponse:
@@ -244,7 +245,7 @@ async def add_competency_reward_to_mission(
     mission = await use_case.execute(
         mission_id=mission_id,
         competency_id=competency_id,
-        level_increase=level_increase,
+        level_increase=body.level_increase,
     )
     return MissionResponse.from_schema(mission=mission)
 
@@ -277,7 +278,7 @@ async def remove_competency_reward_from_mission(
 async def add_skill_reward_to_mission(
     mission_id: int,
     skill_id: int,
-    level_increase: int,
+    body: SkillRewardAddRequest,
     user: FromDishka[JwtHRUser],
     use_case: FromDishka[AddSkillRewardToMissionUseCase],
 ) -> MissionResponse:
@@ -285,7 +286,7 @@ async def add_skill_reward_to_mission(
     mission = await use_case.execute(
         mission_id=mission_id,
         skill_id=skill_id,
-        level_increase=level_increase,
+        level_increase=body.level_increase,
     )
     return MissionResponse.from_schema(mission=mission)
 
