@@ -13,6 +13,7 @@ from src.core.artifacts.use_cases import (
     GetArtifactsUseCase,
     UpdateArtifactUseCase,
 )
+from src.core.exceptions import PermissionDeniedError
 from src.tests.fixtures import APIFixture, ContainerFixture, FactoryFixture
 
 
@@ -20,6 +21,28 @@ class TestCreateArtifactAPI(APIFixture, FactoryFixture, ContainerFixture):
     @pytest.fixture(autouse=True)
     async def setup(self) -> None:
         self.use_case = await self.container.override_use_case(CreateArtifactUseCase)
+
+    def test_not_auth(self) -> None:
+        response = self.api.create_artifact(
+            title="TEST",
+            description="TEST",
+            rarity=ArtifactRarityEnum.COMMON,
+            image_url="TEST",
+        )
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_candidate_forbidden(self) -> None:
+        response = self.candidate_api.create_artifact(
+            title="TEST",
+            description="TEST",
+            rarity=ArtifactRarityEnum.COMMON,
+            image_url="TEST",
+        )
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": PermissionDeniedError.detail}
 
     def test_create_artifact(self) -> None:
         self.use_case.execute.return_value = self.factory.artifact(
@@ -33,7 +56,7 @@ class TestCreateArtifactAPI(APIFixture, FactoryFixture, ContainerFixture):
         response = self.hr_api.create_artifact(
             title="Test Artifact",
             description="Test Description",
-            rarity="common",
+            rarity=ArtifactRarityEnum.COMMON,
             image_url="https://example.com/image.jpg",
         )
 
@@ -62,7 +85,7 @@ class TestCreateArtifactAPI(APIFixture, FactoryFixture, ContainerFixture):
         response = self.hr_api.create_artifact(
             title="Test Artifact",
             description="Test Description",
-            rarity="common",
+            rarity=ArtifactRarityEnum.COMMON,
             image_url="https://example.com/image.jpg",
         )
 
@@ -84,7 +107,13 @@ class TestGetArtifactsAPI(APIFixture, FactoryFixture, ContainerFixture):
     async def setup(self) -> None:
         self.use_case = await self.container.override_use_case(GetArtifactsUseCase)
 
-    async def test_get_artifacts(self) -> None:
+    def test_not_auth(self) -> None:
+        response = self.api.get_artifacts()
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_get_artifacts(self) -> None:
         self.use_case.execute.return_value = self.factory.artifacts(
             values=[
                 self.factory.artifact(
@@ -127,13 +156,28 @@ class TestGetArtifactsAPI(APIFixture, FactoryFixture, ContainerFixture):
         }
         self.use_case.execute.assert_called_once()
 
+    def test_get_artifacts_empty_by_candidate(self) -> None:
+        self.use_case.execute.return_value = self.factory.artifacts(values=[])
+
+        response = self.candidate_api.get_artifacts()
+
+        assert response.status_code == codes.OK
+        assert response.json() == {"values": []}
+        self.use_case.execute.assert_called_once()
+
 
 class TestGetArtifactDetailAPI(APIFixture, FactoryFixture, ContainerFixture):
     @pytest.fixture(autouse=True)
     async def setup(self) -> None:
         self.use_case = await self.container.override_use_case(GetArtifactDetailUseCase)
 
-    async def test_get_artifact_by_id(self) -> None:
+    def test_not_auth(self) -> None:
+        response = self.api.get_artifact(artifact_id=1)
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_get_artifact_by_id(self) -> None:
         self.use_case.execute.return_value = self.factory.artifact(
             artifact_id=1,
             title="Test Artifact",
@@ -155,16 +199,15 @@ class TestGetArtifactDetailAPI(APIFixture, FactoryFixture, ContainerFixture):
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(artifact_id=1)
 
-    async def test_get_artifact_not_found(self) -> None:
-        use_case = await self.container.override_use_case(GetArtifactDetailUseCase)
-        use_case.execute.side_effect = ArtifactNotFoundError
+    def test_get_artifact_not_found(self) -> None:
+        self.use_case.execute.side_effect = ArtifactNotFoundError
 
-        response = self.hr_api.get_artifact(artifact_id=999)
+        response = self.candidate_api.get_artifact(artifact_id=999)
 
         assert response.status_code == codes.NOT_FOUND
         assert response.json() == {"detail": ArtifactNotFoundError.detail}
-        use_case.execute.assert_called_once()
-        use_case.execute.assert_awaited_once_with(artifact_id=999)
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(artifact_id=999)
 
 
 class TestUpdateArtifactAPI(APIFixture, FactoryFixture, ContainerFixture):
@@ -172,7 +215,31 @@ class TestUpdateArtifactAPI(APIFixture, FactoryFixture, ContainerFixture):
     async def setup(self) -> None:
         self.use_case = await self.container.override_use_case(UpdateArtifactUseCase)
 
-    async def test_update_artifact(self) -> None:
+    def test_not_auth(self) -> None:
+        response = self.api.update_artifact(
+            artifact_id=1,
+            title="TEST",
+            description="TEST",
+            rarity=ArtifactRarityEnum.RARE,
+            image_url="TEST",
+        )
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_candidate_forbidden(self) -> None:
+        response = self.candidate_api.update_artifact(
+            artifact_id=1,
+            title="TEST",
+            description="TEST",
+            rarity=ArtifactRarityEnum.RARE,
+            image_url="TEST",
+        )
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": PermissionDeniedError.detail}
+
+    def test_update_artifact(self) -> None:
         self.use_case.execute.return_value = self.factory.artifact(
             artifact_id=1,
             title="Updated Artifact",
@@ -201,7 +268,7 @@ class TestUpdateArtifactAPI(APIFixture, FactoryFixture, ContainerFixture):
             )
         )
 
-    async def test_update_artifact_title_already_exists(self) -> None:
+    def test_update_artifact_title_already_exists(self) -> None:
         self.use_case.execute.side_effect = ArtifactTitleAlreadyExistError
 
         response = self.hr_api.update_artifact(
@@ -224,7 +291,7 @@ class TestUpdateArtifactAPI(APIFixture, FactoryFixture, ContainerFixture):
             )
         )
 
-    async def test_update_artifact_not_found(self) -> None:
+    def test_update_artifact_not_found(self) -> None:
         self.use_case.execute.side_effect = ArtifactNotFoundError
 
         response = self.hr_api.update_artifact(
@@ -254,7 +321,19 @@ class TestDeleteArtifactAPI(APIFixture, FactoryFixture, ContainerFixture):
     async def setup(self) -> None:
         self.use_case = await self.container.override_use_case(DeleteArtifactUseCase)
 
-    async def test_delete_artifact(self) -> None:
+    def test_not_auth(self) -> None:
+        response = self.api.delete_artifact(artifact_id=1)
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_candidate_forbidden(self) -> None:
+        response = self.candidate_api.delete_artifact(artifact_id=1)
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": PermissionDeniedError.detail}
+
+    def test_delete_artifact(self) -> None:
         self.use_case.execute.return_value = None
 
         response = self.hr_api.delete_artifact(artifact_id=1)
@@ -263,7 +342,7 @@ class TestDeleteArtifactAPI(APIFixture, FactoryFixture, ContainerFixture):
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(artifact_id=1)
 
-    async def test_delete_artifact_not_found(self) -> None:
+    def test_delete_artifact_not_found(self) -> None:
         self.use_case.execute.side_effect = ArtifactNotFoundError
 
         response = self.hr_api.delete_artifact(artifact_id=999)

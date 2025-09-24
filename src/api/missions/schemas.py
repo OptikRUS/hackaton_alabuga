@@ -159,6 +159,14 @@ class SkillRewardResponse(BoundaryModel):
     level_increase: int
 
 
+class CompetencyRewardAddRequest(BoundaryModel):
+    level_increase: int = Field(default=..., ge=1, description="Уровень повышения компетенции")
+
+
+class SkillRewardAddRequest(BoundaryModel):
+    level_increase: int = Field(default=..., ge=1, description="Уровень повышения навыка")
+
+
 class MissionsResponse(BoundaryModel):
     values: list[MissionResponse]
 

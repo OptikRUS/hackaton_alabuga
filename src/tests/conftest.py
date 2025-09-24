@@ -94,7 +94,7 @@ def candidate_auth_token(candidate_jwt_user: JwtUser) -> str:
 
 @pytest.fixture
 def no_auth_client(app: FastAPI, container: AsyncContainer) -> Generator[TestClient]:
-    setup_dishka(container, app)
+    setup_dishka(container=container, app=app)
     with TestClient(app) as no_auth_client:
         yield no_auth_client
 

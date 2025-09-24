@@ -4,7 +4,7 @@ from dishka import Provider, Scope, provide
 from fastapi import Request
 from fastapi.security import HTTPBearer
 
-from src.api.auth.schemas import JwtUser
+from src.api.auth.schemas import JwtCandidateUser, JwtHRUser, JwtUser
 from src.core.artifacts.use_cases import (
     AddArtifactToMissionUseCase,
     AddArtifactToUserUseCase,
@@ -25,8 +25,10 @@ from src.core.competencies.use_cases import (
     RemoveSkillFromCompetencyUseCase,
     UpdateCompetencyUseCase,
 )
-from src.core.exceptions import InvalidJWTTokenError
+from src.core.exceptions import InvalidJWTTokenError, PermissionDeniedError
 from src.core.missions.use_cases import (
+    AddCompetencyRewardToMissionUseCase,
+    AddSkillRewardToMissionUseCase,
     AddTaskToMissionUseCase,
     CreateMissionBranchUseCase,
     CreateMissionUseCase,
@@ -35,6 +37,8 @@ from src.core.missions.use_cases import (
     GetMissionBranchesUseCase,
     GetMissionDetailUseCase,
     GetMissionsUseCase,
+    RemoveCompetencyRewardFromMissionUseCase,
+    RemoveSkillRewardFromMissionUseCase,
     RemoveTaskFromMissionUseCase,
     UpdateMissionBranchUseCase,
     UpdateMissionUseCase,
@@ -65,6 +69,7 @@ from src.core.tasks.use_cases import (
     GetMissionTasksUseCase,
     UpdateMissionTaskUseCase,
 )
+from src.core.users.enums import UserRoleEnum
 from src.core.users.use_cases import CreateUserUseCase, GetUserUseCase, LoginUserUseCase
 from src.services.minio import MinioService
 from src.tests.mocks.user_password import UserPasswordServiceMock
@@ -153,6 +158,16 @@ class MissionProviderMock(Provider):
     def override_remove_task_from_mission_use_case(self) -> RemoveTaskFromMissionUseCase:
         return AsyncMock(spec=RemoveTaskFromMissionUseCase)
 
+    @provide
+    def override_add_skill_reward_to_mission_use_case(self) -> AddSkillRewardToMissionUseCase:
+        return AsyncMock(spec=AddSkillRewardToMissionUseCase)
+
+    @provide
+    def override_remove_skill_reward_from_mission_use_case(
+        self,
+    ) -> RemoveSkillRewardFromMissionUseCase:
+        return AsyncMock(spec=RemoveSkillRewardFromMissionUseCase)
+
 
 class ArtifactProviderMock(Provider):
     scope: Scope = Scope.APP
@@ -217,6 +232,18 @@ class AuthProviderMock(Provider):
             raise InvalidJWTTokenError
         return JwtUser.decode(payload=auth.credentials)
 
+    @provide(scope=Scope.REQUEST)
+    async def hr_auth(self, jwt_user: JwtUser) -> JwtHRUser:
+        if jwt_user.role == UserRoleEnum.HR:
+            return JwtHRUser(login=jwt_user.login, role=jwt_user.role)
+        raise PermissionDeniedError
+
+    @provide(scope=Scope.REQUEST)
+    async def candidate_auth(self, jwt_user: JwtUser) -> JwtCandidateUser:
+        if jwt_user.role == UserRoleEnum.CANDIDATE:
+            return JwtCandidateUser(login=jwt_user.login, role=jwt_user.role)
+        raise PermissionDeniedError
+
 
 class SkillProviderMock(Provider):
     scope: Scope = Scope.APP
@@ -272,6 +299,18 @@ class CompetencyProviderMock(Provider):
     @provide
     def override_remove_skill_from_competency_use_case(self) -> RemoveSkillFromCompetencyUseCase:
         return AsyncMock(spec=RemoveSkillFromCompetencyUseCase)
+
+    @provide
+    def override_add_competency_reward_to_mission_use_case(
+        self,
+    ) -> AddCompetencyRewardToMissionUseCase:
+        return AsyncMock(spec=AddCompetencyRewardToMissionUseCase)
+
+    @provide
+    def override_remove_competency_reward_from_mission_use_case(
+        self,
+    ) -> RemoveCompetencyRewardFromMissionUseCase:
+        return AsyncMock(spec=RemoveCompetencyRewardFromMissionUseCase)
 
 
 class RankProviderMock(Provider):

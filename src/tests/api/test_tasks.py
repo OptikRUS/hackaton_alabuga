@@ -1,6 +1,7 @@
 import pytest
 from httpx import codes
 
+from src.core.exceptions import PermissionDeniedError
 from src.core.tasks.exceptions import TaskNameAlreadyExistError, TaskNotFoundError
 from src.core.tasks.use_cases import (
     CreateMissionTaskUseCase,
@@ -17,6 +18,18 @@ class TestCreateTaskAPI(APIFixture, FactoryFixture, ContainerFixture):
     async def setup(self) -> None:
         self.use_case = await self.container.override_use_case(CreateMissionTaskUseCase)
 
+    def test_not_auth(self) -> None:
+        response = self.api.create_task(title="TEST", description="TEST")
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_candidate_forbidden(self) -> None:
+        response = self.candidate_api.create_task(title="TEST", description="TEST")
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": PermissionDeniedError.detail}
+
     def test_create_task(self) -> None:
         self.use_case.execute.return_value = self.factory.mission_task(
             task_id=100,
@@ -24,7 +37,7 @@ class TestCreateTaskAPI(APIFixture, FactoryFixture, ContainerFixture):
             description="TEST",
         )
 
-        response = self.api.create_task(title="TEST", description="TEST")
+        response = self.hr_api.create_task(title="TEST", description="TEST")
 
         assert response.status_code == codes.CREATED
         assert response.json() == {"id": 100, "title": "TEST", "description": "TEST"}
@@ -40,7 +53,7 @@ class TestCreateTaskAPI(APIFixture, FactoryFixture, ContainerFixture):
     def test_create_task_already_exists(self) -> None:
         self.use_case.execute.side_effect = TaskNameAlreadyExistError
 
-        response = self.api.create_task(title="TEST", description="TEST")
+        response = self.hr_api.create_task(title="TEST", description="TEST")
 
         assert response.status_code == codes.CONFLICT
         assert response.json() == {"detail": TaskNameAlreadyExistError.detail}
@@ -59,6 +72,12 @@ class TestGetTasksAPI(APIFixture, FactoryFixture, ContainerFixture):
     async def setup(self) -> None:
         self.use_case = await self.container.override_use_case(GetMissionTasksUseCase)
 
+    def test_not_auth(self) -> None:
+        response = self.api.get_tasks()
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
     def test_get_tasks(self) -> None:
         self.use_case.execute.return_value = self.factory.mission_tasks(
             values=[
@@ -75,7 +94,7 @@ class TestGetTasksAPI(APIFixture, FactoryFixture, ContainerFixture):
             ]
         )
 
-        response = self.api.get_tasks()
+        response = self.hr_api.get_tasks()
 
         assert response.status_code == codes.OK
         assert response.json() == {
@@ -90,7 +109,7 @@ class TestGetTasksAPI(APIFixture, FactoryFixture, ContainerFixture):
     def test_get_tasks_empty(self) -> None:
         self.use_case.execute.return_value = self.factory.mission_tasks(values=[])
 
-        response = self.api.get_tasks()
+        response = self.candidate_api.get_tasks()
 
         assert response.status_code == codes.OK
         assert response.json() == {"values": []}
@@ -98,10 +117,16 @@ class TestGetTasksAPI(APIFixture, FactoryFixture, ContainerFixture):
         self.use_case.execute.assert_awaited_once_with()
 
 
-class TestGetTaskAPI(APIFixture, FactoryFixture, ContainerFixture):
+class TestGetTaskDetailAPI(APIFixture, FactoryFixture, ContainerFixture):
     @pytest.fixture(autouse=True)
     async def setup(self) -> None:
         self.use_case = await self.container.override_use_case(GetMissionTaskDetailUseCase)
+
+    def test_not_auth(self) -> None:
+        response = self.api.get_task(task_id=1)
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
 
     def test_get_task(self) -> None:
         self.use_case.execute.return_value = self.factory.mission_task(
@@ -110,7 +135,7 @@ class TestGetTaskAPI(APIFixture, FactoryFixture, ContainerFixture):
             description="Test task description",
         )
 
-        response = self.api.get_task(task_id=1)
+        response = self.hr_api.get_task(task_id=1)
 
         assert response.status_code == codes.OK
         assert response.json() == {
@@ -124,7 +149,7 @@ class TestGetTaskAPI(APIFixture, FactoryFixture, ContainerFixture):
     def test_get_task_not_found(self) -> None:
         self.use_case.execute.side_effect = TaskNotFoundError
 
-        response = self.api.get_task(task_id=999)
+        response = self.candidate_api.get_task(task_id=999)
 
         assert response.status_code == codes.NOT_FOUND
         assert response.json() == {"detail": TaskNotFoundError.detail}
@@ -137,6 +162,18 @@ class TestUpdateTaskAPI(APIFixture, FactoryFixture, ContainerFixture):
     async def setup(self) -> None:
         self.use_case = await self.container.override_use_case(UpdateMissionTaskUseCase)
 
+    def test_not_auth(self) -> None:
+        response = self.api.update_task(task_id=1, title="TEST", description="TEST")
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_candidate_forbidden(self) -> None:
+        response = self.candidate_api.update_task(task_id=1, title="TEST", description="TEST")
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": PermissionDeniedError.detail}
+
     def test_update_task(self) -> None:
         self.use_case.execute.return_value = self.factory.mission_task(
             task_id=1,
@@ -144,7 +181,7 @@ class TestUpdateTaskAPI(APIFixture, FactoryFixture, ContainerFixture):
             description="TEST",
         )
 
-        response = self.api.update_task(task_id=1, title="TEST", description="TEST")
+        response = self.hr_api.update_task(task_id=1, title="TEST", description="TEST")
 
         assert response.status_code == codes.OK
         assert response.json() == {
@@ -160,7 +197,7 @@ class TestUpdateTaskAPI(APIFixture, FactoryFixture, ContainerFixture):
     def test_update_task_already_exists(self) -> None:
         self.use_case.execute.side_effect = TaskNameAlreadyExistError
 
-        response = self.api.update_task(task_id=1, title="TEST", description="TEST")
+        response = self.hr_api.update_task(task_id=1, title="TEST", description="TEST")
 
         assert response.status_code == codes.CONFLICT
         assert response.json() == {"detail": TaskNameAlreadyExistError.detail}
@@ -176,7 +213,7 @@ class TestUpdateTaskAPI(APIFixture, FactoryFixture, ContainerFixture):
     def test_update_task_not_found(self) -> None:
         self.use_case.execute.side_effect = TaskNotFoundError
 
-        response = self.api.update_task(task_id=999, title="TEST", description="TEST")
+        response = self.hr_api.update_task(task_id=999, title="TEST", description="TEST")
 
         assert response.status_code == codes.NOT_FOUND
         assert response.json() == {"detail": TaskNotFoundError.detail}
@@ -195,10 +232,22 @@ class TestDeleteTaskAPI(APIFixture, FactoryFixture, ContainerFixture):
     async def setup(self) -> None:
         self.use_case = await self.container.override_use_case(DeleteMissionTaskUseCase)
 
+    def test_not_auth(self) -> None:
+        response = self.api.delete_task(task_id=1)
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_candidate_forbidden(self) -> None:
+        response = self.candidate_api.delete_task(task_id=1)
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": PermissionDeniedError.detail}
+
     def test_delete_task(self) -> None:
         self.use_case.execute.return_value = None
 
-        response = self.api.delete_task(task_id=1)
+        response = self.hr_api.delete_task(task_id=1)
 
         assert response.status_code == codes.NO_CONTENT
         self.use_case.execute.assert_called_once()
@@ -207,7 +256,7 @@ class TestDeleteTaskAPI(APIFixture, FactoryFixture, ContainerFixture):
     def test_delete_task_not_found(self) -> None:
         self.use_case.execute.side_effect = TaskNotFoundError
 
-        response = self.api.delete_task(task_id=999)
+        response = self.hr_api.delete_task(task_id=999)
 
         assert response.status_code == codes.NOT_FOUND
         assert response.json() == {"detail": TaskNotFoundError.detail}
