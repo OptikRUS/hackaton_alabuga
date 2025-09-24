@@ -4,6 +4,8 @@ from io import BytesIO
 from httpx import Response
 from starlette.testclient import TestClient
 
+from src.core.artifacts.enums import ArtifactRarityEnum
+
 
 @dataclass
 class APIHelper:
@@ -143,7 +145,7 @@ class APIHelper:
         self,
         title: str,
         description: str,
-        rarity: str,
+        rarity: ArtifactRarityEnum,
         image_url: str,
     ) -> Response:
         return self.client.post(

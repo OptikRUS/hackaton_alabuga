@@ -4,7 +4,7 @@ from dishka import Provider, Scope, provide
 from fastapi import Request
 from fastapi.security import HTTPBearer
 
-from src.api.auth.schemas import JwtUser
+from src.api.auth.schemas import JwtCandidateUser, JwtHRUser, JwtUser
 from src.core.artifacts.use_cases import (
     AddArtifactToMissionUseCase,
     AddArtifactToUserUseCase,
@@ -25,7 +25,7 @@ from src.core.competencies.use_cases import (
     RemoveSkillFromCompetencyUseCase,
     UpdateCompetencyUseCase,
 )
-from src.core.exceptions import InvalidJWTTokenError
+from src.core.exceptions import InvalidJWTTokenError, PermissionDeniedError
 from src.core.missions.use_cases import (
     AddTaskToMissionUseCase,
     CreateMissionBranchUseCase,
@@ -65,6 +65,7 @@ from src.core.tasks.use_cases import (
     GetMissionTasksUseCase,
     UpdateMissionTaskUseCase,
 )
+from src.core.users.enums import UserRoleEnum
 from src.core.users.use_cases import CreateUserUseCase, GetUserUseCase, LoginUserUseCase
 from src.services.minio import MinioService
 from src.tests.mocks.user_password import UserPasswordServiceMock
@@ -216,6 +217,18 @@ class AuthProviderMock(Provider):
         if not auth:
             raise InvalidJWTTokenError
         return JwtUser.decode(payload=auth.credentials)
+
+    @provide(scope=Scope.REQUEST)
+    async def hr_auth(self, jwt_user: JwtUser) -> JwtHRUser:
+        if jwt_user.role == UserRoleEnum.HR:
+            return JwtHRUser(login=jwt_user.login, role=jwt_user.role)
+        raise PermissionDeniedError
+
+    @provide(scope=Scope.REQUEST)
+    async def candidate_auth(self, jwt_user: JwtUser) -> JwtCandidateUser:
+        if jwt_user.role == UserRoleEnum.CANDIDATE:
+            return JwtCandidateUser(login=jwt_user.login, role=jwt_user.role)
+        raise PermissionDeniedError
 
 
 class SkillProviderMock(Provider):
