@@ -38,6 +38,7 @@ jobs:
               -e DB_HOST=${{ secrets.DB_HOST }} \
               -e DB_PORT=${{ secrets.DB_PORT }} \
               -e MINIO_ENDPOINT=${{ secrets.MINIO_ENDPOINT }} \
+              -e SERVER_HOST=${{ secrets.SERVER_HOST }} \
               ${{ vars.DOCKERHUB_USERNAME }}/${{ vars.DOCKERHUB_REPONAME }}
 
             echo "⏳ Проверяем healthcheck нового контейнера..."
@@ -54,7 +55,7 @@ jobs:
             done
 
             if [ "$success" = true ]; then
-              echo "🛑 Останавливаем и удаляем старый контейнер..."
+              echo "🗑 Останавливаем и удаляем старый контейнер..."
               docker container stop ${{ vars.DOCKERHUB_REPONAME }} || true
               docker container rm ${{ vars.DOCKERHUB_REPONAME }} || true
 
@@ -72,6 +73,7 @@ jobs:
                 -e DB_HOST=${{ secrets.DB_HOST }} \
                 -e DB_PORT=${{ secrets.DB_PORT }} \
                 -e MINIO_ENDPOINT=${{ secrets.MINIO_ENDPOINT }} \
+                -e SERVER_HOST=${{ secrets.SERVER_HOST }} \
                 ${{ vars.DOCKERHUB_USERNAME }}/${{ vars.DOCKERHUB_REPONAME }}
 
               echo "🧹 Чистим dangling images..."
