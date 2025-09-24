@@ -19,7 +19,7 @@ class MinioService(FileStorage):
     server_url: str = settings.SERVER.URL
     region_name: str = settings.MINIO.REGION
     bucket: str = settings.MINIO.BUCKET
-    chunck_size: int = 65536
+    chunk_size: int = 65536
 
     @property
     def media_url_prefix(self) -> str:
@@ -67,7 +67,7 @@ class MinioService(FileStorage):
         try:
             obj = await self.minio_connection.get_object(Bucket=self.bucket, Key=key)
             async with obj["Body"] as response:
-                async for chunk in response.content.iter_chunked(self.chunck_size):
+                async for chunk in response.content.iter_chunked(self.chunk_size):
                     if not chunk:
                         continue
                     yield chunk
