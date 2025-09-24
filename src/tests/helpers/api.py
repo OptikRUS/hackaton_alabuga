@@ -323,7 +323,7 @@ class APIHelper:
     ) -> Response:
         return self.client.post(
             f"/ranks/{rank_id}/competencies/{competency_id}",
-            params={"min_level": min_level},
+            json={"min_level": min_level},
         )
 
     def remove_required_competency_from_rank(self, rank_id: int, competency_id: int) -> Response:

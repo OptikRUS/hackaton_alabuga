@@ -34,6 +34,10 @@ class RankUpdateRequest(BoundaryModel):
         )
 
 
+class AddRequiredCompetencyToRankRequest(BoundaryModel):
+    min_level: int = Field(default=..., ge=1, description="Минимальный уровень компетенции")
+
+
 class RankResponse(BoundaryModel):
     id: int = Field(default=..., description="Идентификатор ранга")
     name: str = Field(default=..., description="Название ранга")
