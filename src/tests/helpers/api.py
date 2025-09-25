@@ -58,6 +58,18 @@ class APIHelper:
     def delete_mission_branch(self, branch_id: int) -> Response:
         return self.client.delete(f"/missions/branches/{branch_id}")
 
+    def create_season(self, name: str) -> Response:
+        return self.client.post(url="/seasons", json={"name": name})
+
+    def get_seasons(self) -> Response:
+        return self.client.get("/seasons")
+
+    def update_season(self, season_id: int, name: str) -> Response:
+        return self.client.put(url=f"/seasons/{season_id}", json={"name": name})
+
+    def delete_season(self, season_id: int) -> Response:
+        return self.client.delete(f"/seasons/{season_id}")
+
     def create_mission(
         self,
         title: str,
