@@ -18,8 +18,6 @@ from src.core.competencies.exceptions import (
 )
 from src.core.competencies.schemas import Competencies, Competency
 from src.core.missions.exceptions import (
-    MissionBranchNameAlreadyExistError,
-    MissionBranchNotFoundError,
     MissionCompetencyRewardAlreadyExistsError,
     MissionNameAlreadyExistError,
     MissionNotFoundError,
@@ -27,8 +25,6 @@ from src.core.missions.exceptions import (
 )
 from src.core.missions.schemas import (
     Mission,
-    MissionBranch,
-    MissionBranches,
     Missions,
 )
 from src.core.ranks.exceptions import (
@@ -39,6 +35,8 @@ from src.core.ranks.exceptions import (
     RankNotFoundError,
 )
 from src.core.ranks.schemas import Rank, Ranks
+from src.core.seasons.exceptions import SeasonNameAlreadyExistError, SeasonNotFoundError
+from src.core.seasons.schemas import Season, Seasons
 from src.core.skills.exceptions import (
     SkillLevelIncreaseTooHighError,
     SkillNameAlreadyExistError,
@@ -135,33 +133,39 @@ class DatabaseStorage(
             raise UserNotFoundError
         return candidate.to_candidate_schema()
 
-    async def insert_mission_branch(self, branch: MissionBranch) -> None:
+    async def insert_season(self, season: Season) -> None:
         query = (
-            insert(MissionBranchModel).values({"name": branch.name}).returning(MissionBranchModel)
+            insert(MissionBranchModel)
+            .values({
+                "name": season.name,
+                "start_date": season.start_date,
+                "end_date": season.end_date,
+            })
+            .returning(MissionBranchModel)
         )
         try:
             await self.session.scalar(query)
         except IntegrityError as error:
-            raise MissionBranchNameAlreadyExistError from error
+            raise SeasonNameAlreadyExistError from error
 
-    async def get_mission_branch_by_name(self, name: str) -> MissionBranch:
+    async def get_season_by_name(self, name: str) -> Season:
         query = select(MissionBranchModel).where(MissionBranchModel.name == name)
         branch = await self.session.scalar(query)
         if branch is None:
-            raise MissionBranchNotFoundError
+            raise SeasonNotFoundError
         return branch.to_schema()
 
-    async def get_mission_branch_by_id(self, branch_id: int) -> MissionBranch:
-        query = select(MissionBranchModel).where(MissionBranchModel.id == branch_id)
+    async def get_season_by_id(self, season_id: int) -> Season:
+        query = select(MissionBranchModel).where(MissionBranchModel.id == season_id)
         branch = await self.session.scalar(query)
         if branch is None:
-            raise MissionBranchNotFoundError
+            raise SeasonNotFoundError
         return branch.to_schema()
 
-    async def list_mission_branches(self) -> MissionBranches:
+    async def list_seasons(self) -> Seasons:
         query = select(MissionBranchModel)
         result = await self.session.scalars(query)
-        return MissionBranches(values=[row.to_schema() for row in result])
+        return Seasons(values=[row.to_schema() for row in result])
 
     async def insert_mission(self, mission: Mission) -> None:
         query = (
@@ -172,7 +176,7 @@ class DatabaseStorage(
                 "reward_xp": mission.reward_xp,
                 "reward_mana": mission.reward_mana,
                 "rank_requirement": mission.rank_requirement,
-                "branch_id": mission.branch_id,
+                "branch_id": mission.season_id,
                 "category": mission.category,
             })
             .returning(MissionModel.id)
@@ -232,7 +236,7 @@ class DatabaseStorage(
                 "reward_xp": mission.reward_xp,
                 "reward_mana": mission.reward_mana,
                 "rank_requirement": mission.rank_requirement,
-                "branch_id": mission.branch_id,
+                "branch_id": mission.season_id,
                 "category": mission.category,
             })
         )
@@ -243,21 +247,25 @@ class DatabaseStorage(
         query = delete(MissionModel).where(MissionModel.id == mission_id)
         await self.session.execute(query)
 
-    async def update_mission_branch(self, branch: MissionBranch) -> None:
-        await self.get_mission_branch_by_id(branch_id=branch.id)
+    async def update_season(self, branch: Season) -> None:
+        await self.get_season_by_id(season_id=branch.id)
         query = (
             update(MissionBranchModel)
             .where(MissionBranchModel.id == branch.id)
-            .values({"name": branch.name})
+            .values({
+                "name": branch.name,
+                "start_date": branch.start_date,
+                "end_date": branch.end_date,
+            })
         )
         try:
             await self.session.execute(query)
         except IntegrityError as error:
-            raise MissionBranchNameAlreadyExistError from error
+            raise SeasonNameAlreadyExistError from error
 
-    async def delete_mission_branch(self, branch_id: int) -> None:
-        await self.get_mission_branch_by_id(branch_id=branch_id)
-        query = delete(MissionBranchModel).where(MissionBranchModel.id == branch_id)
+    async def delete_season(self, season_id: int) -> None:
+        await self.get_season_by_id(season_id=season_id)
+        query = delete(MissionBranchModel).where(MissionBranchModel.id == season_id)
         await self.session.execute(query)
 
     async def insert_mission_task(self, task: MissionTask) -> None:

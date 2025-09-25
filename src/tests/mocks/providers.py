@@ -30,17 +30,13 @@ from src.core.missions.use_cases import (
     AddCompetencyRewardToMissionUseCase,
     AddSkillRewardToMissionUseCase,
     AddTaskToMissionUseCase,
-    CreateMissionBranchUseCase,
     CreateMissionUseCase,
-    DeleteMissionBranchUseCase,
     DeleteMissionUseCase,
-    GetMissionBranchesUseCase,
     GetMissionDetailUseCase,
     GetMissionsUseCase,
     RemoveCompetencyRewardFromMissionUseCase,
     RemoveSkillRewardFromMissionUseCase,
     RemoveTaskFromMissionUseCase,
-    UpdateMissionBranchUseCase,
     UpdateMissionUseCase,
 )
 from src.core.password import PasswordService
@@ -54,6 +50,13 @@ from src.core.ranks.use_cases import (
     RemoveRequiredCompetencyFromRankUseCase,
     RemoveRequiredMissionFromRankUseCase,
     UpdateRankUseCase,
+)
+from src.core.seasons.use_cases import (
+    CreateSeasonUseCase,
+    DeleteSeasonUseCase,
+    GetSeasonDetailUseCase,
+    GetSeasonsUseCase,
+    UpdateSeasonUseCase,
 )
 from src.core.skills.use_cases import (
     CreateSkillUseCase,
@@ -95,20 +98,24 @@ class MissionProviderMock(Provider):
     scope: Scope = Scope.APP
 
     @provide
-    def override_create_mission_branch_use_case(self) -> CreateMissionBranchUseCase:
-        return AsyncMock(spec=CreateMissionBranchUseCase)
+    def override_create_season_use_case(self) -> CreateSeasonUseCase:
+        return AsyncMock(spec=CreateSeasonUseCase)
 
     @provide
-    def override_get_mission_branches_use_case(self) -> GetMissionBranchesUseCase:
-        return AsyncMock(spec=GetMissionBranchesUseCase)
+    def override_get_seasons_use_case(self) -> GetSeasonsUseCase:
+        return AsyncMock(spec=GetSeasonsUseCase)
 
     @provide
-    def override_update_mission_branch_use_case(self) -> UpdateMissionBranchUseCase:
-        return AsyncMock(spec=CreateMissionBranchUseCase)
+    def override_get_season_detail_use_case(self) -> GetSeasonDetailUseCase:
+        return AsyncMock(spec=GetSeasonDetailUseCase)
 
     @provide
-    def override_delete_mission_branch_usecase(self) -> DeleteMissionBranchUseCase:
-        return AsyncMock(spec=GetMissionBranchesUseCase)
+    def override_update_season_use_case(self) -> UpdateSeasonUseCase:
+        return AsyncMock(spec=UpdateSeasonUseCase)
+
+    @provide
+    def override_delete_season_use_case(self) -> DeleteSeasonUseCase:
+        return AsyncMock(spec=DeleteSeasonUseCase)
 
     @provide
     def override_create_mission_use_case(self) -> CreateMissionUseCase:
@@ -132,23 +139,23 @@ class MissionProviderMock(Provider):
 
     @provide
     def override_create_mission_task_use_case(self) -> CreateMissionTaskUseCase:
-        return AsyncMock(storage=CreateMissionTaskUseCase)
+        return AsyncMock(spec=CreateMissionTaskUseCase)
 
     @provide
     def override_get_mission_tasks_use_case(self) -> GetMissionTasksUseCase:
-        return AsyncMock(storage=GetMissionTasksUseCase)
+        return AsyncMock(spec=GetMissionTasksUseCase)
 
     @provide
     def override_get_mission_task_detail_use_case(self) -> GetMissionTaskDetailUseCase:
-        return AsyncMock(storage=GetMissionTaskDetailUseCase)
+        return AsyncMock(spec=GetMissionTaskDetailUseCase)
 
     @provide
     def override_update_mission_task_use_case(self) -> UpdateMissionTaskUseCase:
-        return AsyncMock(storage=UpdateMissionTaskUseCase)
+        return AsyncMock(spec=UpdateMissionTaskUseCase)
 
     @provide
     def override_delete_mission_task_use_case(self) -> DeleteMissionTaskUseCase:
-        return AsyncMock(storage=DeleteMissionTaskUseCase)
+        return AsyncMock(spec=DeleteMissionTaskUseCase)
 
     @provide
     def override_add_task_to_mission_use_case(self) -> AddTaskToMissionUseCase:

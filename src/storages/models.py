@@ -1,12 +1,15 @@
-from sqlalchemy import ForeignKey, PrimaryKeyConstraint, String, UniqueConstraint
+from datetime import datetime
+
+from sqlalchemy import DateTime, ForeignKey, PrimaryKeyConstraint, String, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 from src.core.artifacts.enums import ArtifactRarityEnum
 from src.core.artifacts.schemas import Artifact
 from src.core.competencies.schemas import Competency
 from src.core.missions.enums import MissionCategoryEnum
-from src.core.missions.schemas import CompetencyReward, Mission, MissionBranch, SkillReward
+from src.core.missions.schemas import CompetencyReward, Mission, SkillReward
 from src.core.ranks.schemas import Rank, RankCompetencyRequirement
+from src.core.seasons.schemas import Season
 from src.core.skills.schemas import Skill
 from src.core.tasks.schemas import MissionTask
 from src.core.users.enums import UserRoleEnum
@@ -80,15 +83,27 @@ class MissionBranchModel(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(255))
+    start_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    end_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
     missions: Mapped[list["MissionModel"]] = relationship(cascade="all, delete-orphan")
 
     @classmethod
-    def from_schema(cls, branch: MissionBranch) -> "MissionBranchModel":
-        return cls(id=branch.id, name=branch.name)
+    def from_schema(cls, branch: Season) -> "MissionBranchModel":
+        return cls(
+            id=branch.id,
+            name=branch.name,
+            start_date=branch.start_date,
+            end_date=branch.end_date,
+        )
 
-    def to_schema(self) -> MissionBranch:
-        return MissionBranch(id=self.id, name=self.name)
+    def to_schema(self) -> Season:
+        return Season(
+            id=self.id,
+            name=self.name,
+            start_date=self.start_date,
+            end_date=self.end_date,
+        )
 
 
 class MissionModel(Base):
@@ -141,7 +156,7 @@ class MissionModel(Base):
             reward_xp=mission.reward_xp,
             reward_mana=mission.reward_mana,
             rank_requirement=mission.rank_requirement,
-            branch_id=mission.branch_id,
+            branch_id=mission.season_id,
             category=mission.category,
         )
 
@@ -153,7 +168,7 @@ class MissionModel(Base):
             reward_xp=self.reward_xp,
             reward_mana=self.reward_mana,
             rank_requirement=self.rank_requirement,
-            branch_id=self.branch_id,
+            season_id=self.branch_id,
             category=MissionCategoryEnum(self.category),
             tasks=[task.to_schema() for task in self.tasks],
             reward_artifacts=[artifact.to_schema() for artifact in self.artifacts],

@@ -1,3 +1,5 @@
+from datetime import UTC, datetime
+
 from src.core.artifacts.enums import ArtifactRarityEnum
 from src.core.artifacts.schemas import Artifact, Artifacts
 from src.core.competencies.schemas import Competencies, Competency
@@ -5,12 +7,11 @@ from src.core.missions.enums import MissionCategoryEnum
 from src.core.missions.schemas import (
     CompetencyReward,
     Mission,
-    MissionBranch,
-    MissionBranches,
     Missions,
     SkillReward,
 )
 from src.core.ranks.schemas import Rank, RankCompetencyRequirement, Ranks
+from src.core.seasons.schemas import Season, Seasons
 from src.core.skills.schemas import Skill, Skills
 from src.core.tasks.schemas import (
     MissionTask,
@@ -80,12 +81,23 @@ class FactoryHelper:
         )
 
     @classmethod
-    def mission_branch(cls, branch_id: int = 0, name: str = "TEST") -> MissionBranch:
-        return MissionBranch(id=branch_id, name=name)
+    def season(
+        cls,
+        season_id: int = 0,
+        name: str = "TEST",
+        start_date: str = "2025-10-25T06:55:47Z",
+        end_date: str = "2025-10-25T06:55:47Z",
+    ) -> Season:
+        return Season(
+            id=season_id,
+            name=name,
+            start_date=datetime.fromisoformat(start_date).replace(tzinfo=UTC),
+            end_date=datetime.fromisoformat(end_date).replace(tzinfo=UTC),
+        )
 
     @classmethod
-    def mission_branches(cls, values: list[MissionBranch]) -> MissionBranches:
-        return MissionBranches(values=values if values else [])
+    def seasons(cls, values: list[Season]) -> Seasons:
+        return Seasons(values=values if values else [])
 
     @classmethod
     def mission(
@@ -96,7 +108,7 @@ class FactoryHelper:
         reward_xp: int = 100,
         reward_mana: int = 50,
         rank_requirement: int = 1,
-        branch_id: int = 1,
+        season_id: int = 1,
         category: MissionCategoryEnum = MissionCategoryEnum.QUEST,
         tasks: list[MissionTask] | None = None,
         reward_artifacts: list[Artifact] | None = None,
@@ -110,7 +122,7 @@ class FactoryHelper:
             reward_xp=reward_xp,
             reward_mana=reward_mana,
             rank_requirement=rank_requirement,
-            branch_id=branch_id,
+            season_id=season_id,
             category=category,
             tasks=tasks,
             reward_artifacts=reward_artifacts,

@@ -22,7 +22,7 @@ class TestGetMissionsUseCase(FactoryFixture):
                     reward_xp=100,
                     reward_mana=50,
                     rank_requirement=1,
-                    branch_id=1,
+                    season_id=1,
                     category=MissionCategoryEnum.QUEST,
                 )
             )
@@ -36,7 +36,7 @@ class TestGetMissionsUseCase(FactoryFixture):
                     reward_xp=200,
                     reward_mana=100,
                     rank_requirement=2,
-                    branch_id=1,
+                    season_id=1,
                     category=MissionCategoryEnum.SIMULATOR,
                 )
             )
@@ -54,7 +54,7 @@ class TestGetMissionsUseCase(FactoryFixture):
                     reward_xp=100,
                     reward_mana=50,
                     rank_requirement=1,
-                    branch_id=1,
+                    season_id=1,
                     category=MissionCategoryEnum.QUEST,
                 ),
                 self.factory.mission(
@@ -64,7 +64,7 @@ class TestGetMissionsUseCase(FactoryFixture):
                     reward_xp=200,
                     reward_mana=100,
                     rank_requirement=2,
-                    branch_id=1,
+                    season_id=1,
                     category=MissionCategoryEnum.SIMULATOR,
                 ),
             ]

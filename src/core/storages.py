@@ -4,11 +4,10 @@ from src.core.artifacts.schemas import Artifact, Artifacts
 from src.core.competencies.schemas import Competencies, Competency
 from src.core.missions.schemas import (
     Mission,
-    MissionBranch,
-    MissionBranches,
     Missions,
 )
 from src.core.ranks.schemas import Rank, Ranks
+from src.core.seasons.schemas import Season, Seasons
 from src.core.skills.schemas import Skill, Skills
 from src.core.tasks.schemas import (
     MissionTask,
@@ -33,19 +32,19 @@ class UserStorage(metaclass=ABCMeta):
 
 class MissionStorage(metaclass=ABCMeta):
     @abstractmethod
-    async def insert_mission_branch(self, branch: MissionBranch) -> None:
+    async def insert_season(self, season: Season) -> None:
         raise NotImplementedError
 
     @abstractmethod
-    async def get_mission_branch_by_name(self, name: str) -> MissionBranch:
+    async def get_season_by_name(self, name: str) -> Season:
         raise NotImplementedError
 
     @abstractmethod
-    async def get_mission_branch_by_id(self, branch_id: int) -> MissionBranch:
+    async def get_season_by_id(self, season_id: int) -> Season:
         raise NotImplementedError
 
     @abstractmethod
-    async def list_mission_branches(self) -> MissionBranches:
+    async def list_seasons(self) -> Seasons:
         raise NotImplementedError
 
     @abstractmethod
@@ -73,11 +72,11 @@ class MissionStorage(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    async def update_mission_branch(self, branch: MissionBranch) -> None:
+    async def update_season(self, branch: Season) -> None:
         raise NotImplementedError
 
     @abstractmethod
-    async def delete_mission_branch(self, branch_id: int) -> None:
+    async def delete_season(self, season_id: int) -> None:
         raise NotImplementedError
 
     @abstractmethod
@@ -114,19 +113,27 @@ class MissionStorage(metaclass=ABCMeta):
 
     @abstractmethod
     async def add_competency_reward_to_mission(
-        self, mission_id: int, competency_id: int, level_increase: int
+        self,
+        mission_id: int,
+        competency_id: int,
+        level_increase: int,
     ) -> None:
         raise NotImplementedError
 
     @abstractmethod
     async def remove_competency_reward_from_mission(
-        self, mission_id: int, competency_id: int
+        self,
+        mission_id: int,
+        competency_id: int,
     ) -> None:
         raise NotImplementedError
 
     @abstractmethod
     async def add_skill_reward_to_mission(
-        self, mission_id: int, skill_id: int, level_increase: int
+        self,
+        mission_id: int,
+        skill_id: int,
+        level_increase: int,
     ) -> None:
         raise NotImplementedError
 

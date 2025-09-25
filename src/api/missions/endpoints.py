@@ -4,10 +4,6 @@ from fastapi import APIRouter, status
 from src.api.auth.schemas import JwtHRUser, JwtUser
 from src.api.missions.schemas import (
     CompetencyRewardAddRequest,
-    MissionBranchCreateRequest,
-    MissionBranchesResponse,
-    MissionBranchResponse,
-    MissionBranchUpdateRequest,
     MissionCreateRequest,
     MissionResponse,
     MissionsResponse,
@@ -23,88 +19,17 @@ from src.core.missions.use_cases import (
     AddCompetencyRewardToMissionUseCase,
     AddSkillRewardToMissionUseCase,
     AddTaskToMissionUseCase,
-    CreateMissionBranchUseCase,
     CreateMissionUseCase,
-    DeleteMissionBranchUseCase,
     DeleteMissionUseCase,
-    GetMissionBranchesUseCase,
     GetMissionDetailUseCase,
     GetMissionsUseCase,
     RemoveCompetencyRewardFromMissionUseCase,
     RemoveSkillRewardFromMissionUseCase,
     RemoveTaskFromMissionUseCase,
-    UpdateMissionBranchUseCase,
     UpdateMissionUseCase,
 )
 
 router = APIRouter(tags=["missions"], route_class=DishkaRoute)
-
-
-@router.post(
-    path="/missions/branches",
-    openapi_extra=openapi_extra,
-    status_code=status.HTTP_201_CREATED,
-    summary="Создать ветку миссий",
-    description="Создает новую ветку миссий в системе",
-)
-async def create_mission_branch(
-    user: FromDishka[JwtHRUser],
-    body: MissionBranchCreateRequest,
-    use_case: FromDishka[CreateMissionBranchUseCase],
-) -> MissionBranchResponse:
-    _ = user
-    branch = await use_case.execute(branch=body.to_schema())
-    return MissionBranchResponse.from_schema(branch=branch)
-
-
-@router.get(
-    path="/missions/branches",
-    openapi_extra=openapi_extra,
-    status_code=status.HTTP_200_OK,
-    summary="Получить список веток миссий",
-    description="Возвращает все доступные ветки миссий",
-)
-async def get_mission_branches(
-    user: FromDishka[JwtUser],
-    use_case: FromDishka[GetMissionBranchesUseCase],
-) -> MissionBranchesResponse:
-    _ = user
-    branches = await use_case.execute()
-    return MissionBranchesResponse.from_schema(branches=branches)
-
-
-@router.put(
-    path="/missions/branches/{branch_id}",
-    openapi_extra=openapi_extra,
-    status_code=status.HTTP_200_OK,
-    summary="Обновить ветку миссий",
-    description="Обновляет данные указанной ветки миссий",
-)
-async def update_mission_branch(
-    branch_id: int,
-    user: FromDishka[JwtHRUser],
-    body: MissionBranchUpdateRequest,
-    use_case: FromDishka[UpdateMissionBranchUseCase],
-) -> MissionBranchResponse:
-    _ = user
-    branch = await use_case.execute(branch=body.to_schema(branch_id=branch_id))
-    return MissionBranchResponse.from_schema(branch=branch)
-
-
-@router.delete(
-    path="/missions/branches/{branch_id}",
-    openapi_extra=openapi_extra,
-    status_code=status.HTTP_204_NO_CONTENT,
-    summary="Удалить ветку миссий",
-    description="Удаляет указанную ветку миссий",
-)
-async def delete_mission_branch(
-    branch_id: int,
-    user: FromDishka[JwtHRUser],
-    use_case: FromDishka[DeleteMissionBranchUseCase],
-) -> None:
-    _ = user
-    await use_case.execute(branch_id=branch_id)
 
 
 @router.post(

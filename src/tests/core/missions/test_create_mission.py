@@ -1,8 +1,9 @@
 import pytest
 
 from src.core.missions.enums import MissionCategoryEnum
-from src.core.missions.exceptions import MissionBranchNotFoundError, MissionNameAlreadyExistError
+from src.core.missions.exceptions import MissionNameAlreadyExistError
 from src.core.missions.use_cases import CreateMissionUseCase
+from src.core.seasons.exceptions import SeasonNotFoundError
 from src.tests.fixtures import FactoryFixture
 from src.tests.mocks.storage_stub import StorageMock
 
@@ -12,9 +13,7 @@ class TestCreateMissionUseCase(FactoryFixture):
     async def setup(self) -> None:
         self.storage = StorageMock()
         self.use_case = CreateMissionUseCase(storage=self.storage)
-        await self.storage.insert_mission_branch(
-            branch=self.factory.mission_branch(branch_id=1, name="TEST")
-        )
+        await self.storage.insert_season(season=self.factory.season(season_id=1, name="TEST"))
 
     async def test_create_mission(self) -> None:
         mission = await self.use_case.execute(
@@ -26,7 +25,7 @@ class TestCreateMissionUseCase(FactoryFixture):
                     reward_xp=100,
                     reward_mana=50,
                     rank_requirement=1,
-                    branch_id=1,
+                    season_id=1,
                     category=MissionCategoryEnum.QUEST,
                 )
             )
@@ -39,7 +38,7 @@ class TestCreateMissionUseCase(FactoryFixture):
             reward_xp=100,
             reward_mana=50,
             rank_requirement=1,
-            branch_id=1,
+            season_id=1,
             category=MissionCategoryEnum.QUEST,
         )
 
@@ -53,7 +52,7 @@ class TestCreateMissionUseCase(FactoryFixture):
                     reward_xp=100,
                     reward_mana=50,
                     rank_requirement=1,
-                    branch_id=1,
+                    season_id=1,
                     category=MissionCategoryEnum.QUEST,
                 )
             )
@@ -69,14 +68,14 @@ class TestCreateMissionUseCase(FactoryFixture):
                         reward_xp=100,
                         reward_mana=50,
                         rank_requirement=1,
-                        branch_id=1,
+                        season_id=1,
                         category=MissionCategoryEnum.QUEST,
                     )
                 )
             )
 
     async def test_create_mission_branch_not_found(self) -> None:
-        with pytest.raises(MissionBranchNotFoundError):
+        with pytest.raises(SeasonNotFoundError):
             await self.use_case.execute(
                 mission=(
                     self.factory.mission(
@@ -86,7 +85,7 @@ class TestCreateMissionUseCase(FactoryFixture):
                         reward_xp=100,
                         reward_mana=50,
                         rank_requirement=1,
-                        branch_id=999,
+                        season_id=999,
                         category=MissionCategoryEnum.QUEST,
                     )
                 )

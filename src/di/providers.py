@@ -33,17 +33,13 @@ from src.core.missions.use_cases import (
     AddCompetencyRewardToMissionUseCase,
     AddSkillRewardToMissionUseCase,
     AddTaskToMissionUseCase,
-    CreateMissionBranchUseCase,
     CreateMissionUseCase,
-    DeleteMissionBranchUseCase,
     DeleteMissionUseCase,
-    GetMissionBranchesUseCase,
     GetMissionDetailUseCase,
     GetMissionsUseCase,
     RemoveCompetencyRewardFromMissionUseCase,
     RemoveSkillRewardFromMissionUseCase,
     RemoveTaskFromMissionUseCase,
-    UpdateMissionBranchUseCase,
     UpdateMissionUseCase,
 )
 from src.core.password import PasswordService
@@ -57,6 +53,13 @@ from src.core.ranks.use_cases import (
     RemoveRequiredCompetencyFromRankUseCase,
     RemoveRequiredMissionFromRankUseCase,
     UpdateRankUseCase,
+)
+from src.core.seasons.use_cases import (
+    CreateSeasonUseCase,
+    DeleteSeasonUseCase,
+    GetSeasonDetailUseCase,
+    GetSeasonsUseCase,
+    UpdateSeasonUseCase,
 )
 from src.core.skills.use_cases import (
     CreateSkillUseCase,
@@ -116,23 +119,19 @@ class MissionProvider(Provider):
     scope: Scope = Scope.REQUEST
 
     @provide
-    def build_create_mission_branch_use_case(
-        self,
-        storage: MissionStorage,
-    ) -> CreateMissionBranchUseCase:
-        return CreateMissionBranchUseCase(storage=storage)
+    def build_create_season_use_case(self, storage: MissionStorage) -> CreateSeasonUseCase:
+        return CreateSeasonUseCase(storage=storage)
 
     @provide
-    def build_get_mission_branches_use_case(
-        self, storage: MissionStorage
-    ) -> GetMissionBranchesUseCase:
-        return GetMissionBranchesUseCase(storage=storage)
+    def build_get_seasons_use_case(self, storage: MissionStorage) -> GetSeasonsUseCase:
+        return GetSeasonsUseCase(storage=storage)
 
     @provide
-    def build_create_mission_use_case(
-        self,
-        storage: MissionStorage,
-    ) -> CreateMissionUseCase:
+    def build_get_season_detail_use_case(self, storage: MissionStorage) -> GetSeasonDetailUseCase:
+        return GetSeasonDetailUseCase(storage=storage)
+
+    @provide
+    def build_create_mission_use_case(self, storage: MissionStorage) -> CreateMissionUseCase:
         return CreateMissionUseCase(storage=storage)
 
     @provide
@@ -152,18 +151,12 @@ class MissionProvider(Provider):
         return DeleteMissionUseCase(storage=storage)
 
     @provide
-    def build_update_mission_branch_use_case(
-        self,
-        storage: MissionStorage,
-    ) -> UpdateMissionBranchUseCase:
-        return UpdateMissionBranchUseCase(storage=storage)
+    def build_update_season_use_case(self, storage: MissionStorage) -> UpdateSeasonUseCase:
+        return UpdateSeasonUseCase(storage=storage)
 
     @provide
-    def build_delete_mission_branch_use_case(
-        self,
-        storage: MissionStorage,
-    ) -> DeleteMissionBranchUseCase:
-        return DeleteMissionBranchUseCase(storage=storage)
+    def build_delete_season_use_case(self, storage: MissionStorage) -> DeleteSeasonUseCase:
+        return DeleteSeasonUseCase(storage=storage)
 
     @provide
     def build_create_mission_task_use_case(
@@ -418,10 +411,6 @@ class DatabaseProvider(Provider):
 
     @provide
     def get_user_storage(self, session: AsyncSession) -> UserStorage:
-        return DatabaseStorage(session=session)
-
-    @provide
-    def get_mission_branch_storage(self, session: AsyncSession) -> MissionStorage:
         return DatabaseStorage(session=session)
 
     @provide

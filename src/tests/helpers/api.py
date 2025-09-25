@@ -46,17 +46,26 @@ class APIHelper:
     def get_me(self) -> Response:
         return self.client.get("/users/me")
 
-    def create_mission_branch(self, name: str) -> Response:
-        return self.client.post(url="/missions/branches", json={"name": name})
+    def create_season(self, name: str, start_date: str, end_date: str) -> Response:
+        return self.client.post(
+            url="/seasons",
+            json={"name": name, "start_date": start_date, "end_date": end_date},
+        )
 
-    def get_mission_branches(self) -> Response:
-        return self.client.get("/missions/branches")
+    def get_seasons(self) -> Response:
+        return self.client.get("/seasons")
 
-    def update_mission_branch(self, branch_id: int, name: str) -> Response:
-        return self.client.put(url=f"/missions/branches/{branch_id}", json={"name": name})
+    def get_season(self, season_id: int) -> Response:
+        return self.client.get(f"/seasons/{season_id}")
 
-    def delete_mission_branch(self, branch_id: int) -> Response:
-        return self.client.delete(f"/missions/branches/{branch_id}")
+    def update_season(self, season_id: int, name: str, start_date: str, end_date: str) -> Response:
+        return self.client.put(
+            url=f"/seasons/{season_id}",
+            json={"name": name, "start_date": start_date, "end_date": end_date},
+        )
+
+    def delete_season(self, season_id: int) -> Response:
+        return self.client.delete(f"/seasons/{season_id}")
 
     def create_mission(
         self,
@@ -65,7 +74,7 @@ class APIHelper:
         reward_xp: int,
         reward_mana: int,
         rank_requirement: int,
-        branch_id: int,
+        season_id: int,
         category: str,
     ) -> Response:
         return self.client.post(
@@ -76,7 +85,7 @@ class APIHelper:
                 "rewardXp": reward_xp,
                 "rewardMana": reward_mana,
                 "rankRequirement": rank_requirement,
-                "branchId": branch_id,
+                "seasonId": season_id,
                 "category": category,
             },
         )
@@ -95,7 +104,7 @@ class APIHelper:
         reward_xp: int,
         reward_mana: int,
         rank_requirement: int,
-        branch_id: int,
+        season_id: int,
         category: str,
     ) -> Response:
         return self.client.put(
@@ -106,7 +115,7 @@ class APIHelper:
                 "rewardXp": reward_xp,
                 "rewardMana": reward_mana,
                 "rankRequirement": rank_requirement,
-                "branchId": branch_id,
+                "seasonId": season_id,
                 "category": category,
             },
         )

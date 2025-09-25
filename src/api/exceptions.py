@@ -14,8 +14,6 @@ from src.core.competencies.exceptions import (
 from src.core.exceptions import BaseExceptionError, InvalidJWTTokenError, PermissionDeniedError
 from src.core.media.exceptions import MediaNotFoundError
 from src.core.missions.exceptions import (
-    MissionBranchNameAlreadyExistError,
-    MissionBranchNotFoundError,
     MissionCompetencyRewardAlreadyExistsError,
     MissionNameAlreadyExistError,
     MissionNotFoundError,
@@ -28,6 +26,7 @@ from src.core.ranks.exceptions import (
     RankNameAlreadyExistError,
     RankNotFoundError,
 )
+from src.core.seasons.exceptions import SeasonNameAlreadyExistError, SeasonNotFoundError
 from src.core.skills.exceptions import (
     SkillLevelIncreaseTooHighError,
     SkillNameAlreadyExistError,
@@ -75,8 +74,8 @@ exception_handlers: (
     UserNotFoundError: handler(status_code=status.HTTP_404_NOT_FOUND),
     UserAlreadyExistError: handler(status_code=status.HTTP_409_CONFLICT),
     UserIncorrectCredentialsError: handler(status_code=status.HTTP_401_UNAUTHORIZED),
-    MissionBranchNameAlreadyExistError: handler(status_code=status.HTTP_409_CONFLICT),
-    MissionBranchNotFoundError: handler(status_code=status.HTTP_404_NOT_FOUND),
+    SeasonNameAlreadyExistError: handler(status_code=status.HTTP_409_CONFLICT),
+    SeasonNotFoundError: handler(status_code=status.HTTP_404_NOT_FOUND),
     MissionNameAlreadyExistError: handler(status_code=status.HTTP_409_CONFLICT),
     MissionNotFoundError: handler(status_code=status.HTTP_404_NOT_FOUND),
     MissionCompetencyRewardAlreadyExistsError: handler(status_code=status.HTTP_409_CONFLICT),

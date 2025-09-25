@@ -23,7 +23,7 @@ class TestGetMissionDetailUseCase(FactoryFixture):
                     reward_xp=100,
                     reward_mana=50,
                     rank_requirement=1,
-                    branch_id=1,
+                    season_id=1,
                     category=MissionCategoryEnum.QUEST,
                 )
             )
@@ -38,7 +38,7 @@ class TestGetMissionDetailUseCase(FactoryFixture):
             reward_xp=100,
             reward_mana=50,
             rank_requirement=1,
-            branch_id=1,
+            season_id=1,
             category=MissionCategoryEnum.QUEST,
             tasks=[],
         )
