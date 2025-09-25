@@ -2,16 +2,13 @@ import pytest
 from httpx import codes
 
 from src.core.exceptions import PermissionDeniedError
-from src.core.missions.exceptions import (
-    MissionBranchNameAlreadyExistError,
-    MissionBranchNotFoundError,
-)
-from src.core.missions.use_cases import (
-    CreateMissionBranchUseCase,
-    DeleteMissionBranchUseCase,
-    GetMissionBranchDetailUseCase,
-    GetMissionBranchesUseCase,
-    UpdateMissionBranchUseCase,
+from src.core.seasons.exceptions import SeasonNameAlreadyExistError, SeasonNotFoundError
+from src.core.seasons.use_cases import (
+    CreateSeasonUseCase,
+    DeleteSeasonUseCase,
+    GetSeasonDetailUseCase,
+    GetSeasonsUseCase,
+    UpdateSeasonUseCase,
 )
 from src.tests.fixtures import APIFixture, ContainerFixture, FactoryFixture
 
@@ -19,7 +16,7 @@ from src.tests.fixtures import APIFixture, ContainerFixture, FactoryFixture
 class TestCreateSeasonAPI(APIFixture, FactoryFixture, ContainerFixture):
     @pytest.fixture(autouse=True)
     async def setup(self) -> None:
-        self.use_case = await self.container.override_use_case(CreateMissionBranchUseCase)
+        self.use_case = await self.container.override_use_case(CreateSeasonUseCase)
 
     def test_not_auth(self) -> None:
         response = self.api.create_season(name="TEST")
@@ -34,7 +31,7 @@ class TestCreateSeasonAPI(APIFixture, FactoryFixture, ContainerFixture):
         assert response.json() == {"detail": PermissionDeniedError.detail}
 
     def test_create_season(self) -> None:
-        self.use_case.execute.return_value = self.factory.mission_branch(branch_id=1, name="TEST")
+        self.use_case.execute.return_value = self.factory.season(season_id=1, name="TEST")
 
         response = self.hr_api.create_season(name="TEST")
 
@@ -42,26 +39,26 @@ class TestCreateSeasonAPI(APIFixture, FactoryFixture, ContainerFixture):
         assert response.json() == {"id": 1, "name": "TEST"}
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(
-            branch=self.factory.mission_branch(branch_id=0, name="TEST")
+            branch=self.factory.season(season_id=0, name="TEST")
         )
 
     def test_create_season_already_exists(self) -> None:
-        self.use_case.execute.side_effect = MissionBranchNameAlreadyExistError
+        self.use_case.execute.side_effect = SeasonNameAlreadyExistError
 
         response = self.hr_api.create_season(name="TEST")
 
         assert response.status_code == codes.CONFLICT
-        assert response.json() == {"detail": MissionBranchNameAlreadyExistError.detail}
+        assert response.json() == {"detail": SeasonNameAlreadyExistError.detail}
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(
-            branch=self.factory.mission_branch(branch_id=0, name="TEST")
+            branch=self.factory.season(season_id=0, name="TEST")
         )
 
 
 class TestUpdateSeasonAPI(APIFixture, FactoryFixture, ContainerFixture):
     @pytest.fixture(autouse=True)
     async def setup(self) -> None:
-        self.use_case = await self.container.override_use_case(UpdateMissionBranchUseCase)
+        self.use_case = await self.container.override_use_case(UpdateSeasonUseCase)
 
     def test_not_auth(self) -> None:
         response = self.api.update_season(season_id=1, name="TEST")
@@ -76,7 +73,7 @@ class TestUpdateSeasonAPI(APIFixture, FactoryFixture, ContainerFixture):
         assert response.json() == {"detail": PermissionDeniedError.detail}
 
     def test_update_season(self) -> None:
-        self.use_case.execute.return_value = self.factory.mission_branch(branch_id=1, name="TEST")
+        self.use_case.execute.return_value = self.factory.season(season_id=1, name="TEST")
 
         response = self.hr_api.update_season(season_id=1, name="TEST")
 
@@ -84,38 +81,38 @@ class TestUpdateSeasonAPI(APIFixture, FactoryFixture, ContainerFixture):
         assert response.json() == {"id": 1, "name": "TEST"}
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(
-            branch=self.factory.mission_branch(branch_id=1, name="TEST")
+            branch=self.factory.season(season_id=1, name="TEST")
         )
 
     def test_update_season_not_found(self) -> None:
-        self.use_case.execute.side_effect = MissionBranchNotFoundError
+        self.use_case.execute.side_effect = SeasonNotFoundError
 
         response = self.hr_api.update_season(season_id=999, name="TEST")
 
         assert response.status_code == codes.NOT_FOUND
-        assert response.json() == {"detail": MissionBranchNotFoundError.detail}
+        assert response.json() == {"detail": SeasonNotFoundError.detail}
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(
-            branch=self.factory.mission_branch(branch_id=999, name="TEST")
+            branch=self.factory.season(season_id=999, name="TEST")
         )
 
     def test_update_season_name_already_exists(self) -> None:
-        self.use_case.execute.side_effect = MissionBranchNameAlreadyExistError
+        self.use_case.execute.side_effect = SeasonNameAlreadyExistError
 
         response = self.hr_api.update_season(season_id=1, name="TEST")
 
         assert response.status_code == codes.CONFLICT
-        assert response.json() == {"detail": MissionBranchNameAlreadyExistError.detail}
+        assert response.json() == {"detail": SeasonNameAlreadyExistError.detail}
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(
-            branch=self.factory.mission_branch(branch_id=1, name="TEST")
+            branch=self.factory.season(season_id=1, name="TEST")
         )
 
 
 class TestGetSeasonsAPI(APIFixture, FactoryFixture, ContainerFixture):
     @pytest.fixture(autouse=True)
     async def setup(self) -> None:
-        self.use_case = await self.container.override_use_case(GetMissionBranchesUseCase)
+        self.use_case = await self.container.override_use_case(GetSeasonsUseCase)
 
     def test_not_auth(self) -> None:
         response = self.api.get_seasons()
@@ -124,10 +121,10 @@ class TestGetSeasonsAPI(APIFixture, FactoryFixture, ContainerFixture):
         assert response.json() == {"detail": "Not authenticated"}
 
     def test_get_seasons(self) -> None:
-        self.use_case.execute.return_value = self.factory.mission_branches(
+        self.use_case.execute.return_value = self.factory.seasons(
             values=[
-                self.factory.mission_branch(branch_id=1, name="TEST1"),
-                self.factory.mission_branch(branch_id=2, name="TEST2"),
+                self.factory.season(season_id=1, name="TEST1"),
+                self.factory.season(season_id=2, name="TEST2"),
             ]
         )
 
@@ -144,7 +141,7 @@ class TestGetSeasonsAPI(APIFixture, FactoryFixture, ContainerFixture):
         self.use_case.execute.assert_awaited_once_with()
 
     def test_get_seasons_empty(self) -> None:
-        self.use_case.execute.return_value = self.factory.mission_branches(values=[])
+        self.use_case.execute.return_value = self.factory.seasons(values=[])
 
         response = self.candidate_api.get_seasons()
 
@@ -157,7 +154,7 @@ class TestGetSeasonsAPI(APIFixture, FactoryFixture, ContainerFixture):
 class TestGetSeasonAPI(APIFixture, FactoryFixture, ContainerFixture):
     @pytest.fixture(autouse=True)
     async def setup(self) -> None:
-        self.use_case = await self.container.override_use_case(GetMissionBranchDetailUseCase)
+        self.use_case = await self.container.override_use_case(GetSeasonDetailUseCase)
 
     def test_not_auth(self) -> None:
         response = self.api.get_season(season_id=1)
@@ -166,7 +163,7 @@ class TestGetSeasonAPI(APIFixture, FactoryFixture, ContainerFixture):
         assert response.json() == {"detail": "Not authenticated"}
 
     def test_get_season(self) -> None:
-        self.use_case.execute.return_value = self.factory.mission_branch(branch_id=1, name="TEST")
+        self.use_case.execute.return_value = self.factory.season(season_id=1, name="TEST")
 
         response = self.hr_api.get_season(season_id=1)
 
@@ -176,7 +173,7 @@ class TestGetSeasonAPI(APIFixture, FactoryFixture, ContainerFixture):
         self.use_case.execute.assert_awaited_once_with(branch_id=1)
 
     def test_get_season_candidate(self) -> None:
-        self.use_case.execute.return_value = self.factory.mission_branch(branch_id=1, name="TEST")
+        self.use_case.execute.return_value = self.factory.season(season_id=1, name="TEST")
 
         response = self.candidate_api.get_season(season_id=1)
 
@@ -186,12 +183,12 @@ class TestGetSeasonAPI(APIFixture, FactoryFixture, ContainerFixture):
         self.use_case.execute.assert_awaited_once_with(branch_id=1)
 
     def test_get_season_not_found(self) -> None:
-        self.use_case.execute.side_effect = MissionBranchNotFoundError
+        self.use_case.execute.side_effect = SeasonNotFoundError
 
         response = self.hr_api.get_season(season_id=999)
 
         assert response.status_code == codes.NOT_FOUND
-        assert response.json() == {"detail": MissionBranchNotFoundError.detail}
+        assert response.json() == {"detail": SeasonNotFoundError.detail}
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(branch_id=999)
 
@@ -199,7 +196,7 @@ class TestGetSeasonAPI(APIFixture, FactoryFixture, ContainerFixture):
 class TestDeleteSeasonAPI(APIFixture, FactoryFixture, ContainerFixture):
     @pytest.fixture(autouse=True)
     async def setup(self) -> None:
-        self.use_case = await self.container.override_use_case(DeleteMissionBranchUseCase)
+        self.use_case = await self.container.override_use_case(DeleteSeasonUseCase)
 
     def test_not_auth(self) -> None:
         response = self.api.delete_season(season_id=1)
@@ -223,11 +220,11 @@ class TestDeleteSeasonAPI(APIFixture, FactoryFixture, ContainerFixture):
         self.use_case.execute.assert_awaited_once_with(branch_id=1)
 
     def test_delete_season_not_found(self) -> None:
-        self.use_case.execute.side_effect = MissionBranchNotFoundError
+        self.use_case.execute.side_effect = SeasonNotFoundError
 
         response = self.hr_api.delete_season(season_id=999)
 
         assert response.status_code == codes.NOT_FOUND
-        assert response.json() == {"detail": MissionBranchNotFoundError.detail}
+        assert response.json() == {"detail": SeasonNotFoundError.detail}
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(branch_id=999)

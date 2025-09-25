@@ -9,12 +9,12 @@ from src.api.seasons.schemas import (
     SeasonsResponse,
     SeasonUpdateRequest,
 )
-from src.core.missions.use_cases import (
-    CreateMissionBranchUseCase,
-    DeleteMissionBranchUseCase,
-    GetMissionBranchDetailUseCase,
-    GetMissionBranchesUseCase,
-    UpdateMissionBranchUseCase,
+from src.core.seasons.use_cases import (
+    CreateSeasonUseCase,
+    DeleteSeasonUseCase,
+    GetSeasonDetailUseCase,
+    GetSeasonsUseCase,
+    UpdateSeasonUseCase,
 )
 
 router = APIRouter(tags=["seasons"], route_class=DishkaRoute)
@@ -30,7 +30,7 @@ router = APIRouter(tags=["seasons"], route_class=DishkaRoute)
 async def create_season(
     user: FromDishka[JwtHRUser],
     body: SeasonCreateRequest,
-    use_case: FromDishka[CreateMissionBranchUseCase],
+    use_case: FromDishka[CreateSeasonUseCase],
 ) -> SeasonResponse:
     _ = user
     branch = await use_case.execute(branch=body.to_schema())
@@ -46,7 +46,7 @@ async def create_season(
 )
 async def get_seasons(
     user: FromDishka[JwtUser],
-    use_case: FromDishka[GetMissionBranchesUseCase],
+    use_case: FromDishka[GetSeasonsUseCase],
 ) -> SeasonsResponse:
     _ = user
     branches = await use_case.execute()
@@ -63,7 +63,7 @@ async def get_seasons(
 async def get_season(
     season_id: int,
     user: FromDishka[JwtUser],
-    use_case: FromDishka[GetMissionBranchDetailUseCase],
+    use_case: FromDishka[GetSeasonDetailUseCase],
 ) -> SeasonResponse:
     _ = user
     branch = await use_case.execute(branch_id=season_id)
@@ -81,7 +81,7 @@ async def update_season(
     season_id: int,
     user: FromDishka[JwtHRUser],
     body: SeasonUpdateRequest,
-    use_case: FromDishka[UpdateMissionBranchUseCase],
+    use_case: FromDishka[UpdateSeasonUseCase],
 ) -> SeasonResponse:
     _ = user
     branch = await use_case.execute(branch=body.to_schema(branch_id=season_id))
@@ -98,7 +98,7 @@ async def update_season(
 async def delete_season(
     season_id: int,
     user: FromDishka[JwtHRUser],
-    use_case: FromDishka[DeleteMissionBranchUseCase],
+    use_case: FromDishka[DeleteSeasonUseCase],
 ) -> None:
     _ = user
     await use_case.execute(branch_id=season_id)

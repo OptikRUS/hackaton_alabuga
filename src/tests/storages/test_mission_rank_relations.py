@@ -16,14 +16,14 @@ class TestMissionRankRelations(FactoryFixture, StorageFixture):
 
     async def test_add_required_mission_to_rank(self) -> None:
         branch = await self.storage_helper.insert_branch(
-            branch=self.factory.mission_branch(name="TEST_BRANCH")
+            branch=self.factory.season(name="TEST_BRANCH")
         )
         assert branch is not None
         mission = await self.storage_helper.insert_mission(
             mission=self.factory.mission(
                 title="TEST_MISSION",
                 description="TEST_DESCRIPTION",
-                branch_id=branch.id,
+                season_id=branch.id,
             )
         )
         assert mission is not None
@@ -44,14 +44,14 @@ class TestMissionRankRelations(FactoryFixture, StorageFixture):
 
     async def test_remove_required_mission_from_rank(self) -> None:
         branch = await self.storage_helper.insert_branch(
-            branch=self.factory.mission_branch(name="TEST_BRANCH")
+            branch=self.factory.season(name="TEST_BRANCH")
         )
         assert branch is not None
         mission = await self.storage_helper.insert_mission(
             mission=self.factory.mission(
                 title="TEST_MISSION",
                 description="TEST_DESCRIPTION",
-                branch_id=branch.id,
+                season_id=branch.id,
             )
         )
         assert mission is not None
@@ -76,7 +76,7 @@ class TestMissionRankRelations(FactoryFixture, StorageFixture):
 
     async def test_add_multiple_required_missions_to_rank(self) -> None:
         branch = await self.storage_helper.insert_branch(
-            branch=self.factory.mission_branch(name="TEST_BRANCH")
+            branch=self.factory.season(name="TEST_BRANCH")
         )
         assert branch is not None
 
@@ -84,14 +84,14 @@ class TestMissionRankRelations(FactoryFixture, StorageFixture):
             mission=self.factory.mission(
                 title="TEST_MISSION_1",
                 description="TEST_DESCRIPTION_1",
-                branch_id=branch.id,
+                season_id=branch.id,
             )
         )
         mission_2 = await self.storage_helper.insert_mission(
             mission=self.factory.mission(
                 title="TEST_MISSION_2",
                 description="TEST_DESCRIPTION_2",
-                branch_id=branch.id,
+                season_id=branch.id,
             )
         )
         assert mission_1 is not None

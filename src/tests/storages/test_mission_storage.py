@@ -11,7 +11,7 @@ class TestMissionStorage(FactoryFixture, StorageFixture):
     @pytest.fixture(autouse=True)
     async def setup(self, storage: DatabaseStorage) -> None:
         self.storage = storage
-        await self.storage_helper.insert_branch(branch=self.factory.mission_branch(name="TEST"))
+        await self.storage_helper.insert_branch(branch=self.factory.season(name="TEST"))
         inserted_branch = await self.storage_helper.get_branch_by_name(name="TEST")
         assert inserted_branch is not None
         self.created_branch = inserted_branch.to_schema()
@@ -24,7 +24,7 @@ class TestMissionStorage(FactoryFixture, StorageFixture):
                 reward_xp=100,
                 reward_mana=50,
                 rank_requirement=1,
-                branch_id=self.created_branch.id,
+                season_id=self.created_branch.id,
                 category=MissionCategoryEnum.QUEST,
             )
         )
@@ -38,7 +38,7 @@ class TestMissionStorage(FactoryFixture, StorageFixture):
         assert mission.reward_xp == 100
         assert mission.reward_mana == 50
         assert mission.rank_requirement == 1
-        assert mission.branch_id == self.created_branch.id
+        assert mission.season_id == self.created_branch.id
         assert mission.category == MissionCategoryEnum.QUEST
 
     async def test_get_mission_by_id_with_tasks(self) -> None:
@@ -49,7 +49,7 @@ class TestMissionStorage(FactoryFixture, StorageFixture):
                 reward_xp=100,
                 reward_mana=50,
                 rank_requirement=1,
-                branch_id=self.created_branch.id,
+                season_id=self.created_branch.id,
                 category=MissionCategoryEnum.QUEST,
             )
         )
@@ -75,7 +75,7 @@ class TestMissionStorage(FactoryFixture, StorageFixture):
             reward_xp=100,
             reward_mana=50,
             rank_requirement=1,
-            branch_id=self.created_branch.id,
+            season_id=self.created_branch.id,
             category=MissionCategoryEnum.QUEST,
             tasks=[task_1.to_schema(), task_2.to_schema()],
             reward_artifacts=[],
@@ -91,7 +91,7 @@ class TestMissionStorage(FactoryFixture, StorageFixture):
                 reward_xp=100,
                 reward_mana=50,
                 rank_requirement=1,
-                branch_id=self.created_branch.id,
+                season_id=self.created_branch.id,
                 category=MissionCategoryEnum.QUEST,
             )
         )
@@ -136,7 +136,7 @@ class TestMissionStorage(FactoryFixture, StorageFixture):
             reward_xp=100,
             reward_mana=50,
             rank_requirement=1,
-            branch_id=self.created_branch.id,
+            season_id=self.created_branch.id,
             category=MissionCategoryEnum.QUEST,
             tasks=[],
             reward_artifacts=[artifact_1.to_schema(), artifact_2.to_schema()],
@@ -152,7 +152,7 @@ class TestMissionStorage(FactoryFixture, StorageFixture):
                 reward_xp=100,
                 reward_mana=50,
                 rank_requirement=1,
-                branch_id=self.created_branch.id,
+                season_id=self.created_branch.id,
                 category=MissionCategoryEnum.QUEST,
             )
         )
@@ -207,7 +207,7 @@ class TestMissionStorage(FactoryFixture, StorageFixture):
             reward_xp=100,
             reward_mana=50,
             rank_requirement=1,
-            branch_id=self.created_branch.id,
+            season_id=self.created_branch.id,
             category=MissionCategoryEnum.QUEST,
             tasks=[task_1.to_schema(), task_2.to_schema()],
             reward_artifacts=[artifact_1.to_schema(), artifact_2.to_schema()],
@@ -229,7 +229,7 @@ class TestMissionStorage(FactoryFixture, StorageFixture):
                     reward_xp=100,
                     reward_mana=50,
                     rank_requirement=1,
-                    branch_id=self.created_branch.id,
+                    season_id=self.created_branch.id,
                     category=MissionCategoryEnum.QUEST,
                 )
             )
@@ -243,7 +243,7 @@ class TestMissionStorage(FactoryFixture, StorageFixture):
         assert mission.reward_xp == 100
         assert mission.reward_mana == 50
         assert mission.rank_requirement == 1
-        assert mission.branch_id == self.created_branch.id
+        assert mission.season_id == self.created_branch.id
         assert mission.category == MissionCategoryEnum.QUEST
 
     async def test_get_mission_by_title_not_found(self) -> None:
@@ -259,7 +259,7 @@ class TestMissionStorage(FactoryFixture, StorageFixture):
                     reward_xp=100,
                     reward_mana=50,
                     rank_requirement=1,
-                    branch_id=self.created_branch.id,
+                    season_id=self.created_branch.id,
                     category=MissionCategoryEnum.QUEST,
                 )
             )
@@ -282,7 +282,7 @@ class TestMissionStorage(FactoryFixture, StorageFixture):
             reward_xp=100,
             reward_mana=50,
             rank_requirement=1,
-            branch_id=self.created_branch.id,
+            season_id=self.created_branch.id,
             category=MissionCategoryEnum.QUEST,
         )
         await self.storage_helper.insert_mission(mission=mission)
@@ -299,7 +299,7 @@ class TestMissionStorage(FactoryFixture, StorageFixture):
                     reward_xp=100,
                     reward_mana=50,
                     rank_requirement=1,
-                    branch_id=self.created_branch.id,
+                    season_id=self.created_branch.id,
                     category=MissionCategoryEnum.QUEST,
                 )
             )
@@ -312,7 +312,7 @@ class TestMissionStorage(FactoryFixture, StorageFixture):
                     reward_xp=200,
                     reward_mana=100,
                     rank_requirement=2,
-                    branch_id=self.created_branch.id,
+                    season_id=self.created_branch.id,
                     category=MissionCategoryEnum.LECTURE,
                 )
             )
@@ -326,14 +326,14 @@ class TestMissionStorage(FactoryFixture, StorageFixture):
         missions.values[0].reward_xp = 100
         missions.values[0].reward_mana = 50
         missions.values[0].rank_requirement = 1
-        missions.values[0].branch_id = self.created_branch.id
+        missions.values[0].season_id = self.created_branch.id
         missions.values[0].category = MissionCategoryEnum.QUEST
         missions.values[1].title = "TEST2"
         missions.values[1].description = "Description 2"
         missions.values[1].reward_xp = 200
         missions.values[1].reward_mana = 100
         missions.values[1].rank_requirement = 2
-        missions.values[1].branch_id = self.created_branch.id
+        missions.values[1].season_id = self.created_branch.id
         missions.values[1].category = MissionCategoryEnum.LECTURE
 
     async def test_list_empty_missions(self) -> None:
@@ -350,7 +350,7 @@ class TestMissionStorage(FactoryFixture, StorageFixture):
                     reward_xp=100,
                     reward_mana=50,
                     rank_requirement=1,
-                    branch_id=self.created_branch.id,
+                    season_id=self.created_branch.id,
                     category=MissionCategoryEnum.QUEST,
                 )
             )
@@ -368,7 +368,7 @@ class TestMissionStorage(FactoryFixture, StorageFixture):
                     reward_xp=150,
                     reward_mana=75,
                     rank_requirement=2,
-                    branch_id=self.created_branch.id,
+                    season_id=self.created_branch.id,
                     category=MissionCategoryEnum.LECTURE,
                 )
             )
@@ -393,7 +393,7 @@ class TestMissionStorage(FactoryFixture, StorageFixture):
                     reward_xp=100,
                     reward_mana=50,
                     rank_requirement=1,
-                    branch_id=self.created_branch.id,
+                    season_id=self.created_branch.id,
                     category=MissionCategoryEnum.LECTURE,
                 )
             )

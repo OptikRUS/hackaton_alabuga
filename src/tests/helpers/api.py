@@ -46,18 +46,6 @@ class APIHelper:
     def get_me(self) -> Response:
         return self.client.get("/users/me")
 
-    def create_mission_branch(self, name: str) -> Response:
-        return self.client.post(url="/missions/branches", json={"name": name})
-
-    def get_mission_branches(self) -> Response:
-        return self.client.get("/missions/branches")
-
-    def update_mission_branch(self, branch_id: int, name: str) -> Response:
-        return self.client.put(url=f"/missions/branches/{branch_id}", json={"name": name})
-
-    def delete_mission_branch(self, branch_id: int) -> Response:
-        return self.client.delete(f"/missions/branches/{branch_id}")
-
     def create_season(self, name: str) -> Response:
         return self.client.post(url="/seasons", json={"name": name})
 
@@ -80,7 +68,7 @@ class APIHelper:
         reward_xp: int,
         reward_mana: int,
         rank_requirement: int,
-        branch_id: int,
+        season_id: int,
         category: str,
     ) -> Response:
         return self.client.post(
@@ -91,7 +79,7 @@ class APIHelper:
                 "rewardXp": reward_xp,
                 "rewardMana": reward_mana,
                 "rankRequirement": rank_requirement,
-                "branchId": branch_id,
+                "seasonId": season_id,
                 "category": category,
             },
         )
@@ -110,7 +98,7 @@ class APIHelper:
         reward_xp: int,
         reward_mana: int,
         rank_requirement: int,
-        branch_id: int,
+        season_id: int,
         category: str,
     ) -> Response:
         return self.client.put(
@@ -121,7 +109,7 @@ class APIHelper:
                 "rewardXp": reward_xp,
                 "rewardMana": reward_mana,
                 "rankRequirement": rank_requirement,
-                "branchId": branch_id,
+                "seasonId": season_id,
                 "category": category,
             },
         )

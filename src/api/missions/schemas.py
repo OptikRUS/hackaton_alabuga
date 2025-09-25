@@ -5,22 +5,8 @@ from src.api.boundary import BoundaryModel
 from src.api.competencies.schemas import CompetencyResponse
 from src.api.skills.schemas import SkillResponse
 from src.core.missions.enums import MissionCategoryEnum
-from src.core.missions.schemas import Mission, MissionBranch, MissionBranches, Missions
+from src.core.missions.schemas import Mission, Missions
 from src.core.tasks.schemas import MissionTask
-
-
-class MissionBranchCreateRequest(BoundaryModel):
-    name: str = Field(default=..., description="Название ветки миссий")
-
-    def to_schema(self) -> MissionBranch:
-        return MissionBranch(id=0, name=self.name)
-
-
-class MissionBranchUpdateRequest(BoundaryModel):
-    name: str = Field(default=..., description="Название ветки миссий")
-
-    def to_schema(self, branch_id: int) -> MissionBranch:
-        return MissionBranch(id=branch_id, name=self.name)
 
 
 class MissionTaskResponse(BoundaryModel):
@@ -33,32 +19,13 @@ class MissionTaskResponse(BoundaryModel):
         return cls(id=task.id, title=task.title, description=task.description)
 
 
-class MissionBranchResponse(BoundaryModel):
-    id: int = Field(default=..., description="Идентификатор ветки миссий")
-    name: str = Field(default=..., description="Название ветки миссий")
-
-    @classmethod
-    def from_schema(cls, branch: MissionBranch) -> "MissionBranchResponse":
-        return cls(id=branch.id or 0, name=branch.name)
-
-
-class MissionBranchesResponse(BoundaryModel):
-    values: list[MissionBranchResponse]
-
-    @classmethod
-    def from_schema(cls, branches: MissionBranches) -> "MissionBranchesResponse":
-        return cls(
-            values=[MissionBranchResponse.from_schema(branch=branch) for branch in branches.values]
-        )
-
-
 class MissionCreateRequest(BoundaryModel):
     title: str = Field(default=..., description="Название миссии")
     description: str = Field(default=..., description="Описание миссии")
     reward_xp: int = Field(default=..., ge=0, description="Награда в опыте")
     reward_mana: int = Field(default=..., description="Награда в мане")
     rank_requirement: int = Field(default=..., description="Требуемый ранг")
-    branch_id: int = Field(default=..., description="ID ветки миссий")
+    season_id: int = Field(default=..., description="ID ветки миссий")
     category: MissionCategoryEnum = Field(default=..., description="Категория миссии")
 
     def to_schema(self) -> Mission:
@@ -69,7 +36,7 @@ class MissionCreateRequest(BoundaryModel):
             reward_xp=self.reward_xp,
             reward_mana=self.reward_mana,
             rank_requirement=self.rank_requirement,
-            branch_id=self.branch_id,
+            season_id=self.season_id,
             category=self.category,
         )
 
@@ -80,7 +47,7 @@ class MissionUpdateRequest(BoundaryModel):
     reward_xp: int = Field(default=..., ge=0, description="Награда в опыте")
     reward_mana: int = Field(default=..., description="Награда в мане")
     rank_requirement: int = Field(default=..., description="Требуемый ранг")
-    branch_id: int = Field(default=..., description="ID ветки миссий")
+    season_id: int = Field(default=..., description="ID ветки миссий")
     category: MissionCategoryEnum = Field(default=..., description="Категория миссии")
 
     def to_schema(self, mission_id: int) -> Mission:
@@ -91,7 +58,7 @@ class MissionUpdateRequest(BoundaryModel):
             reward_xp=self.reward_xp,
             reward_mana=self.reward_mana,
             rank_requirement=self.rank_requirement,
-            branch_id=self.branch_id,
+            season_id=self.season_id,
             category=self.category,
         )
 
@@ -103,7 +70,7 @@ class MissionResponse(BoundaryModel):
     reward_xp: int = Field(default=..., description="Награда в опыте")
     reward_mana: int = Field(default=..., description="Награда в мане")
     rank_requirement: int = Field(default=..., description="Требуемый ранг")
-    branch_id: int = Field(default=..., description="ID ветки миссий")
+    season_id: int = Field(default=..., description="ID ветки миссий")
     category: str = Field(default=..., description="Категория миссии")
     tasks: list[MissionTaskResponse] = Field(default_factory=list, description="Таски миссии")
     reward_artifacts: list[ArtifactResponse] = Field(
@@ -125,7 +92,7 @@ class MissionResponse(BoundaryModel):
             reward_xp=mission.reward_xp,
             reward_mana=mission.reward_mana,
             rank_requirement=mission.rank_requirement,
-            branch_id=mission.branch_id,
+            season_id=mission.season_id,
             category=mission.category,
             tasks=[MissionTaskResponse.from_schema(task=task) for task in (mission.tasks or [])],
             reward_artifacts=[

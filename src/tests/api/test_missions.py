@@ -10,7 +10,6 @@ from src.core.artifacts.use_cases import (
 from src.core.exceptions import PermissionDeniedError
 from src.core.missions.enums import MissionCategoryEnum
 from src.core.missions.exceptions import (
-    MissionBranchNotFoundError,
     MissionNameAlreadyExistError,
     MissionNotFoundError,
 )
@@ -27,6 +26,7 @@ from src.core.missions.use_cases import (
     RemoveTaskFromMissionUseCase,
     UpdateMissionUseCase,
 )
+from src.core.seasons.exceptions import SeasonNotFoundError
 from src.core.tasks.exceptions import TaskNotFoundError
 from src.tests.fixtures import APIFixture, ContainerFixture, FactoryFixture
 
@@ -43,7 +43,7 @@ class TestCreateMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             reward_xp=100,
             reward_mana=50,
             rank_requirement=1,
-            branch_id=1,
+            season_id=1,
             category=MissionCategoryEnum.QUEST,
         )
 
@@ -57,7 +57,7 @@ class TestCreateMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             reward_xp=100,
             reward_mana=50,
             rank_requirement=1,
-            branch_id=1,
+            season_id=1,
             category=MissionCategoryEnum.QUEST,
         )
 
@@ -72,7 +72,7 @@ class TestCreateMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             reward_xp=100,
             reward_mana=50,
             rank_requirement=1,
-            branch_id=1,
+            season_id=1,
             category=MissionCategoryEnum.QUEST,
             reward_competencies=[],
             reward_skills=[],
@@ -84,7 +84,7 @@ class TestCreateMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             reward_xp=100,
             reward_mana=50,
             rank_requirement=1,
-            branch_id=1,
+            season_id=1,
             category=MissionCategoryEnum.QUEST,
         )
 
@@ -96,7 +96,7 @@ class TestCreateMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             "rewardXp": 100,
             "rewardMana": 50,
             "rankRequirement": 1,
-            "branchId": 1,
+            "seasonId": 1,
             "category": MissionCategoryEnum.QUEST,
             "tasks": [],
             "rewardArtifacts": [],
@@ -111,7 +111,7 @@ class TestCreateMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
                 reward_xp=100,
                 reward_mana=50,
                 rank_requirement=1,
-                branch_id=1,
+                season_id=1,
                 category=MissionCategoryEnum.QUEST,
                 tasks=None,
                 reward_artifacts=None,
@@ -129,7 +129,7 @@ class TestCreateMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             reward_xp=100,
             reward_mana=50,
             rank_requirement=1,
-            branch_id=1,
+            season_id=1,
             category=MissionCategoryEnum.QUEST,
         )
 
@@ -143,13 +143,13 @@ class TestCreateMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
                 reward_xp=100,
                 reward_mana=50,
                 rank_requirement=1,
-                branch_id=1,
+                season_id=1,
                 category=MissionCategoryEnum.QUEST,
             )
         )
 
     def test_create_mission_branch_not_found(self) -> None:
-        self.use_case.execute.side_effect = MissionBranchNotFoundError
+        self.use_case.execute.side_effect = SeasonNotFoundError
 
         response = self.hr_api.create_mission(
             title="TEST",
@@ -157,12 +157,12 @@ class TestCreateMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             reward_xp=100,
             reward_mana=50,
             rank_requirement=1,
-            branch_id=999,
+            season_id=999,
             category=MissionCategoryEnum.QUEST,
         )
 
         assert response.status_code == codes.NOT_FOUND
-        assert response.json() == {"detail": MissionBranchNotFoundError.detail}
+        assert response.json() == {"detail": SeasonNotFoundError.detail}
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(
             mission=self.factory.mission(
@@ -171,7 +171,7 @@ class TestCreateMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
                 reward_xp=100,
                 reward_mana=50,
                 rank_requirement=1,
-                branch_id=999,
+                season_id=999,
                 category=MissionCategoryEnum.QUEST,
             )
         )
@@ -198,7 +198,7 @@ class TestGetMissionsAPI(APIFixture, FactoryFixture, ContainerFixture):
                     reward_xp=100,
                     reward_mana=50,
                     rank_requirement=1,
-                    branch_id=1,
+                    season_id=1,
                     category=MissionCategoryEnum.QUEST,
                 ),
                 self.factory.mission(
@@ -208,7 +208,7 @@ class TestGetMissionsAPI(APIFixture, FactoryFixture, ContainerFixture):
                     reward_xp=200,
                     reward_mana=100,
                     rank_requirement=2,
-                    branch_id=1,
+                    season_id=1,
                     category=MissionCategoryEnum.SIMULATOR,
                 ),
             ]
@@ -226,7 +226,7 @@ class TestGetMissionsAPI(APIFixture, FactoryFixture, ContainerFixture):
                     "rewardXp": 100,
                     "rewardMana": 50,
                     "rankRequirement": 1,
-                    "branchId": 1,
+                    "seasonId": 1,
                     "category": MissionCategoryEnum.QUEST,
                     "tasks": [],
                     "rewardArtifacts": [],
@@ -240,7 +240,7 @@ class TestGetMissionsAPI(APIFixture, FactoryFixture, ContainerFixture):
                     "rewardXp": 200,
                     "rewardMana": 100,
                     "rankRequirement": 2,
-                    "branchId": 1,
+                    "seasonId": 1,
                     "category": MissionCategoryEnum.SIMULATOR,
                     "tasks": [],
                     "rewardArtifacts": [],
@@ -281,7 +281,7 @@ class TestGetMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             reward_xp=100,
             reward_mana=50,
             rank_requirement=1,
-            branch_id=1,
+            season_id=1,
             category=MissionCategoryEnum.QUEST,
         )
 
@@ -295,7 +295,7 @@ class TestGetMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             "rewardXp": 100,
             "rewardMana": 50,
             "rankRequirement": 1,
-            "branchId": 1,
+            "seasonId": 1,
             "category": MissionCategoryEnum.QUEST,
             "tasks": [],
             "rewardArtifacts": [],
@@ -313,7 +313,7 @@ class TestGetMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             reward_xp=100,
             reward_mana=50,
             rank_requirement=1,
-            branch_id=1,
+            season_id=1,
             category=MissionCategoryEnum.QUEST,
             tasks=[
                 self.factory.mission_task(
@@ -339,7 +339,7 @@ class TestGetMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             "rewardXp": 100,
             "rewardMana": 50,
             "rankRequirement": 1,
-            "branchId": 1,
+            "seasonId": 1,
             "category": "quest",
             "rewardSkills": [],
             "rewardCompetencies": [],
@@ -360,7 +360,7 @@ class TestGetMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             reward_xp=100,
             reward_mana=50,
             rank_requirement=1,
-            branch_id=1,
+            season_id=1,
             category=MissionCategoryEnum.QUEST,
             reward_artifacts=[
                 self.factory.artifact(
@@ -390,7 +390,7 @@ class TestGetMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             "rewardXp": 100,
             "rewardMana": 50,
             "rankRequirement": 1,
-            "branchId": 1,
+            "seasonId": 1,
             "category": "quest",
             "tasks": [],
             "rewardSkills": [],
@@ -439,7 +439,7 @@ class TestUpdateMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             reward_xp=150,
             reward_mana=75,
             rank_requirement=2,
-            branch_id=1,
+            season_id=1,
             category=MissionCategoryEnum.QUEST,
         )
 
@@ -454,7 +454,7 @@ class TestUpdateMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             reward_xp=150,
             reward_mana=75,
             rank_requirement=2,
-            branch_id=1,
+            season_id=1,
             category=MissionCategoryEnum.QUEST,
         )
 
@@ -469,7 +469,7 @@ class TestUpdateMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             reward_xp=150,
             reward_mana=75,
             rank_requirement=2,
-            branch_id=1,
+            season_id=1,
             category=MissionCategoryEnum.QUEST,
         )
 
@@ -480,7 +480,7 @@ class TestUpdateMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             reward_xp=150,
             reward_mana=75,
             rank_requirement=2,
-            branch_id=1,
+            season_id=1,
             category=MissionCategoryEnum.QUEST,
         )
 
@@ -492,7 +492,7 @@ class TestUpdateMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             "rewardXp": 150,
             "rewardMana": 75,
             "rankRequirement": 2,
-            "branchId": 1,
+            "seasonId": 1,
             "category": MissionCategoryEnum.QUEST,
             "tasks": [],
             "rewardArtifacts": [],
@@ -508,7 +508,7 @@ class TestUpdateMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
                 reward_xp=150,
                 reward_mana=75,
                 rank_requirement=2,
-                branch_id=1,
+                season_id=1,
                 category=MissionCategoryEnum.QUEST,
             )
         )
@@ -523,7 +523,7 @@ class TestUpdateMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             reward_xp=100,
             reward_mana=50,
             rank_requirement=1,
-            branch_id=1,
+            season_id=1,
             category=MissionCategoryEnum.QUEST,
         )
 
@@ -538,7 +538,7 @@ class TestUpdateMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
                 reward_xp=100,
                 reward_mana=50,
                 rank_requirement=1,
-                branch_id=1,
+                season_id=1,
                 category=MissionCategoryEnum.QUEST,
             )
         )
@@ -553,7 +553,7 @@ class TestUpdateMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             reward_xp=100,
             reward_mana=50,
             rank_requirement=1,
-            branch_id=1,
+            season_id=1,
             category=MissionCategoryEnum.QUEST,
         )
 
@@ -568,7 +568,7 @@ class TestUpdateMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
                 reward_xp=100,
                 reward_mana=50,
                 rank_requirement=1,
-                branch_id=1,
+                season_id=1,
                 category=MissionCategoryEnum.QUEST,
             )
         )
@@ -636,7 +636,7 @@ class TestAddTaskToMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             reward_xp=100,
             reward_mana=50,
             rank_requirement=1,
-            branch_id=1,
+            season_id=1,
             category=MissionCategoryEnum.QUEST,
         )
 
@@ -650,7 +650,7 @@ class TestAddTaskToMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             "rewardXp": 100,
             "rewardMana": 50,
             "rankRequirement": 1,
-            "branchId": 1,
+            "seasonId": 1,
             "category": MissionCategoryEnum.QUEST,
             "tasks": [],
             "rewardArtifacts": [],
@@ -706,7 +706,7 @@ class TestRemoveTaskFromMissionAPI(APIFixture, FactoryFixture, ContainerFixture)
             reward_xp=100,
             reward_mana=50,
             rank_requirement=1,
-            branch_id=1,
+            season_id=1,
             category=MissionCategoryEnum.QUEST,
         )
 
@@ -720,7 +720,7 @@ class TestRemoveTaskFromMissionAPI(APIFixture, FactoryFixture, ContainerFixture)
             "rewardXp": 100,
             "rewardMana": 50,
             "rankRequirement": 1,
-            "branchId": 1,
+            "seasonId": 1,
             "category": MissionCategoryEnum.QUEST,
             "tasks": [],
             "rewardArtifacts": [],
@@ -738,7 +738,7 @@ class TestRemoveTaskFromMissionAPI(APIFixture, FactoryFixture, ContainerFixture)
             reward_xp=100,
             reward_mana=50,
             rank_requirement=1,
-            branch_id=1,
+            season_id=1,
             category=MissionCategoryEnum.QUEST,
             tasks=[
                 self.factory.mission_task(
@@ -764,7 +764,7 @@ class TestRemoveTaskFromMissionAPI(APIFixture, FactoryFixture, ContainerFixture)
             "rewardXp": 100,
             "rewardMana": 50,
             "rankRequirement": 1,
-            "branchId": 1,
+            "seasonId": 1,
             "category": MissionCategoryEnum.QUEST,
             "rewardSkills": [],
             "rewardCompetencies": [],
@@ -820,7 +820,7 @@ class TestAddArtifactToMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             mission_id=1,
             title="Test Mission",
             description="Test Description",
-            branch_id=1,
+            season_id=1,
         )
 
         response = self.hr_api.add_artifact_to_mission(mission_id=1, artifact_id=1)
@@ -833,7 +833,7 @@ class TestAddArtifactToMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             "rewardXp": 100,
             "rewardMana": 50,
             "rankRequirement": 1,
-            "branchId": 1,
+            "seasonId": 1,
             "category": "quest",
             "tasks": [],
             "rewardArtifacts": [],
@@ -886,7 +886,7 @@ class TestRemoveArtifactFromMissionAPI(APIFixture, FactoryFixture, ContainerFixt
             mission_id=1,
             title="Test Mission",
             description="Test Description",
-            branch_id=1,
+            season_id=1,
         )
 
         response = self.hr_api.remove_artifact_from_mission(mission_id=1, artifact_id=1)
@@ -899,7 +899,7 @@ class TestRemoveArtifactFromMissionAPI(APIFixture, FactoryFixture, ContainerFixt
             "rewardXp": 100,
             "rewardMana": 50,
             "rankRequirement": 1,
-            "branchId": 1,
+            "seasonId": 1,
             "category": "quest",
             "tasks": [],
             "rewardArtifacts": [],
@@ -960,7 +960,7 @@ class TestAddCompetencyRewardToMissionAPI(APIFixture, FactoryFixture, ContainerF
             mission_id=1,
             title="Test Mission",
             description="Test Description",
-            branch_id=1,
+            season_id=1,
         )
 
         response = self.hr_api.add_competency_reward_to_mission(
@@ -977,7 +977,7 @@ class TestAddCompetencyRewardToMissionAPI(APIFixture, FactoryFixture, ContainerF
             "rewardXp": 100,
             "rewardMana": 50,
             "rankRequirement": 1,
-            "branchId": 1,
+            "seasonId": 1,
             "category": "quest",
             "tasks": [],
             "rewardArtifacts": [],
@@ -1031,7 +1031,7 @@ class TestRemoveCompetencyRewardFromMissionAPI(APIFixture, FactoryFixture, Conta
             mission_id=1,
             title="Test Mission",
             description="Test Description",
-            branch_id=1,
+            season_id=1,
         )
 
         response = self.hr_api.remove_competency_reward_from_mission(mission_id=1, competency_id=1)
@@ -1044,7 +1044,7 @@ class TestRemoveCompetencyRewardFromMissionAPI(APIFixture, FactoryFixture, Conta
             "rewardXp": 100,
             "rewardMana": 50,
             "rankRequirement": 1,
-            "branchId": 1,
+            "seasonId": 1,
             "category": "quest",
             "tasks": [],
             "rewardArtifacts": [],
@@ -1092,7 +1092,7 @@ class TestAddSkillRewardToMissionAPI(APIFixture, FactoryFixture, ContainerFixtur
             mission_id=1,
             title="Test Mission",
             description="Test Description",
-            branch_id=1,
+            season_id=1,
         )
 
         response = self.hr_api.add_skill_reward_to_mission(
@@ -1107,7 +1107,7 @@ class TestAddSkillRewardToMissionAPI(APIFixture, FactoryFixture, ContainerFixtur
             "rewardXp": 100,
             "rewardMana": 50,
             "rankRequirement": 1,
-            "branchId": 1,
+            "seasonId": 1,
             "category": "quest",
             "tasks": [],
             "rewardArtifacts": [],
@@ -1152,7 +1152,7 @@ class TestRemoveSkillRewardFromMissionAPI(APIFixture, FactoryFixture, ContainerF
             mission_id=1,
             title="Test Mission",
             description="Test Description",
-            branch_id=1,
+            season_id=1,
         )
 
         response = self.hr_api.remove_skill_reward_from_mission(mission_id=1, skill_id=1)
@@ -1165,7 +1165,7 @@ class TestRemoveSkillRewardFromMissionAPI(APIFixture, FactoryFixture, ContainerF
             "rewardXp": 100,
             "rewardMana": 50,
             "rankRequirement": 1,
-            "branchId": 1,
+            "seasonId": 1,
             "category": "quest",
             "tasks": [],
             "rewardArtifacts": [],

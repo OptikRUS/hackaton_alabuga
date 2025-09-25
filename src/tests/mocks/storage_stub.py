@@ -12,15 +12,11 @@ from src.core.competencies.exceptions import (
 )
 from src.core.competencies.schemas import Competencies, Competency
 from src.core.missions.exceptions import (
-    MissionBranchNameAlreadyExistError,
-    MissionBranchNotFoundError,
     MissionNameAlreadyExistError,
     MissionNotFoundError,
 )
 from src.core.missions.schemas import (
     Mission,
-    MissionBranch,
-    MissionBranches,
     Missions,
 )
 from src.core.ranks.exceptions import (
@@ -29,6 +25,8 @@ from src.core.ranks.exceptions import (
     RankNotFoundError,
 )
 from src.core.ranks.schemas import Rank, RankCompetencyRequirement, Ranks
+from src.core.seasons.exceptions import SeasonNameAlreadyExistError, SeasonNotFoundError
+from src.core.seasons.schemas import Season, Seasons
 from src.core.skills.exceptions import (
     SkillNameAlreadyExistError,
     SkillNotFoundError,
@@ -59,7 +57,7 @@ class StorageMock(
     UserStorage, MissionStorage, ArtifactStorage, CompetencyStorage, SkillStorage, RankStorage
 ):
     user_table: dict[str, User | CandidateUser | HRUser] = field(default_factory=dict)
-    mission_branch_table: dict[str, MissionBranch] = field(default_factory=dict)
+    season_table: dict[str, Season] = field(default_factory=dict)
     mission_table: dict[int, Mission] = field(default_factory=dict)
     task_table: dict[int, MissionTask] = field(default_factory=dict)
     artifact_table: dict[int, Artifact] = field(default_factory=dict)
@@ -94,27 +92,27 @@ class StorageMock(
         except KeyError as error:
             raise UserNotFoundError from error
 
-    async def insert_mission_branch(self, branch: MissionBranch) -> None:
+    async def insert_season(self, season: Season) -> None:
         try:
-            self.mission_branch_table[branch.name]
-            raise MissionBranchNameAlreadyExistError
+            self.season_table[season.name]
+            raise SeasonNameAlreadyExistError
         except KeyError:
-            self.mission_branch_table[branch.name] = branch
+            self.season_table[season.name] = season
 
-    async def get_mission_branch_by_name(self, name: str) -> MissionBranch:
+    async def get_season_by_name(self, name: str) -> Season:
         try:
-            return self.mission_branch_table[name]
+            return self.season_table[name]
         except KeyError as error:
-            raise MissionBranchNotFoundError from error
+            raise SeasonNotFoundError from error
 
-    async def get_mission_branch_by_id(self, branch_id: int) -> MissionBranch:
-        for branch in self.mission_branch_table.values():
-            if branch.id == branch_id:
+    async def get_season_by_id(self, season_id: int) -> Season:
+        for branch in self.season_table.values():
+            if branch.id == season_id:
                 return branch
-        raise MissionBranchNotFoundError
+        raise SeasonNotFoundError
 
-    async def list_mission_branches(self) -> MissionBranches:
-        return MissionBranches(values=list(self.mission_branch_table.values()))
+    async def list_seasons(self) -> Seasons:
+        return Seasons(values=list(self.season_table.values()))
 
     async def insert_mission(self, mission: Mission) -> None:
         for existing_mission in self.mission_table.values():
@@ -135,7 +133,7 @@ class StorageMock(
                 reward_xp=mission.reward_xp,
                 reward_mana=mission.reward_mana,
                 rank_requirement=mission.rank_requirement,
-                branch_id=mission.branch_id,
+                season_id=mission.season_id,
                 category=mission.category,
                 tasks=tasks,
             )
@@ -162,27 +160,27 @@ class StorageMock(
         except KeyError as error:
             raise MissionNotFoundError from error
 
-    async def update_mission_branch(self, branch: MissionBranch) -> None:
+    async def update_season(self, branch: Season) -> None:
         try:
-            existing_branch = self.mission_branch_table[branch.name]
+            existing_branch = self.season_table[branch.name]
             if existing_branch.id != branch.id:
-                raise MissionBranchNameAlreadyExistError
+                raise SeasonNameAlreadyExistError
         except KeyError:
             pass
         # Найти ветку по ID и обновить
-        for name, existing_branch in self.mission_branch_table.items():
+        for name, existing_branch in self.season_table.items():
             if existing_branch.id == branch.id:
-                del self.mission_branch_table[name]
-                self.mission_branch_table[branch.name] = branch
+                del self.season_table[name]
+                self.season_table[branch.name] = branch
                 return
-        raise MissionBranchNotFoundError
+        raise SeasonNotFoundError
 
-    async def delete_mission_branch(self, branch_id: int) -> None:
-        for name, branch in self.mission_branch_table.items():
-            if branch.id == branch_id:
-                del self.mission_branch_table[name]
+    async def delete_season(self, season_id: int) -> None:
+        for name, branch in self.season_table.items():
+            if branch.id == season_id:
+                del self.season_table[name]
                 return
-        raise MissionBranchNotFoundError
+        raise SeasonNotFoundError
 
     async def insert_mission_task(self, task: MissionTask) -> None:
         for existing_task in self.task_table.values():

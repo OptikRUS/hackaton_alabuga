@@ -6,8 +6,9 @@ from sqlalchemy.orm import selectinload
 
 from src.core.artifacts.schemas import Artifact
 from src.core.competencies.schemas import Competency
-from src.core.missions.schemas import Mission, MissionBranch
+from src.core.missions.schemas import Mission
 from src.core.ranks.schemas import Rank
+from src.core.seasons.schemas import Season
 from src.core.skills.schemas import Skill
 from src.core.tasks.schemas import MissionTask
 from src.core.users.schemas import User
@@ -62,7 +63,7 @@ class StorageHelper:
         )
         return await self.session.scalar(query)  # type: ignore[no-any-return]
 
-    async def insert_branch(self, branch: MissionBranch) -> MissionBranchModel | None:
+    async def insert_branch(self, branch: Season) -> MissionBranchModel | None:
         query = (
             insert(MissionBranchModel).values({"name": branch.name}).returning(MissionBranchModel)
         )
@@ -82,7 +83,7 @@ class StorageHelper:
                     "reward_xp": mission.reward_xp,
                     "reward_mana": mission.reward_mana,
                     "rank_requirement": mission.rank_requirement,
-                    "branch_id": mission.branch_id,
+                    "branch_id": mission.season_id,
                     "category": mission.category,
                 },
             )
