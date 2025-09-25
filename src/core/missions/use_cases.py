@@ -38,6 +38,14 @@ class GetMissionBranchesUseCase(UseCase):
 
 
 @dataclass
+class GetMissionBranchDetailUseCase(UseCase):
+    storage: MissionStorage
+
+    async def execute(self, branch_id: int) -> MissionBranch:
+        return await self.storage.get_mission_branch_by_id(branch_id=branch_id)
+
+
+@dataclass
 class CreateMissionUseCase(UseCase):
     storage: MissionStorage
 

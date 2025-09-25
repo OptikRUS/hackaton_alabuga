@@ -34,6 +34,7 @@ from src.core.missions.use_cases import (
     CreateMissionUseCase,
     DeleteMissionBranchUseCase,
     DeleteMissionUseCase,
+    GetMissionBranchDetailUseCase,
     GetMissionBranchesUseCase,
     GetMissionDetailUseCase,
     GetMissionsUseCase,
@@ -103,12 +104,16 @@ class MissionProviderMock(Provider):
         return AsyncMock(spec=GetMissionBranchesUseCase)
 
     @provide
-    def override_update_mission_branch_use_case(self) -> UpdateMissionBranchUseCase:
-        return AsyncMock(spec=CreateMissionBranchUseCase)
+    def override_get_mission_branch_detail_use_case(self) -> GetMissionBranchDetailUseCase:
+        return AsyncMock(spec=GetMissionBranchDetailUseCase)
 
     @provide
-    def override_delete_mission_branch_usecase(self) -> DeleteMissionBranchUseCase:
-        return AsyncMock(spec=GetMissionBranchesUseCase)
+    def override_update_mission_branch_use_case(self) -> UpdateMissionBranchUseCase:
+        return AsyncMock(spec=UpdateMissionBranchUseCase)
+
+    @provide
+    def override_delete_mission_branch_use_case(self) -> DeleteMissionBranchUseCase:
+        return AsyncMock(spec=DeleteMissionBranchUseCase)
 
     @provide
     def override_create_mission_use_case(self) -> CreateMissionUseCase:
@@ -132,23 +137,23 @@ class MissionProviderMock(Provider):
 
     @provide
     def override_create_mission_task_use_case(self) -> CreateMissionTaskUseCase:
-        return AsyncMock(storage=CreateMissionTaskUseCase)
+        return AsyncMock(spec=CreateMissionTaskUseCase)
 
     @provide
     def override_get_mission_tasks_use_case(self) -> GetMissionTasksUseCase:
-        return AsyncMock(storage=GetMissionTasksUseCase)
+        return AsyncMock(spec=GetMissionTasksUseCase)
 
     @provide
     def override_get_mission_task_detail_use_case(self) -> GetMissionTaskDetailUseCase:
-        return AsyncMock(storage=GetMissionTaskDetailUseCase)
+        return AsyncMock(spec=GetMissionTaskDetailUseCase)
 
     @provide
     def override_update_mission_task_use_case(self) -> UpdateMissionTaskUseCase:
-        return AsyncMock(storage=UpdateMissionTaskUseCase)
+        return AsyncMock(spec=UpdateMissionTaskUseCase)
 
     @provide
     def override_delete_mission_task_use_case(self) -> DeleteMissionTaskUseCase:
-        return AsyncMock(storage=DeleteMissionTaskUseCase)
+        return AsyncMock(spec=DeleteMissionTaskUseCase)
 
     @provide
     def override_add_task_to_mission_use_case(self) -> AddTaskToMissionUseCase:

@@ -9,6 +9,7 @@ from src.core.missions.exceptions import (
 from src.core.missions.use_cases import (
     CreateMissionBranchUseCase,
     DeleteMissionBranchUseCase,
+    GetMissionBranchDetailUseCase,
     GetMissionBranchesUseCase,
     UpdateMissionBranchUseCase,
 )
@@ -151,6 +152,48 @@ class TestGetSeasonsAPI(APIFixture, FactoryFixture, ContainerFixture):
         assert response.json() == {"values": []}
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with()
+
+
+class TestGetSeasonAPI(APIFixture, FactoryFixture, ContainerFixture):
+    @pytest.fixture(autouse=True)
+    async def setup(self) -> None:
+        self.use_case = await self.container.override_use_case(GetMissionBranchDetailUseCase)
+
+    def test_not_auth(self) -> None:
+        response = self.api.get_season(season_id=1)
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_get_season(self) -> None:
+        self.use_case.execute.return_value = self.factory.mission_branch(branch_id=1, name="TEST")
+
+        response = self.hr_api.get_season(season_id=1)
+
+        assert response.status_code == codes.OK
+        assert response.json() == {"id": 1, "name": "TEST"}
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(branch_id=1)
+
+    def test_get_season_candidate(self) -> None:
+        self.use_case.execute.return_value = self.factory.mission_branch(branch_id=1, name="TEST")
+
+        response = self.candidate_api.get_season(season_id=1)
+
+        assert response.status_code == codes.OK
+        assert response.json() == {"id": 1, "name": "TEST"}
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(branch_id=1)
+
+    def test_get_season_not_found(self) -> None:
+        self.use_case.execute.side_effect = MissionBranchNotFoundError
+
+        response = self.hr_api.get_season(season_id=999)
+
+        assert response.status_code == codes.NOT_FOUND
+        assert response.json() == {"detail": MissionBranchNotFoundError.detail}
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(branch_id=999)
 
 
 class TestDeleteSeasonAPI(APIFixture, FactoryFixture, ContainerFixture):

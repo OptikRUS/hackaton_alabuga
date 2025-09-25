@@ -37,6 +37,7 @@ from src.core.missions.use_cases import (
     CreateMissionUseCase,
     DeleteMissionBranchUseCase,
     DeleteMissionUseCase,
+    GetMissionBranchDetailUseCase,
     GetMissionBranchesUseCase,
     GetMissionDetailUseCase,
     GetMissionsUseCase,
@@ -127,6 +128,12 @@ class MissionProvider(Provider):
         self, storage: MissionStorage
     ) -> GetMissionBranchesUseCase:
         return GetMissionBranchesUseCase(storage=storage)
+
+    @provide
+    def build_get_mission_branch_detail_use_case(
+        self, storage: MissionStorage
+    ) -> GetMissionBranchDetailUseCase:
+        return GetMissionBranchDetailUseCase(storage=storage)
 
     @provide
     def build_create_mission_use_case(

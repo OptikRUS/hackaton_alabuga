@@ -12,6 +12,7 @@ from src.api.seasons.schemas import (
 from src.core.missions.use_cases import (
     CreateMissionBranchUseCase,
     DeleteMissionBranchUseCase,
+    GetMissionBranchDetailUseCase,
     GetMissionBranchesUseCase,
     UpdateMissionBranchUseCase,
 )
@@ -50,6 +51,23 @@ async def get_seasons(
     _ = user
     branches = await use_case.execute()
     return SeasonsResponse.from_schema(branches=branches)
+
+
+@router.get(
+    path="/seasons/{season_id}",
+    openapi_extra=openapi_extra,
+    status_code=status.HTTP_200_OK,
+    summary="Получить сезон по ID",
+    description="Возвращает детальную информацию о сезоне миссий",
+)
+async def get_season(
+    season_id: int,
+    user: FromDishka[JwtUser],
+    use_case: FromDishka[GetMissionBranchDetailUseCase],
+) -> SeasonResponse:
+    _ = user
+    branch = await use_case.execute(branch_id=season_id)
+    return SeasonResponse.from_schema(branch=branch)
 
 
 @router.put(

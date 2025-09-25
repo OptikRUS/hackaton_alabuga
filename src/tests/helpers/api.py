@@ -64,6 +64,9 @@ class APIHelper:
     def get_seasons(self) -> Response:
         return self.client.get("/seasons")
 
+    def get_season(self, season_id: int) -> Response:
+        return self.client.get(f"/seasons/{season_id}")
+
     def update_season(self, season_id: int, name: str) -> Response:
         return self.client.put(url=f"/seasons/{season_id}", json={"name": name})
 
