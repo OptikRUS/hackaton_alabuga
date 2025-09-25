@@ -8,7 +8,7 @@ class TestMissionTaskRelations(FactoryFixture, StorageFixture):
     @pytest.fixture(autouse=True)
     async def setup(self, storage: DatabaseStorage) -> None:
         self.storage = storage
-        branch = await self.storage_helper.insert_branch(branch=self.factory.season(name="TEST"))
+        branch = await self.storage_helper.insert_season(season=self.factory.season(name="TEST"))
         assert branch is not None
         mission = await self.storage_helper.insert_mission(
             mission=self.factory.mission(

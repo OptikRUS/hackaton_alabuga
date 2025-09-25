@@ -63,9 +63,15 @@ class StorageHelper:
         )
         return await self.session.scalar(query)  # type: ignore[no-any-return]
 
-    async def insert_branch(self, branch: Season) -> MissionBranchModel | None:
+    async def insert_season(self, season: Season) -> MissionBranchModel | None:
         query = (
-            insert(MissionBranchModel).values({"name": branch.name}).returning(MissionBranchModel)
+            insert(MissionBranchModel)
+            .values({
+                "name": season.name,
+                "start_date": season.start_date,
+                "end_date": season.end_date,
+            })
+            .returning(MissionBranchModel)
         )
         return await self.session.scalar(query)  # type: ignore[no-any-return]
 

@@ -9,13 +9,13 @@ class TestArtifactRelations(FactoryFixture, StorageFixture):
     @pytest.fixture(autouse=True)
     async def setup(self, storage: DatabaseStorage) -> None:
         self.storage = storage
-        branch = await self.storage_helper.insert_branch(branch=self.factory.season(name="TEST"))
-        assert branch is not None
+        season = await self.storage_helper.insert_season(season=self.factory.season(name="TEST"))
+        assert season is not None
         mission = await self.storage_helper.insert_mission(
             mission=self.factory.mission(
                 title="TEST",
                 description="TEST",
-                season_id=branch.id,
+                season_id=season.id,
             )
         )
         assert mission is not None

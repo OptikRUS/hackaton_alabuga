@@ -1,4 +1,6 @@
-from sqlalchemy import ForeignKey, PrimaryKeyConstraint, String, UniqueConstraint
+from datetime import datetime
+
+from sqlalchemy import DateTime, ForeignKey, PrimaryKeyConstraint, String, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 from src.core.artifacts.enums import ArtifactRarityEnum
@@ -81,15 +83,27 @@ class MissionBranchModel(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(255))
+    start_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    end_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
     missions: Mapped[list["MissionModel"]] = relationship(cascade="all, delete-orphan")
 
     @classmethod
     def from_schema(cls, branch: Season) -> "MissionBranchModel":
-        return cls(id=branch.id, name=branch.name)
+        return cls(
+            id=branch.id,
+            name=branch.name,
+            start_date=branch.start_date,
+            end_date=branch.end_date,
+        )
 
     def to_schema(self) -> Season:
-        return Season(id=self.id, name=self.name)
+        return Season(
+            id=self.id,
+            name=self.name,
+            start_date=self.start_date,
+            end_date=self.end_date,
+        )
 
 
 class MissionModel(Base):

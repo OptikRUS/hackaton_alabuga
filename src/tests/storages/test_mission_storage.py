@@ -11,7 +11,7 @@ class TestMissionStorage(FactoryFixture, StorageFixture):
     @pytest.fixture(autouse=True)
     async def setup(self, storage: DatabaseStorage) -> None:
         self.storage = storage
-        await self.storage_helper.insert_branch(branch=self.factory.season(name="TEST"))
+        await self.storage_helper.insert_season(season=self.factory.season(name="TEST"))
         inserted_branch = await self.storage_helper.get_branch_by_name(name="TEST")
         assert inserted_branch is not None
         self.created_branch = inserted_branch.to_schema()

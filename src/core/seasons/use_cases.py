@@ -31,29 +31,29 @@ class GetSeasonsUseCase(UseCase):
 class GetSeasonDetailUseCase(UseCase):
     storage: MissionStorage
 
-    async def execute(self, branch_id: int) -> Season:
-        return await self.storage.get_season_by_id(season_id=branch_id)
+    async def execute(self, season_id: int) -> Season:
+        return await self.storage.get_season_by_id(season_id=season_id)
 
 
 @dataclass
 class UpdateSeasonUseCase(UseCase):
     storage: MissionStorage
 
-    async def execute(self, branch: Season) -> Season:
-        await self.storage.get_season_by_id(season_id=branch.id)
+    async def execute(self, season: Season) -> Season:
+        await self.storage.get_season_by_id(season_id=season.id)
         try:
-            existing_branch = await self.storage.get_season_by_name(name=branch.name)
-            if existing_branch.id != branch.id:
+            existing_branch = await self.storage.get_season_by_name(name=season.name)
+            if existing_branch.id != season.id:
                 raise SeasonNameAlreadyExistError
         except SeasonNotFoundError:
             pass
-        await self.storage.update_season(branch=branch)
-        return await self.storage.get_season_by_id(season_id=branch.id)
+        await self.storage.update_season(branch=season)
+        return await self.storage.get_season_by_id(season_id=season.id)
 
 
 @dataclass
 class DeleteSeasonUseCase(UseCase):
     storage: MissionStorage
 
-    async def execute(self, branch_id: int) -> None:
-        await self.storage.delete_season(season_id=branch_id)
+    async def execute(self, season_id: int) -> None:
+        await self.storage.delete_season(season_id=season_id)

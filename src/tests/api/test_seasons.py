@@ -19,13 +19,21 @@ class TestCreateSeasonAPI(APIFixture, FactoryFixture, ContainerFixture):
         self.use_case = await self.container.override_use_case(CreateSeasonUseCase)
 
     def test_not_auth(self) -> None:
-        response = self.api.create_season(name="TEST")
+        response = self.api.create_season(
+            name="TEST",
+            start_date="2025-10-25T06:55:47Z",
+            end_date="2025-10-25T06:55:47Z",
+        )
 
         assert response.status_code == codes.FORBIDDEN
         assert response.json() == {"detail": "Not authenticated"}
 
     def test_candidate_forbidden(self) -> None:
-        response = self.candidate_api.create_season(name="TEST")
+        response = self.candidate_api.create_season(
+            name="TEST",
+            start_date="2025-10-25T06:55:47Z",
+            end_date="2025-10-25T06:55:47Z",
+        )
 
         assert response.status_code == codes.FORBIDDEN
         assert response.json() == {"detail": PermissionDeniedError.detail}
@@ -33,10 +41,19 @@ class TestCreateSeasonAPI(APIFixture, FactoryFixture, ContainerFixture):
     def test_create_season(self) -> None:
         self.use_case.execute.return_value = self.factory.season(season_id=1, name="TEST")
 
-        response = self.hr_api.create_season(name="TEST")
+        response = self.hr_api.create_season(
+            name="TEST",
+            start_date="2025-10-25T06:55:47Z",
+            end_date="2025-10-25T06:55:47Z",
+        )
 
         assert response.status_code == codes.CREATED
-        assert response.json() == {"id": 1, "name": "TEST"}
+        assert response.json() == {
+            "id": 1,
+            "name": "TEST",
+            "startDate": "2025-10-25T06:55:47Z",
+            "endDate": "2025-10-25T06:55:47Z",
+        }
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(
             branch=self.factory.season(season_id=0, name="TEST")
@@ -45,7 +62,11 @@ class TestCreateSeasonAPI(APIFixture, FactoryFixture, ContainerFixture):
     def test_create_season_already_exists(self) -> None:
         self.use_case.execute.side_effect = SeasonNameAlreadyExistError
 
-        response = self.hr_api.create_season(name="TEST")
+        response = self.hr_api.create_season(
+            name="TEST",
+            start_date="2025-10-25T06:55:47Z",
+            end_date="2025-10-25T06:55:47Z",
+        )
 
         assert response.status_code == codes.CONFLICT
         assert response.json() == {"detail": SeasonNameAlreadyExistError.detail}
@@ -61,13 +82,23 @@ class TestUpdateSeasonAPI(APIFixture, FactoryFixture, ContainerFixture):
         self.use_case = await self.container.override_use_case(UpdateSeasonUseCase)
 
     def test_not_auth(self) -> None:
-        response = self.api.update_season(season_id=1, name="TEST")
+        response = self.api.update_season(
+            season_id=1,
+            name="TEST",
+            start_date="2025-10-25T06:55:47Z",
+            end_date="2025-10-25T06:55:47Z",
+        )
 
         assert response.status_code == codes.FORBIDDEN
         assert response.json() == {"detail": "Not authenticated"}
 
     def test_candidate_forbidden(self) -> None:
-        response = self.candidate_api.update_season(season_id=1, name="TEST")
+        response = self.candidate_api.update_season(
+            season_id=1,
+            name="TEST",
+            start_date="2025-10-25T06:55:47Z",
+            end_date="2025-10-25T06:55:47Z",
+        )
 
         assert response.status_code == codes.FORBIDDEN
         assert response.json() == {"detail": PermissionDeniedError.detail}
@@ -75,37 +106,57 @@ class TestUpdateSeasonAPI(APIFixture, FactoryFixture, ContainerFixture):
     def test_update_season(self) -> None:
         self.use_case.execute.return_value = self.factory.season(season_id=1, name="TEST")
 
-        response = self.hr_api.update_season(season_id=1, name="TEST")
+        response = self.hr_api.update_season(
+            season_id=1,
+            name="TEST",
+            start_date="2025-10-25T06:55:47Z",
+            end_date="2025-10-25T06:55:47Z",
+        )
 
         assert response.status_code == codes.OK
-        assert response.json() == {"id": 1, "name": "TEST"}
+        assert response.json() == {
+            "id": 1,
+            "name": "TEST",
+            "startDate": "2025-10-25T06:55:47Z",
+            "endDate": "2025-10-25T06:55:47Z",
+        }
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(
-            branch=self.factory.season(season_id=1, name="TEST")
+            season=self.factory.season(season_id=1, name="TEST")
         )
 
     def test_update_season_not_found(self) -> None:
         self.use_case.execute.side_effect = SeasonNotFoundError
 
-        response = self.hr_api.update_season(season_id=999, name="TEST")
+        response = self.hr_api.update_season(
+            season_id=999,
+            name="TEST",
+            start_date="2025-10-25T06:55:47Z",
+            end_date="2025-10-25T06:55:47Z",
+        )
 
         assert response.status_code == codes.NOT_FOUND
         assert response.json() == {"detail": SeasonNotFoundError.detail}
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(
-            branch=self.factory.season(season_id=999, name="TEST")
+            season=self.factory.season(season_id=999, name="TEST")
         )
 
     def test_update_season_name_already_exists(self) -> None:
         self.use_case.execute.side_effect = SeasonNameAlreadyExistError
 
-        response = self.hr_api.update_season(season_id=1, name="TEST")
+        response = self.hr_api.update_season(
+            season_id=1,
+            name="TEST",
+            start_date="2025-10-25T06:55:47Z",
+            end_date="2025-10-25T06:55:47Z",
+        )
 
         assert response.status_code == codes.CONFLICT
         assert response.json() == {"detail": SeasonNameAlreadyExistError.detail}
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(
-            branch=self.factory.season(season_id=1, name="TEST")
+            season=self.factory.season(season_id=1, name="TEST")
         )
 
 
@@ -123,8 +174,18 @@ class TestGetSeasonsAPI(APIFixture, FactoryFixture, ContainerFixture):
     def test_get_seasons(self) -> None:
         self.use_case.execute.return_value = self.factory.seasons(
             values=[
-                self.factory.season(season_id=1, name="TEST1"),
-                self.factory.season(season_id=2, name="TEST2"),
+                self.factory.season(
+                    season_id=1,
+                    name="TEST1",
+                    start_date="2025-10-25T06:55:47Z",
+                    end_date="2025-10-25T06:55:47Z",
+                ),
+                self.factory.season(
+                    season_id=2,
+                    name="TEST2",
+                    start_date="2025-10-25T06:55:47Z",
+                    end_date="2025-10-25T06:55:47Z",
+                ),
             ]
         )
 
@@ -133,8 +194,18 @@ class TestGetSeasonsAPI(APIFixture, FactoryFixture, ContainerFixture):
         assert response.status_code == codes.OK
         assert response.json() == {
             "values": [
-                {"id": 1, "name": "TEST1"},
-                {"id": 2, "name": "TEST2"},
+                {
+                    "id": 1,
+                    "name": "TEST1",
+                    "startDate": "2025-10-25T06:55:47Z",
+                    "endDate": "2025-10-25T06:55:47Z",
+                },
+                {
+                    "id": 2,
+                    "name": "TEST2",
+                    "startDate": "2025-10-25T06:55:47Z",
+                    "endDate": "2025-10-25T06:55:47Z",
+                },
             ]
         }
         self.use_case.execute.assert_called_once()
@@ -163,14 +234,24 @@ class TestGetSeasonAPI(APIFixture, FactoryFixture, ContainerFixture):
         assert response.json() == {"detail": "Not authenticated"}
 
     def test_get_season(self) -> None:
-        self.use_case.execute.return_value = self.factory.season(season_id=1, name="TEST")
+        self.use_case.execute.return_value = self.factory.season(
+            season_id=1,
+            name="TEST",
+            start_date="2025-10-25T06:55:47Z",
+            end_date="2025-10-25T06:55:47Z",
+        )
 
         response = self.hr_api.get_season(season_id=1)
 
         assert response.status_code == codes.OK
-        assert response.json() == {"id": 1, "name": "TEST"}
+        assert response.json() == {
+            "id": 1,
+            "name": "TEST",
+            "startDate": "2025-10-25T06:55:47Z",
+            "endDate": "2025-10-25T06:55:47Z",
+        }
         self.use_case.execute.assert_called_once()
-        self.use_case.execute.assert_awaited_once_with(branch_id=1)
+        self.use_case.execute.assert_awaited_once_with(season_id=1)
 
     def test_get_season_candidate(self) -> None:
         self.use_case.execute.return_value = self.factory.season(season_id=1, name="TEST")
@@ -178,9 +259,14 @@ class TestGetSeasonAPI(APIFixture, FactoryFixture, ContainerFixture):
         response = self.candidate_api.get_season(season_id=1)
 
         assert response.status_code == codes.OK
-        assert response.json() == {"id": 1, "name": "TEST"}
+        assert response.json() == {
+            "id": 1,
+            "name": "TEST",
+            "startDate": "2025-10-25T06:55:47Z",
+            "endDate": "2025-10-25T06:55:47Z",
+        }
         self.use_case.execute.assert_called_once()
-        self.use_case.execute.assert_awaited_once_with(branch_id=1)
+        self.use_case.execute.assert_awaited_once_with(season_id=1)
 
     def test_get_season_not_found(self) -> None:
         self.use_case.execute.side_effect = SeasonNotFoundError
@@ -190,7 +276,7 @@ class TestGetSeasonAPI(APIFixture, FactoryFixture, ContainerFixture):
         assert response.status_code == codes.NOT_FOUND
         assert response.json() == {"detail": SeasonNotFoundError.detail}
         self.use_case.execute.assert_called_once()
-        self.use_case.execute.assert_awaited_once_with(branch_id=999)
+        self.use_case.execute.assert_awaited_once_with(season_id=999)
 
 
 class TestDeleteSeasonAPI(APIFixture, FactoryFixture, ContainerFixture):
@@ -217,7 +303,7 @@ class TestDeleteSeasonAPI(APIFixture, FactoryFixture, ContainerFixture):
 
         assert response.status_code == codes.NO_CONTENT
         self.use_case.execute.assert_called_once()
-        self.use_case.execute.assert_awaited_once_with(branch_id=1)
+        self.use_case.execute.assert_awaited_once_with(season_id=1)
 
     def test_delete_season_not_found(self) -> None:
         self.use_case.execute.side_effect = SeasonNotFoundError
@@ -227,4 +313,4 @@ class TestDeleteSeasonAPI(APIFixture, FactoryFixture, ContainerFixture):
         assert response.status_code == codes.NOT_FOUND
         assert response.json() == {"detail": SeasonNotFoundError.detail}
         self.use_case.execute.assert_called_once()
-        self.use_case.execute.assert_awaited_once_with(branch_id=999)
+        self.use_case.execute.assert_awaited_once_with(season_id=999)

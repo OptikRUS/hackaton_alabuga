@@ -46,8 +46,11 @@ class APIHelper:
     def get_me(self) -> Response:
         return self.client.get("/users/me")
 
-    def create_season(self, name: str) -> Response:
-        return self.client.post(url="/seasons", json={"name": name})
+    def create_season(self, name: str, start_date: str, end_date: str) -> Response:
+        return self.client.post(
+            url="/seasons",
+            json={"name": name, "start_date": start_date, "end_date": end_date},
+        )
 
     def get_seasons(self) -> Response:
         return self.client.get("/seasons")
@@ -55,8 +58,11 @@ class APIHelper:
     def get_season(self, season_id: int) -> Response:
         return self.client.get(f"/seasons/{season_id}")
 
-    def update_season(self, season_id: int, name: str) -> Response:
-        return self.client.put(url=f"/seasons/{season_id}", json={"name": name})
+    def update_season(self, season_id: int, name: str, start_date: str, end_date: str) -> Response:
+        return self.client.put(
+            url=f"/seasons/{season_id}",
+            json={"name": name, "start_date": start_date, "end_date": end_date},
+        )
 
     def delete_season(self, season_id: int) -> Response:
         return self.client.delete(f"/seasons/{season_id}")

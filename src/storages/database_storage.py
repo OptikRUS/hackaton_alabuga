@@ -135,7 +135,13 @@ class DatabaseStorage(
 
     async def insert_season(self, season: Season) -> None:
         query = (
-            insert(MissionBranchModel).values({"name": season.name}).returning(MissionBranchModel)
+            insert(MissionBranchModel)
+            .values({
+                "name": season.name,
+                "start_date": season.start_date,
+                "end_date": season.end_date,
+            })
+            .returning(MissionBranchModel)
         )
         try:
             await self.session.scalar(query)
@@ -246,7 +252,11 @@ class DatabaseStorage(
         query = (
             update(MissionBranchModel)
             .where(MissionBranchModel.id == branch.id)
-            .values({"name": branch.name})
+            .values({
+                "name": branch.name,
+                "start_date": branch.start_date,
+                "end_date": branch.end_date,
+            })
         )
         try:
             await self.session.execute(query)

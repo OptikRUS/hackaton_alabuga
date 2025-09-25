@@ -1,3 +1,5 @@
+from datetime import UTC, datetime
+
 from src.core.artifacts.enums import ArtifactRarityEnum
 from src.core.artifacts.schemas import Artifact, Artifacts
 from src.core.competencies.schemas import Competencies, Competency
@@ -79,8 +81,19 @@ class FactoryHelper:
         )
 
     @classmethod
-    def season(cls, season_id: int = 0, name: str = "TEST") -> Season:
-        return Season(id=season_id, name=name)
+    def season(
+        cls,
+        season_id: int = 0,
+        name: str = "TEST",
+        start_date: str = "2025-10-25T06:55:47Z",
+        end_date: str = "2025-10-25T06:55:47Z",
+    ) -> Season:
+        return Season(
+            id=season_id,
+            name=name,
+            start_date=datetime.fromisoformat(start_date).replace(tzinfo=UTC),
+            end_date=datetime.fromisoformat(end_date).replace(tzinfo=UTC),
+        )
 
     @classmethod
     def seasons(cls, values: list[Season]) -> Seasons:

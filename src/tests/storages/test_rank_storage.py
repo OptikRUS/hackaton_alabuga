@@ -74,7 +74,7 @@ class TestRankStorage(FactoryFixture, StorageFixture):
             await self.storage.delete_rank(rank_id=999)
 
     async def test_add_remove_required_mission(self) -> None:
-        branch = await self.storage_helper.insert_branch(self.factory.season(name="BR1"))
+        branch = await self.storage_helper.insert_season(self.factory.season(name="BR1"))
         assert branch is not None
         mission_model = await self.storage_helper.insert_mission(
             mission=self.factory.mission(title="M1", season_id=branch.id)

@@ -66,7 +66,7 @@ async def get_season(
     use_case: FromDishka[GetSeasonDetailUseCase],
 ) -> SeasonResponse:
     _ = user
-    branch = await use_case.execute(branch_id=season_id)
+    branch = await use_case.execute(season_id=season_id)
     return SeasonResponse.from_schema(branch=branch)
 
 
@@ -84,7 +84,7 @@ async def update_season(
     use_case: FromDishka[UpdateSeasonUseCase],
 ) -> SeasonResponse:
     _ = user
-    branch = await use_case.execute(branch=body.to_schema(branch_id=season_id))
+    branch = await use_case.execute(season=body.to_schema(branch_id=season_id))
     return SeasonResponse.from_schema(branch=branch)
 
 
@@ -101,4 +101,4 @@ async def delete_season(
     use_case: FromDishka[DeleteSeasonUseCase],
 ) -> None:
     _ = user
-    await use_case.execute(branch_id=season_id)
+    await use_case.execute(season_id=season_id)
