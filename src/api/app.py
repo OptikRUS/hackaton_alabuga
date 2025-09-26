@@ -1,5 +1,6 @@
 from dishka.integrations.fastapi import setup_dishka
 from fastapi import FastAPI
+from starlette.middleware.cors import CORSMiddleware
 from starlette.types import Lifespan
 
 from src.api.exceptions import exception_handlers
@@ -18,6 +19,7 @@ def create_app(lifespan: Lifespan[FastAPI] | None = None) -> FastAPI:
             "displayRequestDuration": True,
         },
     )
+    app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"])
     container = build_container()
     setup_dishka(container=container, app=app)
     app.openapi = generate_custom_openapi(app=app)  # type: ignore[method-assign]
