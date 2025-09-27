@@ -23,9 +23,9 @@ jobs:
         run: |
           docker compose ps
 
-      - name: Stop and clean up
-        if: always()
-        run: docker compose down --volumes --remove-orphans
+#      - name: Stop and clean up
+#        if: always()
+#        run: docker compose down --volumes --remove-orphans
 
 #jobs:
 #  deploy:
