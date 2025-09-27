@@ -1,21 +1,37 @@
-FROM python:3.13.2-alpine
+FROM python:3.13-slim-bookworm AS python-base
 
-ENV APP_PATH=/project
-ENV PYTHONPATH=$APP_PATH/
-ENV CUSTOM_USER=python-user
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONOPTIMIZE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_DEFAULT_TIMEOUT=100 \
+    APP_PATH="/app" \
+    PYTHONPATH="/app" \
+    UV_VERSION="0.6.14"
 
-EXPOSE 8080
+ENV VIRTUAL_ENV="$APP_PATH/.venv"
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-RUN addgroup -S $CUSTOM_USER && adduser -S $CUSTOM_USER -G $CUSTOM_USER
-RUN mkdir $APP_PATH && chown -R $CUSTOM_USER:$CUSTOM_USER $APP_PATH
-RUN apk update && apk add --no-cache make curl && pip install uv==0.6.8
-
-USER $CUSTOM_USER:$CUSTOM_USER
 WORKDIR $APP_PATH
 
-COPY --chown=$CUSTOM_USER:$CUSTOM_USER uv.lock pyproject.toml ./
-RUN uv venv
+FROM python-base AS builder
 
-COPY --chown=$CUSTOM_USER:$CUSTOM_USER . ./
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends gcc git \
+    && rm -rf /var/lib/apt/lists/
 
-CMD ["uv", "run", "python", "src/main.py"]
+RUN pip install --no-cache-dir "uv==$UV_VERSION"
+
+COPY ./pyproject.toml ./uv.lock ./
+RUN uv venv -p 3.13 \
+    && uv sync --all-extras --no-install-project
+
+RUN uv sync --all-extras --no-editable
+
+FROM python-base AS runner
+
+COPY --from=builder $VIRTUAL_ENV $VIRTUAL_ENV
+COPY ./src ./src
+
+CMD ["python", "src/main.py"]

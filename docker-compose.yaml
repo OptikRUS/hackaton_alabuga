@@ -19,20 +19,19 @@ services:
       - alabuga.postgres.network
       - alabuga.minio.network
     environment:
-      - APP_ADDRESS=0.0.0.0
       - APP_PORT=8080
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_USER=${POSTGRES_USER:-postgres}
       - DB_PASSWORD=${POSTGRES_PASSWORD:-postgres}
       - DB_NAME=${POSTGRES_DB:-alabuga}
-      - S3_ENDPOINT=http://minio:9000
-      - S3_ACCESS_KEY=${MINIO_ROOT_USER:-minio}
-      - S3_SECRET_KEY=${MINIO_ROOT_PASSWORD:-minio12345}
-      - S3_BUCKET=${MINIO_BUCKET:-alabuga}
-      - S3_REGION=${MINIO_REGION:-us-east-1}
-      - S3_USE_SSL=false
-      - S3_ADDRESSING_STYLE=path
+      - MINIO_ENDPOINT=http://minio:9000
+      - MINIO_ACCESS_KEY=${MINIO_ROOT_USER:-minio}
+      - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD:-minio123}
+      - MINIO_BUCKET=${MINIO_BUCKET:-alabuga}
+      - MINIO_REGION=${MINIO_REGION:-us-east-1}
+      - MINIO_USE_SSL=false
+      - MINIO_ADDRESSING_STYLE=path
     healthcheck:
       test: ["CMD-SHELL", "curl -fsSL http://localhost:8080/health"]
       interval: 10s
