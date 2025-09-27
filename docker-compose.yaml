@@ -22,9 +22,9 @@ services:
       - APP_PORT=8080
       - DB_HOST=postgres
       - DB_PORT=5432
-      - DB_USER=${POSTGRES_USER:-postgres}
-      - DB_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-      - DB_NAME=${POSTGRES_DB:-alabuga}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - DB_NAME=${DB_NAME:-alabuga}
       - MINIO_ENDPOINT=http://minio:9000
       - MINIO_ACCESS_KEY=${MINIO_ROOT_USER:-minio}
       - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD:-minio123}
@@ -52,9 +52,9 @@ services:
     networks:
       - alabuga.postgres.network
     environment:
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_DB: ${POSTGRES_DB:-alabuga}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_DB: ${DB_NAME:-alabuga}
     volumes:
       - alabuga.postgres.data:/var/lib/postgresql/data:rw
     healthcheck:
@@ -72,15 +72,15 @@ services:
       - alabuga.postgres.network
     environment:
       - POSTGRES_HOST=postgres
-      - POSTGRES_DB=${POSTGRES_DB:-$USER}
-      - POSTGRES_USER=${POSTGRES_USER:-$USER}
-      - POSTGRES_PASSWORD=$POSTGRES_PASSWORD
+      - POSTGRES_DB=${DB_NAME:-$USER}
+      - POSTGRES_USER=${DB_USER:-$USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
       - BACKUP_DIR=/backups
       - POSTGRES_EXTRA_OPTS=-Z6 --schema=public --blobs
-      - SCHEDULE=${POSTGRES_BACKUP_SCHEDULE:-@daily}
+      - SCHEDULE=${DB_BACKUP_SCHEDULE:-@daily}
       - HEALTHCHECK_PORT=8081
     volumes:
-      - ${POSTGRES_BACKUP_DIR:-./.backups/postgres}:/backups
+      - ${DB_BACKUP_DIR:-./.backups/postgres}:/backups
 
   minio:
     profiles: [ "api" ]

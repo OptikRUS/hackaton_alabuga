@@ -13,6 +13,7 @@ jobs:
       - name: Start Docker Compose services
         env:
           DOCKER_API_IMAGE: ${{ vars.DOCKERHUB_USERNAME }}/${{ vars.DOCKERHUB_REPONAME }}:latest
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: docker compose up -d
 
       - name: Wait for services to be ready (optional but recommended)
