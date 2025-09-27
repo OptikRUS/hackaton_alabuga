@@ -41,9 +41,9 @@ jobs:
 
             docker compose -f "$COMPOSE_FILE" ps
 
-#      - name: Stop and clean up
-#        if: always()
-#        run: docker compose down --volumes --remove-orphans
+      - name: Stop and clean up
+        if: always()
+        run: rm -f /tmp/docker-compose.yaml
 
 #jobs:
 #  deploy:
