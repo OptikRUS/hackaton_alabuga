@@ -33,6 +33,7 @@ class TestCreateMissionChainUseCase(FactoryFixture):
             reward_mana=100,
             missions=[],
             dependencies=[],
+            mission_orders=[],
         )
 
     async def test_create_mission_chain_name_already_exists(self) -> None:

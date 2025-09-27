@@ -39,6 +39,7 @@ from src.core.mission_chains.use_cases import (
     RemoveMissionDependencyUseCase,
     RemoveMissionFromChainUseCase,
     UpdateMissionChainUseCase,
+    UpdateMissionOrderInChainUseCase,
 )
 from src.core.missions.use_cases import (
     AddCompetencyRewardToMissionUseCase,
@@ -289,6 +290,12 @@ class MissionChainProvider(Provider):
         self, storage: MissionStorage
     ) -> RemoveMissionDependencyUseCase:
         return RemoveMissionDependencyUseCase(storage=storage)
+
+    @provide
+    def build_update_mission_order_in_chain_use_case(
+        self, storage: MissionStorage
+    ) -> UpdateMissionOrderInChainUseCase:
+        return UpdateMissionOrderInChainUseCase(storage=storage)
 
 
 class CompetencyProvider(Provider):

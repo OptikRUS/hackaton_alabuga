@@ -20,6 +20,7 @@ from src.core.mission_chains.use_cases import (
     RemoveMissionDependencyUseCase,
     RemoveMissionFromChainUseCase,
     UpdateMissionChainUseCase,
+    UpdateMissionOrderInChainUseCase,
 )
 
 router = APIRouter(tags=["mission-chains"], route_class=DishkaRoute)
@@ -142,6 +143,27 @@ async def remove_mission_from_chain(
 ) -> MissionChainResponse:
     _ = user
     mission_chain = await use_case.execute(chain_id=chain_id, mission_id=mission_id)
+    return MissionChainResponse.from_schema(mission_chain=mission_chain)
+
+
+@router.put(
+    path="/mission-chains/{chain_id}/missions/{mission_id}/order",
+    openapi_extra=openapi_extra,
+    status_code=status.HTTP_200_OK,
+    summary="Обновить порядок миссии в цепочке",
+    description="Обновляет порядок миссии в указанной цепочке",
+)
+async def update_mission_order_in_chain(
+    chain_id: int,
+    mission_id: int,
+    new_order: int,
+    user: FromDishka[JwtHRUser],
+    use_case: FromDishka[UpdateMissionOrderInChainUseCase],
+) -> MissionChainResponse:
+    _ = user
+    mission_chain = await use_case.execute(
+        chain_id=chain_id, mission_id=mission_id, new_order=new_order
+    )
     return MissionChainResponse.from_schema(mission_chain=mission_chain)
 
 

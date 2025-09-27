@@ -186,6 +186,12 @@ class MissionStorage(metaclass=ABCMeta):
     ) -> None:
         raise NotImplementedError
 
+    @abstractmethod
+    async def update_mission_order_in_chain(
+        self, chain_id: int, mission_id: int, new_order: int
+    ) -> None:
+        raise NotImplementedError
+
 
 class ArtifactStorage(metaclass=ABCMeta):
     @abstractmethod
