@@ -1,7 +1,12 @@
 import pytest
 
+from src.core.mission_chains.exceptions import (
+    MissionChainNotFoundError,
+    MissionDependencyAlreadyExistsError,
+)
 from src.core.mission_chains.use_cases import AddMissionDependencyUseCase
 from src.core.missions.enums import MissionCategoryEnum
+from src.core.missions.exceptions import MissionNotFoundError, PrerequisiteMissionNotFoundError
 from src.tests.fixtures import FactoryFixture
 from src.tests.mocks.storage_stub import StorageMock
 
@@ -63,3 +68,26 @@ class TestAddMissionDependencyUseCase(FactoryFixture):
         assert len(mission_chain.dependencies) == 1
         assert mission_chain.dependencies[0].mission_id == 2
         assert mission_chain.dependencies[0].prerequisite_mission_id == 1
+
+    async def test_add_mission_dependency_already_exists(self) -> None:
+        # First add the dependency
+        await self.use_case.execute(chain_id=1, mission_id=2, prerequisite_mission_id=1)
+
+        # Try to add the same dependency again - should raise exception
+        with pytest.raises(MissionDependencyAlreadyExistsError):
+            await self.use_case.execute(chain_id=1, mission_id=2, prerequisite_mission_id=1)
+
+    async def test_add_mission_dependency_chain_not_found(self) -> None:
+        # Try to add dependency to non-existent chain
+        with pytest.raises(MissionChainNotFoundError):
+            await self.use_case.execute(chain_id=999, mission_id=2, prerequisite_mission_id=1)
+
+    async def test_add_mission_dependency_mission_not_found(self) -> None:
+        # Try to add dependency with non-existent mission
+        with pytest.raises(MissionNotFoundError):
+            await self.use_case.execute(chain_id=1, mission_id=999, prerequisite_mission_id=1)
+
+    async def test_add_mission_dependency_prerequisite_not_found(self) -> None:
+        # Try to add dependency with non-existent prerequisite mission
+        with pytest.raises(PrerequisiteMissionNotFoundError):
+            await self.use_case.execute(chain_id=1, mission_id=2, prerequisite_mission_id=999)

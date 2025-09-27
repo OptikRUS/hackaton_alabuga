@@ -5,6 +5,7 @@ from src.core.mission_chains.exceptions import (
     MissionChainNotFoundError,
 )
 from src.core.mission_chains.schemas import MissionChain, MissionChains
+from src.core.missions.exceptions import MissionNotFoundError, PrerequisiteMissionNotFoundError
 from src.core.storages import MissionStorage
 from src.core.use_case import UseCase
 
@@ -64,6 +65,8 @@ class AddMissionToChainUseCase(UseCase):
     storage: MissionStorage
 
     async def execute(self, chain_id: int, mission_id: int) -> MissionChain:
+        await self.storage.get_mission_chain_by_id(chain_id=chain_id)
+        await self.storage.get_mission_by_id(mission_id=mission_id)
         await self.storage.add_mission_to_chain(chain_id=chain_id, mission_id=mission_id)
         return await self.storage.get_mission_chain_by_id(chain_id=chain_id)
 
@@ -84,6 +87,20 @@ class AddMissionDependencyUseCase(UseCase):
     async def execute(
         self, chain_id: int, mission_id: int, prerequisite_mission_id: int
     ) -> MissionChain:
+        await self.storage.get_mission_chain_by_id(chain_id=chain_id)
+
+        # Check mission_id first
+        try:
+            await self.storage.get_mission_by_id(mission_id=mission_id)
+        except MissionNotFoundError as err:
+            raise MissionNotFoundError from err
+
+        # Check prerequisite_mission_id
+        try:
+            await self.storage.get_mission_by_id(mission_id=prerequisite_mission_id)
+        except MissionNotFoundError as err:
+            raise PrerequisiteMissionNotFoundError from err
+
         await self.storage.add_mission_dependency(
             chain_id=chain_id,
             mission_id=mission_id,

@@ -1,9 +1,17 @@
 from src.core.exceptions import BaseExceptionError
 
 
-class MissionChainNotFoundError(BaseExceptionError):
-    message = "Цепочка миссий не найдена"
-
-
 class MissionChainNameAlreadyExistError(BaseExceptionError):
-    message = "Цепочка миссий с таким названием уже существует"
+    detail = "Mission chain with this name already exist!"
+
+
+class MissionChainNotFoundError(BaseExceptionError):
+    detail = "Mission chain not found!"
+
+
+class MissionChainMissionAlreadyExistsError(BaseExceptionError):
+    detail = "This mission is already in the mission chain!"
+
+
+class MissionDependencyAlreadyExistsError(BaseExceptionError):
+    detail = "This mission dependency already exists!"

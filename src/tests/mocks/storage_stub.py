@@ -12,8 +12,10 @@ from src.core.competencies.exceptions import (
 )
 from src.core.competencies.schemas import Competencies, Competency
 from src.core.mission_chains.exceptions import (
+    MissionChainMissionAlreadyExistsError,
     MissionChainNameAlreadyExistError,
     MissionChainNotFoundError,
+    MissionDependencyAlreadyExistsError,
 )
 from src.core.mission_chains.schemas import MissionChain, MissionChains, MissionDependency
 from src.core.missions.exceptions import (
@@ -642,12 +644,10 @@ class StorageMock(
             raise MissionChainNotFoundError from error
 
     async def add_mission_to_chain(self, chain_id: int, mission_id: int) -> None:
-        if chain_id not in self.mission_chain_table:
-            raise MissionChainNotFoundError
-        if mission_id not in self.mission_table:
-            raise MissionNotFoundError
         if chain_id not in self.mission_chains_missions_relations:
             self.mission_chains_missions_relations[chain_id] = set()
+        if mission_id in self.mission_chains_missions_relations[chain_id]:
+            raise MissionChainMissionAlreadyExistsError
         self.mission_chains_missions_relations[chain_id].add(mission_id)
 
     async def remove_mission_from_chain(self, chain_id: int, mission_id: int) -> None:
@@ -663,14 +663,10 @@ class StorageMock(
     async def add_mission_dependency(
         self, chain_id: int, mission_id: int, prerequisite_mission_id: int
     ) -> None:
-        if chain_id not in self.mission_chain_table:
-            raise MissionChainNotFoundError
-        if mission_id not in self.mission_table:
-            raise MissionNotFoundError
-        if prerequisite_mission_id not in self.mission_table:
-            raise MissionNotFoundError
         if chain_id not in self.mission_dependencies:
             self.mission_dependencies[chain_id] = set()
+        if (mission_id, prerequisite_mission_id) in self.mission_dependencies[chain_id]:
+            raise MissionDependencyAlreadyExistsError
         self.mission_dependencies[chain_id].add((mission_id, prerequisite_mission_id))
 
     async def remove_mission_dependency(

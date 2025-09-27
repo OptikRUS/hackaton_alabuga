@@ -18,8 +18,10 @@ from src.core.competencies.exceptions import (
 )
 from src.core.competencies.schemas import Competencies, Competency
 from src.core.mission_chains.exceptions import (
+    MissionChainMissionAlreadyExistsError,
     MissionChainNameAlreadyExistError,
     MissionChainNotFoundError,
+    MissionDependencyAlreadyExistsError,
 )
 from src.core.mission_chains.schemas import MissionChain, MissionChains
 from src.core.missions.exceptions import (
@@ -855,7 +857,10 @@ class DatabaseStorage(
             "mission_chain_id": chain_id,
             "mission_id": mission_id,
         })
-        await self.session.execute(query)
+        try:
+            await self.session.execute(query)
+        except IntegrityError as error:
+            raise MissionChainMissionAlreadyExistsError from error
 
     async def remove_mission_from_chain(self, chain_id: int, mission_id: int) -> None:
         query = delete(MissionChainMissionRelationModel).where(
@@ -872,7 +877,10 @@ class DatabaseStorage(
             "mission_id": mission_id,
             "prerequisite_mission_id": prerequisite_mission_id,
         })
-        await self.session.execute(query)
+        try:
+            await self.session.execute(query)
+        except IntegrityError as error:
+            raise MissionDependencyAlreadyExistsError from error
 
     async def remove_mission_dependency(
         self, chain_id: int, mission_id: int, prerequisite_mission_id: int

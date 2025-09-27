@@ -17,9 +17,5 @@ class MissionSkillRewardAlreadyExistsError(BaseExceptionError):
     detail = "This skill reward already exists for the mission"
 
 
-class MissionChainNameAlreadyExistError(BaseExceptionError):
-    detail = "Mission chain with this name already exist!"
-
-
-class MissionChainNotFoundError(BaseExceptionError):
-    detail = "Mission chain not found!"
+class PrerequisiteMissionNotFoundError(BaseExceptionError):
+    detail = "Prerequisite mission not found!"
