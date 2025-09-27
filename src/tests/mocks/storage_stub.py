@@ -591,6 +591,7 @@ class StorageMock(
                 reward_mana=base_chain.reward_mana,
                 missions=missions,
                 dependencies=dependencies,
+                mission_orders=[],  # V moke мы не отслеживаем порядки детально
             )
         except KeyError as error:
             raise MissionChainNotFoundError from error
@@ -626,6 +627,7 @@ class StorageMock(
                     reward_mana=base_chain.reward_mana,
                     missions=missions,
                     dependencies=dependencies,
+                    mission_orders=[],  # V moke мы не отслеживаем порядки детально
                 )
         raise MissionChainNotFoundError
 
@@ -682,3 +684,17 @@ class StorageMock(
             self.mission_dependencies[chain_id].discard((mission_id, prerequisite_mission_id))
             if not self.mission_dependencies[chain_id]:
                 del self.mission_dependencies[chain_id]
+
+    async def update_mission_order_in_chain(
+        self, chain_id: int, mission_id: int, new_order: int
+    ) -> None:
+        """Обновляет порядок миссии в цепочке s avtomaticheskim смещением других миссий"""
+        # Проверяем, что миссия существует в цепочке
+        if chain_id not in self.mission_chains_missions_relations:
+            raise MissionChainNotFoundError
+
+        if mission_id not in self.mission_chains_missions_relations[chain_id]:
+            raise MissionNotFoundError
+
+        # V moke-klasse мы просто ничего не делаем, так как это тестовая заглушка
+        # V realnoy реализации здесь была бы проверка уникальности порядка

@@ -3,7 +3,12 @@ from datetime import UTC, datetime
 from src.core.artifacts.enums import ArtifactRarityEnum
 from src.core.artifacts.schemas import Artifact, Artifacts
 from src.core.competencies.schemas import Competencies, Competency
-from src.core.mission_chains.schemas import MissionChain, MissionChains, MissionDependency
+from src.core.mission_chains.schemas import (
+    MissionChain,
+    MissionChainMission,
+    MissionChains,
+    MissionDependency,
+)
 from src.core.missions.enums import MissionCategoryEnum
 from src.core.missions.schemas import (
     CompetencyReward,
@@ -232,6 +237,7 @@ class FactoryHelper:
         reward_mana: int = 100,
         missions: list[Mission] | None = None,
         dependencies: list[MissionDependency] | None = None,
+        mission_orders: list[MissionChainMission] | None = None,
     ) -> MissionChain:
         return MissionChain(
             id=chain_id,
@@ -241,6 +247,7 @@ class FactoryHelper:
             reward_mana=reward_mana,
             missions=missions,
             dependencies=dependencies,
+            mission_orders=mission_orders,
         )
 
     @classmethod

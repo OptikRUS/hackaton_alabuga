@@ -35,6 +35,7 @@ class TestGetMissionChainDetailUseCase(FactoryFixture):
             reward_mana=100,
             missions=[],
             dependencies=[],
+            mission_orders=[],
         )
 
     async def test_get_mission_chain_detail_not_found(self) -> None:

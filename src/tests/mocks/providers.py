@@ -36,6 +36,7 @@ from src.core.mission_chains.use_cases import (
     RemoveMissionDependencyUseCase,
     RemoveMissionFromChainUseCase,
     UpdateMissionChainUseCase,
+    UpdateMissionOrderInChainUseCase,
 )
 from src.core.missions.use_cases import (
     AddCompetencyRewardToMissionUseCase,
@@ -415,3 +416,7 @@ class MissionChainProviderMock(Provider):
     @provide
     def override_remove_mission_dependency_use_case(self) -> RemoveMissionDependencyUseCase:
         return AsyncMock(spec=RemoveMissionDependencyUseCase)
+
+    @provide
+    def override_update_mission_order_in_chain_use_case(self) -> UpdateMissionOrderInChainUseCase:
+        return AsyncMock(spec=UpdateMissionOrderInChainUseCase)

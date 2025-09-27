@@ -72,6 +72,7 @@ class TestCreateMissionChainAPI(APIFixture, FactoryFixture, ContainerFixture):
             "rewardMana": 100,
             "missions": [],
             "dependencies": [],
+            "missionOrders": [],
         }
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(
@@ -143,6 +144,7 @@ class TestGetMissionChainsAPI(APIFixture, FactoryFixture, ContainerFixture):
                     "rewardMana": 100,
                     "missions": [],
                     "dependencies": [],
+                    "missionOrders": [],
                 },
                 {
                     "id": 2,
@@ -152,6 +154,7 @@ class TestGetMissionChainsAPI(APIFixture, FactoryFixture, ContainerFixture):
                     "rewardMana": 150,
                     "missions": [],
                     "dependencies": [],
+                    "missionOrders": [],
                 },
             ]
         }
@@ -199,6 +202,7 @@ class TestGetMissionChainAPI(APIFixture, FactoryFixture, ContainerFixture):
             "rewardMana": 100,
             "missions": [],
             "dependencies": [],
+            "missionOrders": [],
         }
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(chain_id=1)
@@ -269,6 +273,7 @@ class TestUpdateMissionChainAPI(APIFixture, FactoryFixture, ContainerFixture):
             "rewardMana": 150,
             "missions": [],
             "dependencies": [],
+            "missionOrders": [],
         }
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(
@@ -386,6 +391,7 @@ class TestAddMissionToChainAPI(APIFixture, FactoryFixture, ContainerFixture):
             "rewardMana": 100,
             "missions": [],
             "dependencies": [],
+            "missionOrders": [],
         }
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(chain_id=1, mission_id=1)
@@ -428,6 +434,7 @@ class TestRemoveMissionFromChainAPI(APIFixture, FactoryFixture, ContainerFixture
             "rewardMana": 100,
             "missions": [],
             "dependencies": [],
+            "missionOrders": [],
         }
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(chain_id=1, mission_id=1)
@@ -482,6 +489,7 @@ class TestAddMissionDependencyAPI(APIFixture, FactoryFixture, ContainerFixture):
             "rewardMana": 100,
             "missions": [],
             "dependencies": [],
+            "missionOrders": [],
         }
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(
@@ -538,6 +546,7 @@ class TestRemoveMissionDependencyAPI(APIFixture, FactoryFixture, ContainerFixtur
             "rewardMana": 100,
             "missions": [],
             "dependencies": [],
+            "missionOrders": [],
         }
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(

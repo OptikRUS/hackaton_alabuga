@@ -2,7 +2,19 @@ from pydantic import Field
 
 from src.api.boundary import BoundaryModel
 from src.api.missions.schemas import MissionDependencyResponse, MissionResponse
-from src.core.mission_chains.schemas import MissionChain, MissionChains
+from src.core.mission_chains.schemas import MissionChain, MissionChainMission, MissionChains
+
+
+class MissionChainMissionResponse(BoundaryModel):
+    mission_id: int = Field(default=..., description="Идентификатор миссии")
+    order: int = Field(default=..., description="Порядок миссии в цепочке")
+
+    @classmethod
+    def from_schema(cls, mission_order: MissionChainMission) -> "MissionChainMissionResponse":
+        return cls(
+            mission_id=mission_order.mission_id,
+            order=mission_order.order,
+        )
 
 
 class MissionChainCreateRequest(BoundaryModel):
@@ -47,6 +59,9 @@ class MissionChainResponse(BoundaryModel):
     dependencies: list[MissionDependencyResponse] = Field(
         default_factory=list, description="Зависимости между миссиями в цепочке"
     )
+    mission_orders: list[MissionChainMissionResponse] = Field(
+        default_factory=list, description="Порядок миссий в цепочке"
+    )
 
     @classmethod
     def from_schema(cls, mission_chain: MissionChain) -> "MissionChainResponse":
@@ -63,6 +78,10 @@ class MissionChainResponse(BoundaryModel):
             dependencies=[
                 MissionDependencyResponse.from_schema(dep)
                 for dep in (mission_chain.dependencies or [])
+            ],
+            mission_orders=[
+                MissionChainMissionResponse.from_schema(mission_order)
+                for mission_order in (mission_chain.mission_orders or [])
             ],
         )
 

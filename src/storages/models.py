@@ -572,6 +572,7 @@ class MissionChainModel(Base):
             reward_mana=self.reward_mana,
             missions=[mission.to_schema() for mission in self.missions],
             dependencies=[dep.to_schema() for dep in self.dependencies],
+            mission_orders=[],  # Будет заполняться в storage
         )
 
 
@@ -593,6 +594,7 @@ class MissionChainMissionRelationModel(Base):
         ForeignKey(MissionModel.id, ondelete="CASCADE"),
         primary_key=True,
     )
+    order: Mapped[int] = mapped_column(default=1)
 
 
 class MissionDependencyModel(Base):

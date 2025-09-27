@@ -401,3 +401,11 @@ class APIHelper:
                 "prerequisite_mission_id": prerequisite_mission_id,
             },
         )
+
+    def update_mission_order_in_chain(
+        self, chain_id: int, mission_id: int, new_order: int
+    ) -> Response:
+        return self.client.put(
+            f"/mission-chains/{chain_id}/missions/{mission_id}/order",
+            params={"new_order": new_order},
+        )

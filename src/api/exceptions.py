@@ -14,6 +14,8 @@ from src.core.competencies.exceptions import (
 from src.core.exceptions import BaseExceptionError, InvalidJWTTokenError, PermissionDeniedError
 from src.core.media.exceptions import MediaNotFoundError
 from src.core.mission_chains.exceptions import (
+    CircularDependencyError,
+    InvalidMissionOrderError,
     MissionChainMissionAlreadyExistsError,
     MissionChainNameAlreadyExistError,
     MissionChainNotFoundError,
@@ -91,6 +93,8 @@ exception_handlers: (
     MissionChainMissionAlreadyExistsError: handler(status_code=status.HTTP_409_CONFLICT),
     MissionDependencyAlreadyExistsError: handler(status_code=status.HTTP_409_CONFLICT),
     MissionChainNameAlreadyExistError: handler(status_code=status.HTTP_409_CONFLICT),
+    InvalidMissionOrderError: handler(status_code=status.HTTP_400_BAD_REQUEST),
+    CircularDependencyError: handler(status_code=status.HTTP_400_BAD_REQUEST),
     MissionChainNotFoundError: handler(status_code=status.HTTP_404_NOT_FOUND),
     TaskNameAlreadyExistError: handler(status_code=status.HTTP_409_CONFLICT),
     TaskNotFoundError: handler(status_code=status.HTTP_404_NOT_FOUND),

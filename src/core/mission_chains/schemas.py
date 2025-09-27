@@ -10,6 +10,12 @@ class MissionDependency:
 
 
 @dataclass
+class MissionChainMission:
+    mission_id: int
+    order: int
+
+
+@dataclass
 class MissionChain:
     id: int
     name: str
@@ -18,6 +24,7 @@ class MissionChain:
     reward_mana: int
     missions: list[Mission] | None = None
     dependencies: list[MissionDependency] | None = None
+    mission_orders: list[MissionChainMission] | None = None
 
 
 @dataclass
