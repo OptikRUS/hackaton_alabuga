@@ -10,19 +10,11 @@ depends_on = None
 def upgrade() -> None:
     op.add_column(
         "missions_branch",
-        sa.Column(
-            "start_date",
-            sa.DateTime(),
-            nullable=False,
-        ),
+        sa.Column("start_date", sa.DateTime(timezone=True), nullable=False),
     )
     op.add_column(
         "missions_branch",
-        sa.Column(
-            "end_date",
-            sa.DateTime(),
-            nullable=False,
-        ),
+        sa.Column("end_date", sa.DateTime(timezone=True), nullable=False),
     )
 
 

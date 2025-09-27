@@ -232,6 +232,30 @@ class MissionTaskRelationModel(Base):
     )
 
 
+class UserTaskRelationModel(Base):
+    __tablename__ = "users_tasks"
+    __table_args__ = (
+        PrimaryKeyConstraint(
+            "task_id",
+            "user_login",
+            name="pk_users_tasks",
+        ),
+    )
+
+    task_id: Mapped[int] = mapped_column(
+        ForeignKey(MissionTaskModel.id, ondelete="CASCADE"),
+        primary_key=True,
+    )
+    user_login: Mapped[str] = mapped_column(
+        ForeignKey(UserModel.login, ondelete="CASCADE"),
+        primary_key=True,
+    )
+    is_completed: Mapped[bool] = mapped_column(default=False, nullable=False)
+
+    task: Mapped[MissionTaskModel] = relationship("MissionTaskModel", lazy="selectin")
+    user: Mapped[UserModel] = relationship("UserModel", lazy="selectin")
+
+
 class CompetencyModel(Base):
     __tablename__ = "competencies_competency"
     __table_args__ = (UniqueConstraint("name", name="uq_competencies_name"),)
