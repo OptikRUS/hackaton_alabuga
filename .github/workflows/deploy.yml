@@ -14,7 +14,7 @@ jobs:
         env:
           DOCKER_API_IMAGE: ${{ vars.DOCKERHUB_USERNAME }}/${{ vars.DOCKERHUB_REPONAME }}:latest
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-        run: docker compose up -d
+        run: docker compose --profile api up -d
 
       - name: Wait for services to be ready (optional but recommended)
         run: sleep 10
