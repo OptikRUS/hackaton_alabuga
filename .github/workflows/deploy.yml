@@ -18,7 +18,7 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           password: ${{ secrets.SERVER_SSH_PRIVATE_KEY }}
           source: "docker-compose.yaml"
-          target: "/tmp/"
+          target: "/tmp/deploy/"
           overwrite: true
 
       - name: Deploy via SSH
@@ -29,21 +29,17 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           password: ${{ secrets.SERVER_SSH_PRIVATE_KEY }}
           script: |
-            # Работаем со временным файлом — ничего не остаётся "навсегда"
-            COMPOSE_FILE="/tmp/docker-compose.yaml"
+            COMPOSE_FILE="/tmp/deploy/docker-compose.yaml"
 
-            # Экспортируем переменные
             export DOCKER_API_IMAGE=${{ vars.DOCKERHUB_USERNAME }}/${{ vars.DOCKERHUB_REPONAME }}:latest
             export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
 
-            # Запускаем новое
             docker compose -f "$COMPOSE_FILE" --profile api up -d --build
-
             docker compose -f "$COMPOSE_FILE" ps
 
-      - name: Stop and clean up
-        if: always()
-        run: rm -f /tmp/docker-compose.yaml
+#      - name: Clean up /tmp
+#        if: always()
+#        run: rm -f /tmp/deploy/docker-compose.yaml
 
 #jobs:
 #  deploy:
