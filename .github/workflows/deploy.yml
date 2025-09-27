@@ -17,8 +17,8 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           username: ${{ secrets.SERVER_USERNAME }}
           password: ${{ secrets.SERVER_SSH_PRIVATE_KEY }}
-          source: "docker-compose.yml"          # ← берём из репозитория
-          target: "/tmp/docker-compose.yml"     # ← кладём во временную папку
+          source: "docker-compose.yaml"          # ← берём из репозитория
+          target: "/tmp/docker-compose.yaml"     # ← кладём во временную папку
 
       - name: Deploy on VPS
         uses: appleboy/ssh-action@master
@@ -28,7 +28,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             # Работаем со временным файлом — ничего не остаётся "навсегда"
-            COMPOSE_FILE="/tmp/docker-compose.yml"
+            COMPOSE_FILE="/tmp/docker-compose.yaml"
 
             # Экспортируем переменные
             export DOCKER_API_IMAGE=${{ vars.DOCKERHUB_USERNAME }}/${{ vars.DOCKERHUB_REPONAME }}:latest
