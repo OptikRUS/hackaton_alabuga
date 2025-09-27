@@ -13,6 +13,10 @@ from src.core.competencies.exceptions import (
 )
 from src.core.exceptions import BaseExceptionError, InvalidJWTTokenError, PermissionDeniedError
 from src.core.media.exceptions import MediaNotFoundError
+from src.core.mission_chains.exceptions import (
+    MissionChainNameAlreadyExistError,
+    MissionChainNotFoundError,
+)
 from src.core.missions.exceptions import (
     MissionCompetencyRewardAlreadyExistsError,
     MissionNameAlreadyExistError,
@@ -97,4 +101,6 @@ exception_handlers: (
     SkillNameAlreadyExistError: handler(status_code=status.HTTP_409_CONFLICT),
     SkillNotFoundError: handler(status_code=status.HTTP_404_NOT_FOUND),
     SkillLevelIncreaseTooHighError: handler(status_code=status.HTTP_400_BAD_REQUEST),
+    MissionChainNameAlreadyExistError: handler(status_code=status.HTTP_409_CONFLICT),
+    MissionChainNotFoundError: handler(status_code=status.HTTP_404_NOT_FOUND),
 }

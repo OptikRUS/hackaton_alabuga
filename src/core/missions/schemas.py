@@ -20,6 +20,12 @@ class SkillReward:
 
 
 @dataclass
+class MissionDependency:
+    mission_id: int
+    prerequisite_mission_id: int
+
+
+@dataclass
 class Mission:
     id: int
     title: str

@@ -26,6 +26,17 @@ from src.core.competencies.use_cases import (
     UpdateCompetencyUseCase,
 )
 from src.core.exceptions import InvalidJWTTokenError, PermissionDeniedError
+from src.core.mission_chains.use_cases import (
+    AddMissionDependencyUseCase,
+    AddMissionToChainUseCase,
+    CreateMissionChainUseCase,
+    DeleteMissionChainUseCase,
+    GetMissionChainDetailUseCase,
+    GetMissionChainsUseCase,
+    RemoveMissionDependencyUseCase,
+    RemoveMissionFromChainUseCase,
+    UpdateMissionChainUseCase,
+)
 from src.core.missions.use_cases import (
     AddCompetencyRewardToMissionUseCase,
     AddSkillRewardToMissionUseCase,
@@ -364,3 +375,43 @@ class RankProviderMock(Provider):
         self,
     ) -> RemoveRequiredCompetencyFromRankUseCase:
         return AsyncMock(spec=RemoveRequiredCompetencyFromRankUseCase)
+
+
+class MissionChainProviderMock(Provider):
+    scope: Scope = Scope.APP
+
+    @provide
+    def override_create_mission_chain_use_case(self) -> CreateMissionChainUseCase:
+        return AsyncMock(spec=CreateMissionChainUseCase)
+
+    @provide
+    def override_get_mission_chains_use_case(self) -> GetMissionChainsUseCase:
+        return AsyncMock(spec=GetMissionChainsUseCase)
+
+    @provide
+    def override_get_mission_chain_detail_use_case(self) -> GetMissionChainDetailUseCase:
+        return AsyncMock(spec=GetMissionChainDetailUseCase)
+
+    @provide
+    def override_update_mission_chain_use_case(self) -> UpdateMissionChainUseCase:
+        return AsyncMock(spec=UpdateMissionChainUseCase)
+
+    @provide
+    def override_delete_mission_chain_use_case(self) -> DeleteMissionChainUseCase:
+        return AsyncMock(spec=DeleteMissionChainUseCase)
+
+    @provide
+    def override_add_mission_to_chain_use_case(self) -> AddMissionToChainUseCase:
+        return AsyncMock(spec=AddMissionToChainUseCase)
+
+    @provide
+    def override_remove_mission_from_chain_use_case(self) -> RemoveMissionFromChainUseCase:
+        return AsyncMock(spec=RemoveMissionFromChainUseCase)
+
+    @provide
+    def override_add_mission_dependency_use_case(self) -> AddMissionDependencyUseCase:
+        return AsyncMock(spec=AddMissionDependencyUseCase)
+
+    @provide
+    def override_remove_mission_dependency_use_case(self) -> RemoveMissionDependencyUseCase:
+        return AsyncMock(spec=RemoveMissionDependencyUseCase)

@@ -337,3 +337,67 @@ class APIHelper:
 
     def remove_required_competency_from_rank(self, rank_id: int, competency_id: int) -> Response:
         return self.client.delete(f"/ranks/{rank_id}/competencies/{competency_id}")
+
+    def create_mission_chain(
+        self, name: str, description: str, reward_xp: int, reward_mana: int
+    ) -> Response:
+        return self.client.post(
+            url="/mission-chains",
+            json={
+                "name": name,
+                "description": description,
+                "reward_xp": reward_xp,
+                "reward_mana": reward_mana,
+            },
+        )
+
+    def get_mission_chains(self) -> Response:
+        return self.client.get("/mission-chains")
+
+    def get_mission_chain(self, chain_id: int) -> Response:
+        return self.client.get(f"/mission-chains/{chain_id}")
+
+    def update_mission_chain(
+        self, chain_id: int, name: str, description: str, reward_xp: int, reward_mana: int
+    ) -> Response:
+        return self.client.put(
+            url=f"/mission-chains/{chain_id}",
+            json={
+                "name": name,
+                "description": description,
+                "reward_xp": reward_xp,
+                "reward_mana": reward_mana,
+            },
+        )
+
+    def delete_mission_chain(self, chain_id: int) -> Response:
+        return self.client.delete(f"/mission-chains/{chain_id}")
+
+    def add_mission_to_chain(self, chain_id: int, mission_id: int) -> Response:
+        return self.client.post(f"/mission-chains/{chain_id}/missions/{mission_id}")
+
+    def remove_mission_from_chain(self, chain_id: int, mission_id: int) -> Response:
+        return self.client.delete(f"/mission-chains/{chain_id}/missions/{mission_id}")
+
+    def add_mission_dependency(
+        self, chain_id: int, mission_id: int, prerequisite_mission_id: int
+    ) -> Response:
+        return self.client.post(
+            f"/mission-chains/{chain_id}/dependencies",
+            json={
+                "mission_id": mission_id,
+                "prerequisite_mission_id": prerequisite_mission_id,
+            },
+        )
+
+    def remove_mission_dependency(
+        self, chain_id: int, mission_id: int, prerequisite_mission_id: int
+    ) -> Response:
+        return self.client.request(
+            "DELETE",
+            f"/mission-chains/{chain_id}/dependencies",
+            json={
+                "mission_id": mission_id,
+                "prerequisite_mission_id": prerequisite_mission_id,
+            },
+        )
