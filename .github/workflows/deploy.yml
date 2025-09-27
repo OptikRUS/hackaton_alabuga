@@ -19,6 +19,7 @@ jobs:
           password: ${{ secrets.SERVER_SSH_PRIVATE_KEY }}
           source: "docker-compose.yaml"
           target: "/tmp/"
+          overwrite: true
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@master
