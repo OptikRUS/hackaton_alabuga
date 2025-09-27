@@ -17,8 +17,8 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           username: ${{ secrets.SERVER_USERNAME }}
           password: ${{ secrets.SERVER_SSH_PRIVATE_KEY }}
-          source: "docker-compose.yaml"          # ← берём из репозитория
-          target: "/tmp/docker-compose.yaml"     # ← кладём во временную папку
+          source: "docker-compose.yml"
+          target: "/tmp/"
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@master
