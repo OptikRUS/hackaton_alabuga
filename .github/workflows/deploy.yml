@@ -35,6 +35,6 @@ jobs:
             export DOCKER_API_IMAGE=${{ vars.DOCKERHUB_USERNAME }}/${{ vars.DOCKERHUB_REPONAME }}:latest
             export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
 
-            docker compose -p "$PROJECT_NAME" -f "$COMPOSE_FILE" --profile api pull || exit 1
-            docker compose -p "$PROJECT_NAME" -f "$COMPOSE_FILE" --profile api up -d --build || exit 1
+            docker compose -p "$PROJECT_NAME" -f "$COMPOSE_FILE" --profile api pull api || exit 1
+            docker compose -p "$PROJECT_NAME" -f "$COMPOSE_FILE" --profile api up -d --force-recreate || exit 1
             docker compose -p "$PROJECT_NAME" -f "$COMPOSE_FILE" ps
