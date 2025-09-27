@@ -23,6 +23,7 @@ from src.storages.models import (
     ArtifactModel,
     CompetencyModel,
     MissionBranchModel,
+    MissionChainModel,
     MissionTaskModel,
     RankModel,
     SkillModel,
@@ -33,6 +34,7 @@ from src.tests.mocks.providers import (
     AuthProviderMock,
     CompetencyProviderMock,
     FileStorageProviderMock,
+    MissionChainProviderMock,
     MissionProviderMock,
     RankProviderMock,
     SkillProviderMock,
@@ -46,6 +48,7 @@ async def container() -> AsyncGenerator[AsyncContainer]:
         FastapiProvider(),
         UserProviderMock(),
         MissionProviderMock(),
+        MissionChainProviderMock(),
         ArtifactProviderMock(),
         CompetencyProviderMock(),
         SkillProviderMock(),
@@ -142,6 +145,7 @@ async def clear_tables(engine: AsyncEngine) -> None:
         await conn.execute(delete(SkillModel))
         await conn.execute(delete(CompetencyModel))
         await conn.execute(delete(RankModel))
+        await conn.execute(delete(MissionChainModel))
 
 
 @pytest.fixture

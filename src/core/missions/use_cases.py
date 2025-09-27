@@ -1,6 +1,9 @@
 from dataclasses import dataclass
 
-from src.core.missions.exceptions import MissionNameAlreadyExistError, MissionNotFoundError
+from src.core.missions.exceptions import (
+    MissionNameAlreadyExistError,
+    MissionNotFoundError,
+)
 from src.core.missions.schemas import Mission, Missions
 from src.core.storages import MissionStorage
 from src.core.use_case import UseCase

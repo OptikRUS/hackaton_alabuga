@@ -11,6 +11,13 @@ from src.core.competencies.exceptions import (
     CompetencyNotFoundError,
 )
 from src.core.competencies.schemas import Competencies, Competency
+from src.core.mission_chains.exceptions import (
+    MissionChainMissionAlreadyExistsError,
+    MissionChainNameAlreadyExistError,
+    MissionChainNotFoundError,
+    MissionDependencyAlreadyExistsError,
+)
+from src.core.mission_chains.schemas import MissionChain, MissionChains, MissionDependency
 from src.core.missions.exceptions import (
     MissionNameAlreadyExistError,
     MissionNotFoundError,
@@ -72,6 +79,9 @@ class StorageMock(
     competencies_skills_relations: dict[int, set[int]] = field(default_factory=dict)
     ranks_missions_requirements: dict[int, set[int]] = field(default_factory=dict)
     ranks_competencies_requirements: dict[int, dict[int, int]] = field(default_factory=dict)
+    mission_chain_table: dict[int, MissionChain] = field(default_factory=dict)
+    mission_chains_missions_relations: dict[int, set[int]] = field(default_factory=dict)
+    mission_dependencies: dict[int, set[tuple[int, int]]] = field(default_factory=dict)
 
     async def insert_user(self, user: User) -> None:
         try:
@@ -543,3 +553,132 @@ class StorageMock(
             self.ranks_competencies_requirements[rank_id].pop(competency_id, None)
             if not self.ranks_competencies_requirements[rank_id]:
                 del self.ranks_competencies_requirements[rank_id]
+
+    # Mission chain methods
+    async def insert_mission_chain(self, mission_chain: MissionChain) -> None:
+        for existing in self.mission_chain_table.values():
+            if existing.name == mission_chain.name:
+                raise MissionChainNameAlreadyExistError
+        self.mission_chain_table[mission_chain.id] = mission_chain
+
+    async def get_mission_chain_by_id(self, chain_id: int) -> MissionChain:
+        try:
+            base_chain = self.mission_chain_table[chain_id]
+            # Get missions for this chain
+            missions: list[Mission] = []
+            if chain_id in self.mission_chains_missions_relations:
+                missions.extend(
+                    self.mission_table[mission_id]
+                    for mission_id in self.mission_chains_missions_relations[chain_id]
+                    if mission_id in self.mission_table
+                )
+
+            # Get dependencies for this chain
+            dependencies = []
+            if chain_id in self.mission_dependencies:
+                for mission_id, prerequisite_mission_id in self.mission_dependencies[chain_id]:
+                    dependencies.append(
+                        MissionDependency(
+                            mission_id=mission_id, prerequisite_mission_id=prerequisite_mission_id
+                        )
+                    )
+
+            return MissionChain(
+                id=base_chain.id,
+                name=base_chain.name,
+                description=base_chain.description,
+                reward_xp=base_chain.reward_xp,
+                reward_mana=base_chain.reward_mana,
+                missions=missions,
+                dependencies=dependencies,
+            )
+        except KeyError as error:
+            raise MissionChainNotFoundError from error
+
+    async def get_mission_chain_by_name(self, name: str) -> MissionChain:
+        for chain_id, base_chain in self.mission_chain_table.items():
+            if base_chain.name == name:
+                # Get missions for this chain
+                missions: list[Mission] = []
+                if chain_id in self.mission_chains_missions_relations:
+                    missions.extend(
+                        self.mission_table[mission_id]
+                        for mission_id in self.mission_chains_missions_relations[chain_id]
+                        if mission_id in self.mission_table
+                    )
+
+                # Get dependencies for this chain
+                dependencies = []
+                if chain_id in self.mission_dependencies:
+                    for mission_id, prerequisite_mission_id in self.mission_dependencies[chain_id]:
+                        dependencies.append(
+                            MissionDependency(
+                                mission_id=mission_id,
+                                prerequisite_mission_id=prerequisite_mission_id,
+                            )
+                        )
+
+                return MissionChain(
+                    id=base_chain.id,
+                    name=base_chain.name,
+                    description=base_chain.description,
+                    reward_xp=base_chain.reward_xp,
+                    reward_mana=base_chain.reward_mana,
+                    missions=missions,
+                    dependencies=dependencies,
+                )
+        raise MissionChainNotFoundError
+
+    async def list_mission_chains(self) -> MissionChains:
+        return MissionChains(values=list(self.mission_chain_table.values()))
+
+    async def update_mission_chain(self, mission_chain: MissionChain) -> None:
+        if mission_chain.id not in self.mission_chain_table:
+            raise MissionChainNotFoundError
+        self.mission_chain_table[mission_chain.id] = mission_chain
+
+    async def delete_mission_chain(self, chain_id: int) -> None:
+        try:
+            del self.mission_chain_table[chain_id]
+        except KeyError as error:
+            raise MissionChainNotFoundError from error
+
+    async def add_mission_to_chain(self, chain_id: int, mission_id: int) -> None:
+        if chain_id not in self.mission_chains_missions_relations:
+            self.mission_chains_missions_relations[chain_id] = set()
+        if mission_id in self.mission_chains_missions_relations[chain_id]:
+            raise MissionChainMissionAlreadyExistsError
+        self.mission_chains_missions_relations[chain_id].add(mission_id)
+
+    async def remove_mission_from_chain(self, chain_id: int, mission_id: int) -> None:
+        if chain_id not in self.mission_chain_table:
+            raise MissionChainNotFoundError
+        if mission_id not in self.mission_table:
+            raise MissionNotFoundError
+        if chain_id in self.mission_chains_missions_relations:
+            self.mission_chains_missions_relations[chain_id].discard(mission_id)
+            if not self.mission_chains_missions_relations[chain_id]:
+                del self.mission_chains_missions_relations[chain_id]
+
+    async def add_mission_dependency(
+        self, chain_id: int, mission_id: int, prerequisite_mission_id: int
+    ) -> None:
+        if chain_id not in self.mission_dependencies:
+            self.mission_dependencies[chain_id] = set()
+        if (mission_id, prerequisite_mission_id) in self.mission_dependencies[chain_id]:
+            raise MissionDependencyAlreadyExistsError
+        self.mission_dependencies[chain_id].add((mission_id, prerequisite_mission_id))
+
+    async def remove_mission_dependency(
+        self, chain_id: int, mission_id: int, prerequisite_mission_id: int
+    ) -> None:
+        if chain_id not in self.mission_chain_table:
+            raise MissionChainNotFoundError
+        if mission_id not in self.mission_table:
+            raise MissionNotFoundError
+        if prerequisite_mission_id not in self.mission_table:
+            raise MissionNotFoundError
+        if chain_id in self.mission_dependencies:
+            self.mission_dependencies[chain_id].discard((mission_id, prerequisite_mission_id))
+            if not self.mission_dependencies[chain_id]:
+                del self.mission_dependencies[chain_id]

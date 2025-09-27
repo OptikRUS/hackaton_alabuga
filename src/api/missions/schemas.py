@@ -4,6 +4,7 @@ from src.api.artifacts.schemas import ArtifactResponse
 from src.api.boundary import BoundaryModel
 from src.api.competencies.schemas import CompetencyResponse
 from src.api.skills.schemas import SkillResponse
+from src.core.mission_chains.schemas import MissionDependency
 from src.core.missions.enums import MissionCategoryEnum
 from src.core.missions.schemas import Mission, Missions
 from src.core.tasks.schemas import MissionTask
@@ -49,6 +50,7 @@ class MissionUpdateRequest(BoundaryModel):
     rank_requirement: int = Field(default=..., description="Требуемый ранг")
     season_id: int = Field(default=..., description="ID ветки миссий")
     category: MissionCategoryEnum = Field(default=..., description="Категория миссии")
+    chain_id: int | None = Field(default=None, description="ID цепочки миссий")
 
     def to_schema(self, mission_id: int) -> Mission:
         return Mission(
@@ -132,6 +134,18 @@ class CompetencyRewardAddRequest(BoundaryModel):
 
 class SkillRewardAddRequest(BoundaryModel):
     level_increase: int = Field(default=..., ge=1, description="Уровень повышения навыка")
+
+
+class MissionDependencyResponse(BoundaryModel):
+    mission_id: int = Field(default=..., description="ID зависимой миссии")
+    prerequisite_mission_id: int = Field(default=..., description="ID предусловия миссии")
+
+    @classmethod
+    def from_schema(cls, dependency: MissionDependency) -> "MissionDependencyResponse":
+        return cls(
+            mission_id=dependency.mission_id,
+            prerequisite_mission_id=dependency.prerequisite_mission_id,
+        )
 
 
 class MissionsResponse(BoundaryModel):

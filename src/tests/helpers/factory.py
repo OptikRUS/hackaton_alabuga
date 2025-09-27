@@ -3,6 +3,7 @@ from datetime import UTC, datetime
 from src.core.artifacts.enums import ArtifactRarityEnum
 from src.core.artifacts.schemas import Artifact, Artifacts
 from src.core.competencies.schemas import Competencies, Competency
+from src.core.mission_chains.schemas import MissionChain, MissionChains, MissionDependency
 from src.core.missions.enums import MissionCategoryEnum
 from src.core.missions.schemas import (
     CompetencyReward,
@@ -220,3 +221,39 @@ class FactoryHelper:
     @classmethod
     def ranks(cls, values: list[Rank]) -> Ranks:
         return Ranks(values=values)
+
+    @classmethod
+    def mission_chain(
+        cls,
+        chain_id: int = 0,
+        name: str = "TEST_CHAIN",
+        description: str = "Test chain description",
+        reward_xp: int = 200,
+        reward_mana: int = 100,
+        missions: list[Mission] | None = None,
+        dependencies: list[MissionDependency] | None = None,
+    ) -> MissionChain:
+        return MissionChain(
+            id=chain_id,
+            name=name,
+            description=description,
+            reward_xp=reward_xp,
+            reward_mana=reward_mana,
+            missions=missions,
+            dependencies=dependencies,
+        )
+
+    @classmethod
+    def mission_chains(cls, values: list[MissionChain]) -> MissionChains:
+        return MissionChains(values=values)
+
+    @classmethod
+    def mission_dependency(
+        cls,
+        mission_id: int = 1,
+        prerequisite_mission_id: int = 2,
+    ) -> MissionDependency:
+        return MissionDependency(
+            mission_id=mission_id,
+            prerequisite_mission_id=prerequisite_mission_id,
+        )

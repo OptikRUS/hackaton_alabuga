@@ -17,6 +17,13 @@ from src.core.competencies.exceptions import (
     CompetencySkillRelationAlreadyExistsError,
 )
 from src.core.competencies.schemas import Competencies, Competency
+from src.core.mission_chains.exceptions import (
+    MissionChainMissionAlreadyExistsError,
+    MissionChainNameAlreadyExistError,
+    MissionChainNotFoundError,
+    MissionDependencyAlreadyExistsError,
+)
+from src.core.mission_chains.schemas import MissionChain, MissionChains
 from src.core.missions.exceptions import (
     MissionCompetencyRewardAlreadyExistsError,
     MissionNameAlreadyExistError,
@@ -68,7 +75,10 @@ from src.storages.models import (
     CompetencyModel,
     CompetencySkillRelationModel,
     MissionBranchModel,
+    MissionChainMissionRelationModel,
+    MissionChainModel,
     MissionCompetencyRewardModel,
+    MissionDependencyModel,
     MissionModel,
     MissionSkillRewardModel,
     MissionTaskModel,
@@ -765,4 +775,119 @@ class DatabaseStorage(
     async def delete_skill(self, skill_id: int) -> None:
         await self.get_skill_by_id(skill_id=skill_id)
         query = delete(SkillModel).where(SkillModel.id == skill_id)
+        await self.session.execute(query)
+
+    async def insert_mission_chain(self, mission_chain: MissionChain) -> None:
+        query = (
+            insert(MissionChainModel)
+            .values({
+                "name": mission_chain.name,
+                "description": mission_chain.description,
+                "reward_xp": mission_chain.reward_xp,
+                "reward_mana": mission_chain.reward_mana,
+            })
+            .returning(MissionChainModel.id)
+        )
+        try:
+            await self.session.scalar(query)
+        except IntegrityError as error:
+            raise MissionChainNameAlreadyExistError from error
+
+    async def get_mission_chain_by_id(self, chain_id: int) -> MissionChain:
+        query = (
+            select(MissionChainModel)
+            .where(MissionChainModel.id == chain_id)
+            .options(
+                selectinload(MissionChainModel.missions),
+                selectinload(MissionChainModel.dependencies),
+            )
+            .execution_options(populate_existing=True)
+        )
+        mission_chain = await self.session.scalar(query)
+        if mission_chain is None:
+            raise MissionChainNotFoundError
+        return mission_chain.to_schema()
+
+    async def get_mission_chain_by_name(self, name: str) -> MissionChain:
+        query = (
+            select(MissionChainModel)
+            .where(MissionChainModel.name == name)
+            .options(
+                selectinload(MissionChainModel.missions),
+                selectinload(MissionChainModel.dependencies),
+            )
+            .execution_options(populate_existing=True)
+        )
+        mission_chain = await self.session.scalar(query)
+        if mission_chain is None:
+            raise MissionChainNotFoundError
+        return mission_chain.to_schema()
+
+    async def list_mission_chains(self) -> MissionChains:
+        query = select(MissionChainModel).options(
+            selectinload(MissionChainModel.missions),
+            selectinload(MissionChainModel.dependencies),
+        )
+        result = await self.session.scalars(query)
+        return MissionChains(values=[row.to_schema() for row in result])
+
+    async def update_mission_chain(self, mission_chain: MissionChain) -> None:
+        query = (
+            update(MissionChainModel)
+            .where(MissionChainModel.id == mission_chain.id)
+            .values({
+                "name": mission_chain.name,
+                "description": mission_chain.description,
+                "reward_xp": mission_chain.reward_xp,
+                "reward_mana": mission_chain.reward_mana,
+            })
+        )
+        try:
+            await self.session.execute(query)
+        except IntegrityError as error:
+            raise MissionChainNameAlreadyExistError from error
+
+    async def delete_mission_chain(self, chain_id: int) -> None:
+        await self.get_mission_chain_by_id(chain_id=chain_id)
+        query = delete(MissionChainModel).where(MissionChainModel.id == chain_id)
+        await self.session.execute(query)
+
+    async def add_mission_to_chain(self, chain_id: int, mission_id: int) -> None:
+        query = insert(MissionChainMissionRelationModel).values({
+            "mission_chain_id": chain_id,
+            "mission_id": mission_id,
+        })
+        try:
+            await self.session.execute(query)
+        except IntegrityError as error:
+            raise MissionChainMissionAlreadyExistsError from error
+
+    async def remove_mission_from_chain(self, chain_id: int, mission_id: int) -> None:
+        query = delete(MissionChainMissionRelationModel).where(
+            MissionChainMissionRelationModel.mission_chain_id == chain_id,
+            MissionChainMissionRelationModel.mission_id == mission_id,
+        )
+        await self.session.execute(query)
+
+    async def add_mission_dependency(
+        self, chain_id: int, mission_id: int, prerequisite_mission_id: int
+    ) -> None:
+        query = insert(MissionDependencyModel).values({
+            "mission_chain_id": chain_id,
+            "mission_id": mission_id,
+            "prerequisite_mission_id": prerequisite_mission_id,
+        })
+        try:
+            await self.session.execute(query)
+        except IntegrityError as error:
+            raise MissionDependencyAlreadyExistsError from error
+
+    async def remove_mission_dependency(
+        self, chain_id: int, mission_id: int, prerequisite_mission_id: int
+    ) -> None:
+        query = delete(MissionDependencyModel).where(
+            MissionDependencyModel.mission_chain_id == chain_id,
+            MissionDependencyModel.mission_id == mission_id,
+            MissionDependencyModel.prerequisite_mission_id == prerequisite_mission_id,
+        )
         await self.session.execute(query)

@@ -6,6 +6,7 @@ from sqlalchemy.orm import selectinload
 
 from src.core.artifacts.schemas import Artifact
 from src.core.competencies.schemas import Competency
+from src.core.mission_chains.schemas import MissionChain
 from src.core.missions.schemas import Mission
 from src.core.ranks.schemas import Rank
 from src.core.seasons.schemas import Season
@@ -16,6 +17,7 @@ from src.storages.models import (
     ArtifactModel,
     CompetencyModel,
     MissionBranchModel,
+    MissionChainModel,
     MissionModel,
     MissionTaskModel,
     RankCompetencyRequirementModel,
@@ -249,4 +251,27 @@ class StorageHelper:
 
     async def get_rank_by_name(self, name: str) -> RankModel | None:
         query = select(RankModel).where(RankModel.name == name)
+        return await self.session.scalar(query)  # type: ignore[no-any-return]
+
+    async def insert_mission_chain(self, mission_chain: MissionChain) -> MissionChainModel | None:
+        query = (
+            insert(MissionChainModel)
+            .values(
+                {
+                    "name": mission_chain.name,
+                    "description": mission_chain.description,
+                    "reward_xp": mission_chain.reward_xp,
+                    "reward_mana": mission_chain.reward_mana,
+                },
+            )
+            .returning(MissionChainModel)
+        )
+        return await self.session.scalar(query)  # type: ignore[no-any-return]
+
+    async def get_mission_chain_by_id(self, chain_id: int) -> MissionChainModel | None:
+        query = select(MissionChainModel).where(MissionChainModel.id == chain_id)
+        return await self.session.scalar(query)  # type: ignore[no-any-return]
+
+    async def get_mission_chain_by_name(self, name: str) -> MissionChainModel | None:
+        query = select(MissionChainModel).where(MissionChainModel.name == name)
         return await self.session.scalar(query)  # type: ignore[no-any-return]

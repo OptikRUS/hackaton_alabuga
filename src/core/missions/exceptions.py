@@ -6,7 +6,7 @@ class MissionNotFoundError(BaseExceptionError):
 
 
 class MissionNameAlreadyExistError(BaseExceptionError):
-    detail = "Mission name already exists"
+    detail = "Mission with this title already exist!"
 
 
 class MissionCompetencyRewardAlreadyExistsError(BaseExceptionError):
@@ -15,3 +15,7 @@ class MissionCompetencyRewardAlreadyExistsError(BaseExceptionError):
 
 class MissionSkillRewardAlreadyExistsError(BaseExceptionError):
     detail = "This skill reward already exists for the mission"
+
+
+class PrerequisiteMissionNotFoundError(BaseExceptionError):
+    detail = "Prerequisite mission not found!"
