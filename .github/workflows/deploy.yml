@@ -10,18 +10,37 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Start Docker Compose services
-        env:
-          DOCKER_API_IMAGE: ${{ vars.DOCKERHUB_USERNAME }}/${{ vars.DOCKERHUB_REPONAME }}:latest
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-        run: docker compose --profile api up -d
+      - name: Copy docker-compose.yml to VPS
+        uses: appleboy/scp-action@v1.0.2
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "docker-compose.yml"          # ← берём из репозитория
+          target: "/tmp/docker-compose.yml"     # ← кладём во временную папку
 
-      - name: Wait for services to be ready (optional but recommended)
-        run: sleep 10
+      - name: Deploy on VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # Работаем со временным файлом — ничего не остаётся "навсегда"
+            COMPOSE_FILE="/tmp/docker-compose.yml"
 
-      - name: Check Installation
-        run: |
-          docker compose ps
+            # Экспортируем переменные
+            export DOCKER_API_IMAGE=${{ vars.DOCKERHUB_USERNAME }}/${{ vars.DOCKERHUB_REPONAME }}:latest
+            export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+
+            # Запускаем новое
+            docker compose -f "$COMPOSE_FILE" --profile api up -d --build
+
+            sleep 10
+            docker compose -f "$COMPOSE_FILE" ps
+
+            # Опционально: удаляем файл после запуска
+            rm -f "$COMPOSE_FILE"
 
 #      - name: Stop and clean up
 #        if: always()
