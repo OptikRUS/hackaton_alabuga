@@ -39,11 +39,7 @@ jobs:
             # Запускаем новое
             docker compose -f "$COMPOSE_FILE" --profile api up -d --build
 
-            sleep 10
             docker compose -f "$COMPOSE_FILE" ps
-
-            # Опционально: удаляем файл после запуска
-            rm -f "$COMPOSE_FILE"
 
 #      - name: Stop and clean up
 #        if: always()
