@@ -5,6 +5,7 @@ from src.core.competencies.schemas import Competencies, Competency
 from src.core.missions.schemas import (
     Mission,
     Missions,
+    UserMission,
 )
 from src.core.ranks.schemas import Rank, Ranks
 from src.core.seasons.schemas import Season, Seasons
@@ -139,6 +140,10 @@ class MissionStorage(metaclass=ABCMeta):
 
     @abstractmethod
     async def remove_skill_reward_from_mission(self, mission_id: int, skill_id: int) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_user_mission(self, mission_id: int, user_login: str) -> UserMission:
         raise NotImplementedError
 
 

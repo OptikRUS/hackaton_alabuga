@@ -26,6 +26,7 @@ from src.core.missions.exceptions import (
 from src.core.missions.schemas import (
     Mission,
     Missions,
+    UserMission,
 )
 from src.core.ranks.exceptions import (
     RankCompetencyMinLevelTooHighError,
@@ -766,3 +767,6 @@ class DatabaseStorage(
         await self.get_skill_by_id(skill_id=skill_id)
         query = delete(SkillModel).where(SkillModel.id == skill_id)
         await self.session.execute(query)
+
+    async def get_user_mission(self, mission_id: int, user_login: str) -> UserMission:
+        raise NotImplementedError

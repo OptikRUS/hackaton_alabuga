@@ -16,6 +16,7 @@ from src.core.skills.schemas import Skill, Skills
 from src.core.tasks.schemas import (
     MissionTask,
     MissionTasks,
+    UserTask,
 )
 from src.core.users.enums import UserRoleEnum
 from src.core.users.schemas import CandidateUser, HRUser, User
@@ -138,6 +139,16 @@ class FactoryHelper:
         description: str = "TEST",
     ) -> MissionTask:
         return MissionTask(id=task_id, title=title, description=description)
+
+    @classmethod
+    def user_task(
+        cls,
+        task_id: int = 0,
+        title: str = "TEST",
+        description: str = "TEST",
+        is_completed: bool = False,
+    ) -> MissionTask:
+        return UserTask(id=task_id, title=title, description=description, is_completed=is_completed)
 
     @classmethod
     def missions(cls, values: list[Mission]) -> Missions:

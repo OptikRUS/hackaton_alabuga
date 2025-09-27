@@ -11,7 +11,7 @@ from src.core.missions.schemas import CompetencyReward, Mission, SkillReward
 from src.core.ranks.schemas import Rank, RankCompetencyRequirement
 from src.core.seasons.schemas import Season
 from src.core.skills.schemas import Skill
-from src.core.tasks.schemas import MissionTask
+from src.core.tasks.schemas import MissionTask, UserTask
 from src.core.users.enums import UserRoleEnum
 from src.core.users.schemas import CandidateUser, User
 
@@ -254,6 +254,14 @@ class UserTaskRelationModel(Base):
 
     task: Mapped[MissionTaskModel] = relationship("MissionTaskModel", lazy="selectin")
     user: Mapped[UserModel] = relationship("UserModel", lazy="selectin")
+
+    def to_schema(self) -> UserTask:
+        return UserTask(
+            id=self.task_id,
+            title=self.task.title,
+            description=self.task.description,
+            is_completed=self.is_completed,
+        )
 
 
 class CompetencyModel(Base):

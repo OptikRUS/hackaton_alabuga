@@ -18,6 +18,7 @@ from src.core.missions.exceptions import (
 from src.core.missions.schemas import (
     Mission,
     Missions,
+    UserMission,
 )
 from src.core.ranks.exceptions import (
     RankCompetencyMinLevelTooHighError,
@@ -47,6 +48,7 @@ from src.core.tasks.exceptions import (
 from src.core.tasks.schemas import (
     MissionTask,
     MissionTasks,
+    UserTask,
 )
 from src.core.users.exceptions import UserAlreadyExistError, UserNotFoundError
 from src.core.users.schemas import CandidateUser, HRUser, User
@@ -54,7 +56,12 @@ from src.core.users.schemas import CandidateUser, HRUser, User
 
 @dataclass
 class StorageMock(
-    UserStorage, MissionStorage, ArtifactStorage, CompetencyStorage, SkillStorage, RankStorage
+    UserStorage,
+    MissionStorage,
+    ArtifactStorage,
+    CompetencyStorage,
+    SkillStorage,
+    RankStorage,
 ):
     user_table: dict[str, User | CandidateUser | HRUser] = field(default_factory=dict)
     season_table: dict[str, Season] = field(default_factory=dict)
@@ -72,6 +79,7 @@ class StorageMock(
     competencies_skills_relations: dict[int, set[int]] = field(default_factory=dict)
     ranks_missions_requirements: dict[int, set[int]] = field(default_factory=dict)
     ranks_competencies_requirements: dict[int, dict[int, int]] = field(default_factory=dict)
+    users_tasks_relations: dict[str, dict[int, bool]] = field(default_factory=dict)
 
     async def insert_user(self, user: User) -> None:
         try:
@@ -543,3 +551,52 @@ class StorageMock(
             self.ranks_competencies_requirements[rank_id].pop(competency_id, None)
             if not self.ranks_competencies_requirements[rank_id]:
                 del self.ranks_competencies_requirements[rank_id]
+
+    async def add_user_task(
+        self,
+        user_login: str,
+        task_id: int,
+        is_completed: bool = False,
+    ) -> None:
+        if user_login not in self.user_table:
+            raise UserNotFoundError
+        if task_id not in self.task_table:
+            raise TaskNotFoundError
+
+        if user_login not in self.users_tasks_relations:
+            self.users_tasks_relations[user_login] = {}
+        self.users_tasks_relations[user_login][task_id] = is_completed
+
+    async def get_user_mission(self, mission_id: int, user_login: str) -> UserMission:
+        mission = await self.get_mission_by_id(mission_id)
+        user_login = str(user_login)
+        task_ids = self.missions_tasks_relations.get(mission_id, set())
+        user_tasks = []
+        for task_id in task_ids:
+            if task_id in self.task_table:
+                task = self.task_table[task_id]
+                is_completed = False
+
+                if (
+                    user_login in self.users_tasks_relations
+                    and task_id in self.users_tasks_relations[user_login]
+                ):
+                    is_completed = self.users_tasks_relations[user_login][task_id]
+
+                user_task = UserTask(
+                    id=task.id,
+                    title=task.title,
+                    description=task.description,
+                    is_completed=is_completed,
+                )
+                user_tasks.append(user_task)
+        return UserMission(
+            id=mission.id,
+            title=mission.title,
+            description=mission.description,
+            reward_xp=mission.reward_xp,
+            reward_mana=mission.reward_mana,
+            rank_requirement=mission.rank_requirement,
+            category=mission.category,
+            user_tasks=user_tasks,
+        )
