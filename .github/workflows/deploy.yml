@@ -11,11 +11,12 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Copy docker-compose.yml to VPS
-        uses: appleboy/scp-action@v1.0.2
+        uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          host: ${{ secrets.SERVER_HOST }}
+          port: ${{ secrets.SERVER_PORT }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          password: ${{ secrets.SERVER_SSH_PRIVATE_KEY }}
           source: "docker-compose.yml"          # ← берём из репозитория
           target: "/tmp/docker-compose.yml"     # ← кладём во временную папку
 
