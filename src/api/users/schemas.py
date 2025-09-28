@@ -1,6 +1,11 @@
 from pydantic import Field
 
+from src.api.artifacts.schemas import ArtifactResponse
 from src.api.boundary import BoundaryModel
+from src.api.competencies.schemas import CompetencyResponse
+from src.api.skills.schemas import SkillResponse
+from src.core.missions.schemas import CompetencyReward, Mission, SkillReward
+from src.core.tasks.schemas import UserTask
 from src.core.users.enums import UserRoleEnum
 from src.core.users.schemas import CandidateUser, HRUser, User
 
@@ -57,3 +62,94 @@ class UserLoginRequest(BoundaryModel):
 
 class UserTokenResponse(BoundaryModel):
     token: str
+
+
+class UserTaskResponse(BoundaryModel):
+    id: int = Field(default=..., description="Идентификатор задачи")
+    title: str = Field(default=..., description="Название задачи")
+    description: str = Field(default=..., description="Описание задачи")
+    is_completed: bool = Field(default=..., description="Статус выполнения задачи")
+
+    @classmethod
+    def from_schema(cls, user_task: UserTask) -> "UserTaskResponse":
+        return cls(
+            id=user_task.id,
+            title=user_task.title,
+            description=user_task.description,
+            is_completed=user_task.is_completed,
+        )
+
+
+class UserMissionResponse(BoundaryModel):
+    id: int = Field(default=..., description="Идентификатор миссии")
+    title: str = Field(default=..., description="Название миссии")
+    description: str = Field(default=..., description="Описание миссии")
+    reward_xp: int = Field(default=..., description="Награда в опыте")
+    reward_mana: int = Field(default=..., description="Награда в мане")
+    rank_requirement: int = Field(default=..., description="Требуемый ранг")
+    season_id: int = Field(default=..., description="ID ветки миссий")
+    category: str = Field(default=..., description="Категория миссии")
+    is_completed: bool = Field(default=False, description="Показатель выполнения миссии")
+    tasks: list["UserTaskResponse"] = Field(default_factory=list, description="Задачи миссии")
+    reward_artifacts: list[ArtifactResponse] = Field(
+        default_factory=list, description="Артефакты-награды"
+    )
+    reward_competencies: list["CompetencyRewardResponse"] = Field(
+        default_factory=list, description="Награды в компетенциях"
+    )
+    reward_skills: list["SkillRewardResponse"] = Field(
+        default_factory=list, description="Награды в скиллах"
+    )
+
+    @classmethod
+    def from_schema(cls, mission: Mission) -> "UserMissionResponse":
+        return cls(
+            id=mission.id,
+            title=mission.title,
+            description=mission.description,
+            reward_xp=mission.reward_xp,
+            reward_mana=mission.reward_mana,
+            rank_requirement=mission.rank_requirement,
+            season_id=mission.season_id,
+            category=mission.category,
+            is_completed=mission.is_completed,
+            tasks=[
+                UserTaskResponse.from_schema(user_task=task) for task in (mission.user_tasks or [])
+            ],
+            reward_artifacts=[
+                ArtifactResponse.from_schema(artifact=artifact)
+                for artifact in (mission.reward_artifacts or [])
+            ],
+            reward_competencies=[
+                CompetencyRewardResponse.from_schema(reward_competencies)
+                for reward_competencies in (mission.reward_competencies or [])
+            ],
+            reward_skills=[
+                SkillRewardResponse.from_schema(reward_skill)
+                for reward_skill in (mission.reward_skills or [])
+            ],
+        )
+
+
+class CompetencyRewardResponse(BoundaryModel):
+    competency: CompetencyResponse
+    level_increase: int
+
+    @classmethod
+    def from_schema(cls, competency_reward: CompetencyReward) -> "CompetencyRewardResponse":
+        return cls(
+            competency=CompetencyResponse.from_schema(competency_reward.competency),
+            level_increase=competency_reward.level_increase,
+        )
+
+
+class SkillRewardResponse(BoundaryModel):
+    skill: SkillResponse
+    level_increase: int
+
+    @classmethod
+    def from_schema(cls, skill_reward: SkillReward) -> "SkillRewardResponse":
+        return cls(
+            skill=SkillResponse.from_schema(skill_reward.skill),
+            level_increase=skill_reward.level_increase,
+        )

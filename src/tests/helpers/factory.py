@@ -308,3 +308,23 @@ class FactoryHelper:
             mission_id=mission_id,
             prerequisite_mission_id=prerequisite_mission_id,
         )
+
+    @classmethod
+    def competency_reward(
+        cls,
+        competency: Competency | None = None,
+        level_increase: int = 1,
+    ) -> CompetencyReward:
+        if competency is None:
+            competency = cls.competency()
+        return CompetencyReward(competency=competency, level_increase=level_increase)
+
+    @classmethod
+    def skill_reward(
+        cls,
+        skill: Skill | None = None,
+        level_increase: int = 1,
+    ) -> SkillReward:
+        if skill is None:
+            skill = cls.skill()
+        return SkillReward(skill=skill, level_increase=level_increase)

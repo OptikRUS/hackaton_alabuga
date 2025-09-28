@@ -46,6 +46,9 @@ class APIHelper:
     def get_me(self) -> Response:
         return self.client.get("/users/me")
 
+    def get_user_mission(self, mission_id: int) -> Response:
+        return self.client.get(f"/users/missions/{mission_id}")
+
     def create_season(self, name: str, start_date: str, end_date: str) -> Response:
         return self.client.post(
             url="/seasons",

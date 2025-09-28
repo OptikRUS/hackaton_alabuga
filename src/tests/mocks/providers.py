@@ -46,6 +46,7 @@ from src.core.missions.use_cases import (
     DeleteMissionUseCase,
     GetMissionDetailUseCase,
     GetMissionsUseCase,
+    GetMissionWithUserTasksUseCase,
     RemoveCompetencyRewardFromMissionUseCase,
     RemoveSkillRewardFromMissionUseCase,
     RemoveTaskFromMissionUseCase,
@@ -186,6 +187,10 @@ class MissionProviderMock(Provider):
         self,
     ) -> RemoveSkillRewardFromMissionUseCase:
         return AsyncMock(spec=RemoveSkillRewardFromMissionUseCase)
+
+    @provide
+    def override_get_mission_with_user_tasks_use_case(self) -> GetMissionWithUserTasksUseCase:
+        return AsyncMock(spec=GetMissionWithUserTasksUseCase)
 
 
 class ArtifactProviderMock(Provider):
