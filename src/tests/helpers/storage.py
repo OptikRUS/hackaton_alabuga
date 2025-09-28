@@ -11,7 +11,7 @@ from src.core.missions.schemas import Mission
 from src.core.ranks.schemas import Rank
 from src.core.seasons.schemas import Season
 from src.core.skills.schemas import Skill
-from src.core.tasks.schemas import MissionTask
+from src.core.tasks.schemas import MissionTask, UserTask
 from src.core.users.schemas import User
 from src.storages.models import (
     ArtifactModel,
@@ -20,10 +20,12 @@ from src.storages.models import (
     MissionChainModel,
     MissionModel,
     MissionTaskModel,
+    MissionTaskRelationModel,
     RankCompetencyRequirementModel,
     RankModel,
     SkillModel,
     UserModel,
+    UserTaskRelationModel,
 )
 
 
@@ -275,3 +277,59 @@ class StorageHelper:
     async def get_mission_chain_by_name(self, name: str) -> MissionChainModel | None:
         query = select(MissionChainModel).where(MissionChainModel.name == name)
         return await self.session.scalar(query)  # type: ignore[no-any-return]
+
+    async def insert_user_task_relation(
+        self,
+        user_login: str,
+        user_task: UserTask,
+    ) -> UserTaskRelationModel | None:
+        query = (
+            insert(UserTaskRelationModel)
+            .values({
+                "user_login": user_login,
+                "task_id": user_task.id,
+                "is_completed": user_task.is_completed,
+            })
+            .returning(UserTaskRelationModel)
+        )
+        return await self.session.scalar(query)  # type: ignore[no-any-return]
+
+    async def get_user_task_relation(
+        self,
+        user_login: str,
+        task_id: int,
+    ) -> UserTaskRelationModel | None:
+        query = (
+            select(UserTaskRelationModel)
+            .where(
+                UserTaskRelationModel.user_login == user_login,
+                UserTaskRelationModel.task_id == task_id,
+            )
+            .options(selectinload(UserTaskRelationModel.task))
+        )
+        return await self.session.scalar(query)  # type: ignore[no-any-return]
+
+    async def insert_mission_task_relation(self, mission_id: int, task_id: int) -> None:
+        query = insert(MissionTaskRelationModel).values({
+            "mission_id": mission_id,
+            "task_id": task_id,
+        })
+        await self.session.execute(query)
+
+    async def get_user_task_relations_by_mission(
+        self, user_login: str, mission_id: int
+    ) -> list[UserTaskRelationModel]:
+        query = (
+            select(UserTaskRelationModel)
+            .join(
+                MissionTaskRelationModel,
+                UserTaskRelationModel.task_id == MissionTaskRelationModel.task_id,
+            )
+            .where(
+                MissionTaskRelationModel.mission_id == mission_id,
+                UserTaskRelationModel.user_login == user_login,
+            )
+            .options(selectinload(UserTaskRelationModel.task))
+        )
+        result = await self.session.scalars(query)
+        return list(result)

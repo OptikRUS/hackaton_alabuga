@@ -153,7 +153,7 @@ class FactoryHelper:
         title: str = "TEST",
         description: str = "TEST",
         is_completed: bool = False,
-    ) -> MissionTask:
+    ) -> UserTask:
         return UserTask(id=task_id, title=title, description=description, is_completed=is_completed)
 
     @classmethod

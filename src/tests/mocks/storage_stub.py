@@ -682,20 +682,15 @@ class StorageMock(
         if mission_id not in self.mission_chains_missions_relations[chain_id]:
             raise MissionNotFoundError
 
-    async def add_user_task(
-        self,
-        user_login: str,
-        task_id: int,
-        is_completed: bool = False,
-    ) -> None:
+    async def add_user_task(self, user_login: str, user_task: UserTask) -> None:
         if user_login not in self.user_table:
             raise UserNotFoundError
-        if task_id not in self.task_table:
+        if user_task.id not in self.task_table:
             raise TaskNotFoundError
 
         if user_login not in self.users_tasks_relations:
             self.users_tasks_relations[user_login] = {}
-        self.users_tasks_relations[user_login][task_id] = is_completed
+        self.users_tasks_relations[user_login][user_task.id] = user_task.is_completed
 
     async def get_user_mission(self, mission_id: int, user_login: str) -> Mission:
         mission = await self.get_mission_by_id(mission_id)

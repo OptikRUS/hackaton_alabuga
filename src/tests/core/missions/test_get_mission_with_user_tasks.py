@@ -30,6 +30,7 @@ class TestGetMissionWithUserTasksUseCase(FactoryFixture):
 
         user_mission = await self.use_case.execute(mission_id=1, user_login="TEST")
 
+        # TODO: по хорошему написать фабрику на user_mission и сравнивать
         assert user_mission.id == 1
         assert user_mission.title == "Test Mission"
         assert user_mission.description == "Test Description"
@@ -64,11 +65,28 @@ class TestGetMissionWithUserTasksUseCase(FactoryFixture):
         )
         await self.storage.add_task_to_mission(mission_id=1, task_id=1)
         await self.storage.add_task_to_mission(mission_id=1, task_id=2)
-        await self.storage.add_user_task(user_login="TEST", task_id=1, is_completed=True)
-        await self.storage.add_user_task(user_login="TEST", task_id=2, is_completed=False)
+        await self.storage.add_user_task(
+            user_login="TEST",
+            user_task=self.factory.user_task(
+                task_id=1,
+                title="Task 1",
+                description="Description 1",
+                is_completed=True,
+            ),
+        )
+        await self.storage.add_user_task(
+            user_login="TEST",
+            user_task=self.factory.user_task(
+                task_id=2,
+                title="Task 2",
+                description="Description 2",
+                is_completed=False,
+            ),
+        )
 
         user_mission = await self.use_case.execute(mission_id=1, user_login="TEST")
 
+        # TODO: по хорошему написать фабрику на user_mission и сравнивать
         assert user_mission.id == 1
         assert user_mission.title == "Test Mission"
         assert user_mission.user_tasks is not None

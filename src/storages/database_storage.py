@@ -65,6 +65,7 @@ from src.core.tasks.exceptions import (
 from src.core.tasks.schemas import (
     MissionTask,
     MissionTasks,
+    UserTask,
 )
 from src.core.users.exceptions import UserAlreadyExistError, UserNotFoundError
 from src.core.users.schemas import CandidateUser, User
@@ -88,6 +89,7 @@ from src.storages.models import (
     RankModel,
     SkillModel,
     UserModel,
+    UserTaskRelationModel,
 )
 
 
@@ -777,8 +779,67 @@ class DatabaseStorage(
         query = delete(SkillModel).where(SkillModel.id == skill_id)
         await self.session.execute(query)
 
+    async def add_user_task(self, user_login: str, user_task: UserTask) -> None:
+        query = insert(UserTaskRelationModel).values({
+            "user_login": user_login,
+            "task_id": user_task.id,
+            "is_completed": user_task.is_completed,
+        })
+        await self.session.execute(query)
+
     async def get_user_mission(self, mission_id: int, user_login: str) -> Mission:
-        raise NotImplementedError
+        mission_query = (
+            select(MissionModel)
+            .where(MissionModel.id == mission_id)
+            .options(
+                selectinload(MissionModel.tasks),
+                selectinload(MissionModel.artifacts),
+                selectinload(MissionModel.competency_rewards).selectinload(
+                    MissionCompetencyRewardModel.competency
+                ),
+                selectinload(MissionModel.skill_rewards).selectinload(
+                    MissionSkillRewardModel.skill
+                ),
+            )
+            .execution_options(populate_existing=True)
+        )
+        mission_model = await self.session.scalar(mission_query)
+        if mission_model is None:
+            raise MissionNotFoundError
+
+        user_task_query = (
+            select(UserTaskRelationModel)
+            .join(
+                MissionTaskRelationModel,
+                UserTaskRelationModel.task_id == MissionTaskRelationModel.task_id,
+            )
+            .where(
+                MissionTaskRelationModel.mission_id == mission_id,
+                UserTaskRelationModel.user_login == user_login,
+            )
+            .options(selectinload(UserTaskRelationModel.task))
+        )
+        user_task_relations = await self.session.scalars(user_task_query)
+        user_task_relations_dict = {rel.task_id: rel for rel in user_task_relations}
+
+        user_tasks = []
+        if mission_model.tasks:
+            for task in mission_model.tasks:
+                if task.id in user_task_relations_dict:
+                    user_task = user_task_relations_dict[task.id].to_schema()
+                else:
+                    temp_relation = UserTaskRelationModel(
+                        task_id=task.id,
+                        user_login=user_login,
+                        is_completed=False,
+                    )
+                    temp_relation.task = task
+                    user_task = temp_relation.to_schema()
+                user_tasks.append(user_task)
+
+        mission = mission_model.to_schema()
+        mission.user_tasks = user_tasks
+        return mission
 
     async def insert_mission_chain(self, mission_chain: MissionChain) -> None:
         query = (

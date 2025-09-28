@@ -13,6 +13,7 @@ from src.core.skills.schemas import Skill, Skills
 from src.core.tasks.schemas import (
     MissionTask,
     MissionTasks,
+    UserTask,
 )
 from src.core.users.schemas import CandidateUser, User
 
@@ -140,6 +141,10 @@ class MissionStorage(metaclass=ABCMeta):
 
     @abstractmethod
     async def remove_skill_reward_from_mission(self, mission_id: int, skill_id: int) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def add_user_task(self, user_login: str, user_task: UserTask) -> None:
         raise NotImplementedError
 
     @abstractmethod
