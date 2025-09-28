@@ -12,7 +12,7 @@ from src.core.missions.schemas import CompetencyReward, Mission, SkillReward
 from src.core.ranks.schemas import Rank, RankCompetencyRequirement
 from src.core.seasons.schemas import Season
 from src.core.skills.schemas import Skill
-from src.core.tasks.schemas import MissionTask
+from src.core.tasks.schemas import MissionTask, UserTask
 from src.core.users.enums import UserRoleEnum
 from src.core.users.schemas import CandidateUser, User
 
@@ -254,6 +254,38 @@ class MissionTaskRelationModel(Base):
         ForeignKey(MissionModel.id, ondelete="CASCADE"),
         primary_key=True,
     )
+
+
+class UserTaskRelationModel(Base):
+    __tablename__ = "users_tasks"
+    __table_args__ = (
+        PrimaryKeyConstraint(
+            "task_id",
+            "user_login",
+            name="pk_users_tasks",
+        ),
+    )
+
+    task_id: Mapped[int] = mapped_column(
+        ForeignKey(MissionTaskModel.id, ondelete="CASCADE"),
+        primary_key=True,
+    )
+    user_login: Mapped[str] = mapped_column(
+        ForeignKey(UserModel.login, ondelete="CASCADE"),
+        primary_key=True,
+    )
+    is_completed: Mapped[bool] = mapped_column(default=False, nullable=False)
+
+    task: Mapped[MissionTaskModel] = relationship("MissionTaskModel", lazy="selectin")
+    user: Mapped[UserModel] = relationship("UserModel", lazy="selectin")
+
+    def to_schema(self) -> UserTask:
+        return UserTask(
+            id=self.task_id,
+            title=self.task.title,
+            description=self.task.description,
+            is_completed=self.is_completed,
+        )
 
 
 class CompetencyModel(Base):

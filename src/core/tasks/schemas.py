@@ -11,3 +11,8 @@ class MissionTask:
 @dataclass
 class MissionTasks:
     values: list[MissionTask]
+
+
+@dataclass
+class UserTask(MissionTask):
+    is_completed: bool = False

@@ -4,7 +4,7 @@ from src.core.artifacts.schemas import Artifact
 from src.core.competencies.schemas import Competency
 from src.core.missions.enums import MissionCategoryEnum
 from src.core.skills.schemas import Skill
-from src.core.tasks.schemas import MissionTask
+from src.core.tasks.schemas import MissionTask, UserTask
 
 
 @dataclass
@@ -39,6 +39,13 @@ class Mission:
     reward_artifacts: list[Artifact] | None = None
     reward_competencies: list[CompetencyReward] | None = None
     reward_skills: list[SkillReward] | None = None
+    user_tasks: list[UserTask] | None = None
+
+    @property
+    def is_completed(self) -> bool:
+        if not self.user_tasks:
+            return False
+        return all(task.is_completed for task in self.user_tasks)
 
 
 @dataclass

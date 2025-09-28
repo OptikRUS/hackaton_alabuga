@@ -7,6 +7,7 @@ from src.api.users.schemas import (
     CandidateUserRegistrationRequest,
     HRUserRegistrationRequest,
     UserLoginRequest,
+    UserMissionResponse,
     UserResponse,
     UserTokenResponse,
 )
@@ -14,6 +15,7 @@ from src.core.artifacts.use_cases import (
     AddArtifactToUserUseCase,
     RemoveArtifactFromUserUseCase,
 )
+from src.core.missions.use_cases import GetMissionWithUserTasksUseCase
 from src.core.users.use_cases import (
     CreateUserUseCase,
     GetUserUseCase,
@@ -107,3 +109,19 @@ async def remove_artifact_from_user(
     _ = user
     user_with_artifact = await use_case.execute(user_login=user_login, artifact_id=artifact_id)
     return UserResponse.from_schema(user=user_with_artifact)
+
+
+@router.get(
+    path="/users/missions/{mission_id}",
+    openapi_extra=openapi_extra,
+    status_code=status.HTTP_200_OK,
+    summary="Получить миссию пользователя",
+    description="Возвращает миссию с задачами и статусом их выполнения для текущего пользователя",
+)
+async def get_user_mission(
+    mission_id: int,
+    user: FromDishka[JwtUser],
+    use_case: FromDishka[GetMissionWithUserTasksUseCase],
+) -> UserMissionResponse:
+    mission = await use_case.execute(mission_id=mission_id, user_login=user.login)
+    return UserMissionResponse.from_schema(mission=mission)

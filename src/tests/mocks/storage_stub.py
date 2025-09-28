@@ -1,10 +1,7 @@
 from dataclasses import dataclass, field
 from typing import cast
 
-from src.core.artifacts.exceptions import (
-    ArtifactNotFoundError,
-    ArtifactTitleAlreadyExistError,
-)
+from src.core.artifacts.exceptions import ArtifactNotFoundError, ArtifactTitleAlreadyExistError
 from src.core.artifacts.schemas import Artifact, Artifacts
 from src.core.competencies.exceptions import (
     CompetencyNameAlreadyExistError,
@@ -18,14 +15,8 @@ from src.core.mission_chains.exceptions import (
     MissionDependencyAlreadyExistsError,
 )
 from src.core.mission_chains.schemas import MissionChain, MissionChains, MissionDependency
-from src.core.missions.exceptions import (
-    MissionNameAlreadyExistError,
-    MissionNotFoundError,
-)
-from src.core.missions.schemas import (
-    Mission,
-    Missions,
-)
+from src.core.missions.exceptions import MissionNameAlreadyExistError, MissionNotFoundError
+from src.core.missions.schemas import Mission, Missions
 from src.core.ranks.exceptions import (
     RankCompetencyMinLevelTooHighError,
     RankNameAlreadyExistError,
@@ -34,10 +25,7 @@ from src.core.ranks.exceptions import (
 from src.core.ranks.schemas import Rank, RankCompetencyRequirement, Ranks
 from src.core.seasons.exceptions import SeasonNameAlreadyExistError, SeasonNotFoundError
 from src.core.seasons.schemas import Season, Seasons
-from src.core.skills.exceptions import (
-    SkillNameAlreadyExistError,
-    SkillNotFoundError,
-)
+from src.core.skills.exceptions import SkillNameAlreadyExistError, SkillNotFoundError
 from src.core.skills.schemas import Skill, Skills
 from src.core.storages import (
     ArtifactStorage,
@@ -47,21 +35,20 @@ from src.core.storages import (
     SkillStorage,
     UserStorage,
 )
-from src.core.tasks.exceptions import (
-    TaskNameAlreadyExistError,
-    TaskNotFoundError,
-)
-from src.core.tasks.schemas import (
-    MissionTask,
-    MissionTasks,
-)
+from src.core.tasks.exceptions import TaskNameAlreadyExistError, TaskNotFoundError
+from src.core.tasks.schemas import MissionTask, MissionTasks, UserTask
 from src.core.users.exceptions import UserAlreadyExistError, UserNotFoundError
 from src.core.users.schemas import CandidateUser, HRUser, User
 
 
 @dataclass
 class StorageMock(
-    UserStorage, MissionStorage, ArtifactStorage, CompetencyStorage, SkillStorage, RankStorage
+    UserStorage,
+    MissionStorage,
+    ArtifactStorage,
+    CompetencyStorage,
+    SkillStorage,
+    RankStorage,
 ):
     user_table: dict[str, User | CandidateUser | HRUser] = field(default_factory=dict)
     season_table: dict[str, Season] = field(default_factory=dict)
@@ -82,6 +69,7 @@ class StorageMock(
     mission_chain_table: dict[int, MissionChain] = field(default_factory=dict)
     mission_chains_missions_relations: dict[int, set[int]] = field(default_factory=dict)
     mission_dependencies: dict[int, set[tuple[int, int]]] = field(default_factory=dict)
+    users_tasks_relations: dict[str, dict[int, bool]] = field(default_factory=dict)
 
     async def insert_user(self, user: User) -> None:
         try:
@@ -688,13 +676,53 @@ class StorageMock(
     async def update_mission_order_in_chain(
         self, chain_id: int, mission_id: int, new_order: int
     ) -> None:
-        """Обновляет порядок миссии в цепочке s avtomaticheskim смещением других миссий"""
-        # Проверяем, что миссия существует в цепочке
         if chain_id not in self.mission_chains_missions_relations:
             raise MissionChainNotFoundError
 
         if mission_id not in self.mission_chains_missions_relations[chain_id]:
             raise MissionNotFoundError
 
-        # V moke-klasse мы просто ничего не делаем, так как это тестовая заглушка
-        # V realnoy реализации здесь была бы проверка уникальности порядка
+    async def add_user_task(self, user_login: str, user_task: UserTask) -> None:
+        if user_login not in self.user_table:
+            raise UserNotFoundError
+        if user_task.id not in self.task_table:
+            raise TaskNotFoundError
+
+        if user_login not in self.users_tasks_relations:
+            self.users_tasks_relations[user_login] = {}
+        self.users_tasks_relations[user_login][user_task.id] = user_task.is_completed
+
+    async def get_user_mission(self, mission_id: int, user_login: str) -> Mission:
+        mission = await self.get_mission_by_id(mission_id)
+        user_login = str(user_login)
+        task_ids = self.missions_tasks_relations.get(mission_id, set())
+        user_tasks = []
+        for task_id in task_ids:
+            if task_id in self.task_table:
+                task = self.task_table[task_id]
+                is_completed = False
+
+                if (
+                    user_login in self.users_tasks_relations
+                    and task_id in self.users_tasks_relations[user_login]
+                ):
+                    is_completed = self.users_tasks_relations[user_login][task_id]
+
+                user_task = UserTask(
+                    id=task.id,
+                    title=task.title,
+                    description=task.description,
+                    is_completed=is_completed,
+                )
+                user_tasks.append(user_task)
+        return Mission(
+            id=mission.id,
+            title=mission.title,
+            description=mission.description,
+            reward_xp=mission.reward_xp,
+            reward_mana=mission.reward_mana,
+            rank_requirement=mission.rank_requirement,
+            season_id=mission.season_id,
+            category=mission.category,
+            user_tasks=user_tasks,
+        )

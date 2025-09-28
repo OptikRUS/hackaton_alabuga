@@ -49,6 +49,7 @@ from src.core.missions.use_cases import (
     DeleteMissionUseCase,
     GetMissionDetailUseCase,
     GetMissionsUseCase,
+    GetMissionWithUserTasksUseCase,
     RemoveCompetencyRewardFromMissionUseCase,
     RemoveSkillRewardFromMissionUseCase,
     RemoveTaskFromMissionUseCase,
@@ -234,6 +235,12 @@ class MissionProvider(Provider):
         self, storage: MissionStorage
     ) -> RemoveSkillRewardFromMissionUseCase:
         return RemoveSkillRewardFromMissionUseCase(storage=storage)
+
+    @provide
+    def build_get_mission_with_user_tasks_use_case(
+        self, storage: MissionStorage
+    ) -> GetMissionWithUserTasksUseCase:
+        return GetMissionWithUserTasksUseCase(storage=storage)
 
 
 class MissionChainProvider(Provider):

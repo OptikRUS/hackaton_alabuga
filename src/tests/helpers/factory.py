@@ -22,6 +22,7 @@ from src.core.skills.schemas import Skill, Skills
 from src.core.tasks.schemas import (
     MissionTask,
     MissionTasks,
+    UserTask,
 )
 from src.core.users.enums import UserRoleEnum
 from src.core.users.schemas import CandidateUser, HRUser, User
@@ -146,6 +147,49 @@ class FactoryHelper:
         return MissionTask(id=task_id, title=title, description=description)
 
     @classmethod
+    def user_mission(
+        cls,
+        mission_id: int = 0,
+        title: str = "TEST",
+        description: str = "TEST",
+        reward_xp: int = 100,
+        reward_mana: int = 50,
+        rank_requirement: int = 1,
+        season_id: int = 1,
+        category: MissionCategoryEnum = MissionCategoryEnum.QUEST,
+        tasks: list[MissionTask] | None = None,
+        user_tasks: list[UserTask] | None = None,
+        reward_artifacts: list[Artifact] | None = None,
+        reward_competencies: list[CompetencyReward] | None = None,
+        reward_skills: list[SkillReward] | None = None,
+    ) -> Mission:
+        return Mission(
+            id=mission_id,
+            title=title,
+            description=description,
+            reward_xp=reward_xp,
+            reward_mana=reward_mana,
+            rank_requirement=rank_requirement,
+            season_id=season_id,
+            category=category,
+            tasks=tasks,
+            user_tasks=user_tasks or [],
+            reward_artifacts=reward_artifacts,
+            reward_competencies=reward_competencies,
+            reward_skills=reward_skills,
+        )
+
+    @classmethod
+    def user_task(
+        cls,
+        task_id: int = 0,
+        title: str = "TEST",
+        description: str = "TEST",
+        is_completed: bool = False,
+    ) -> UserTask:
+        return UserTask(id=task_id, title=title, description=description, is_completed=is_completed)
+
+    @classmethod
     def missions(cls, values: list[Mission]) -> Missions:
         return Missions(values=values)
 
@@ -264,3 +308,23 @@ class FactoryHelper:
             mission_id=mission_id,
             prerequisite_mission_id=prerequisite_mission_id,
         )
+
+    @classmethod
+    def competency_reward(
+        cls,
+        competency: Competency | None = None,
+        level_increase: int = 1,
+    ) -> CompetencyReward:
+        if competency is None:
+            competency = cls.competency()
+        return CompetencyReward(competency=competency, level_increase=level_increase)
+
+    @classmethod
+    def skill_reward(
+        cls,
+        skill: Skill | None = None,
+        level_increase: int = 1,
+    ) -> SkillReward:
+        if skill is None:
+            skill = cls.skill()
+        return SkillReward(skill=skill, level_increase=level_increase)
