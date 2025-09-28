@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 from src.core.missions.exceptions import MissionNameAlreadyExistError, MissionNotFoundError
-from src.core.missions.schemas import Mission, Missions, UserMission
+from src.core.missions.schemas import Mission, Missions
 from src.core.storages import MissionStorage
 from src.core.use_case import UseCase
 
@@ -128,5 +128,5 @@ class RemoveSkillRewardFromMissionUseCase(UseCase):
 class GetMissionWithUserTasksUseCase(UseCase):
     storage: MissionStorage
 
-    async def execute(self, mission_id: int, user_login: str) -> UserMission:
+    async def execute(self, mission_id: int, user_login: str) -> Mission:
         return await self.storage.get_user_mission(mission_id=mission_id, user_login=user_login)

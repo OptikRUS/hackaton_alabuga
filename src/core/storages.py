@@ -6,7 +6,6 @@ from src.core.mission_chains.schemas import MissionChain, MissionChains
 from src.core.missions.schemas import (
     Mission,
     Missions,
-    UserMission,
 )
 from src.core.ranks.schemas import Rank, Ranks
 from src.core.seasons.schemas import Season, Seasons
@@ -144,7 +143,7 @@ class MissionStorage(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    async def get_user_mission(self, mission_id: int, user_login: str) -> UserMission:
+    async def get_user_mission(self, mission_id: int, user_login: str) -> Mission:
         raise NotImplementedError
 
     @abstractmethod

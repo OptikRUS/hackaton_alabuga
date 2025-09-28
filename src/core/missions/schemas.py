@@ -39,22 +39,6 @@ class Mission:
     reward_artifacts: list[Artifact] | None = None
     reward_competencies: list[CompetencyReward] | None = None
     reward_skills: list[SkillReward] | None = None
-
-
-@dataclass
-class Missions:
-    values: list[Mission]
-
-
-@dataclass
-class UserMission:
-    id: int
-    title: str
-    description: str
-    reward_xp: int
-    reward_mana: int
-    rank_requirement: int
-    category: MissionCategoryEnum
     user_tasks: list[UserTask] | None = None
 
     @property
@@ -65,5 +49,5 @@ class UserMission:
 
 
 @dataclass
-class UsersMissions:
-    values: list[UserMission]
+class Missions:
+    values: list[Mission]
