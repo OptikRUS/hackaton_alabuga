@@ -14,9 +14,16 @@ def create_app(lifespan: Lifespan[FastAPI] | None = None) -> FastAPI:
         exception_handlers=exception_handlers,
         lifespan=lifespan,
         swagger_ui_parameters={
-            "filter": True,
             "defaultModelsExpandDepth": 0,
             "displayRequestDuration": True,
+            "docExpansion": "list",
+            "filter": True,
+            "persistAuthorization": True,
+            "withCredentials": True,
+            "showCommonExtensions": True,
+            "showSecurityDefinitions": True,
+            "tryItOutEnabled": True,
+            "requestSnippetsEnabled": True,
         },
     )
     app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"])

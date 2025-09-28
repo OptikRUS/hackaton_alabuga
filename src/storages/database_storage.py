@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from sqlalchemy import delete, insert, select, update
+from sqlalchemy import delete, func, insert, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -17,6 +17,13 @@ from src.core.competencies.exceptions import (
     CompetencySkillRelationAlreadyExistsError,
 )
 from src.core.competencies.schemas import Competencies, Competency
+from src.core.mission_chains.exceptions import (
+    MissionChainMissionAlreadyExistsError,
+    MissionChainNameAlreadyExistError,
+    MissionChainNotFoundError,
+    MissionDependencyAlreadyExistsError,
+)
+from src.core.mission_chains.schemas import MissionChain, MissionChainMission, MissionChains
 from src.core.missions.exceptions import (
     MissionCompetencyRewardAlreadyExistsError,
     MissionNameAlreadyExistError,
@@ -69,7 +76,10 @@ from src.storages.models import (
     CompetencyModel,
     CompetencySkillRelationModel,
     MissionBranchModel,
+    MissionChainMissionRelationModel,
+    MissionChainModel,
     MissionCompetencyRewardModel,
+    MissionDependencyModel,
     MissionModel,
     MissionSkillRewardModel,
     MissionTaskModel,
@@ -770,3 +780,214 @@ class DatabaseStorage(
 
     async def get_user_mission(self, mission_id: int, user_login: str) -> UserMission:
         raise NotImplementedError
+
+    async def insert_mission_chain(self, mission_chain: MissionChain) -> None:
+        query = (
+            insert(MissionChainModel)
+            .values({
+                "name": mission_chain.name,
+                "description": mission_chain.description,
+                "reward_xp": mission_chain.reward_xp,
+                "reward_mana": mission_chain.reward_mana,
+            })
+            .returning(MissionChainModel.id)
+        )
+        try:
+            await self.session.scalar(query)
+        except IntegrityError as error:
+            raise MissionChainNameAlreadyExistError from error
+
+    async def get_mission_chain_by_id(self, chain_id: int) -> MissionChain:
+        query = (
+            select(MissionChainModel)
+            .where(MissionChainModel.id == chain_id)
+            .options(
+                selectinload(MissionChainModel.missions),
+                selectinload(MissionChainModel.dependencies),
+            )
+            .execution_options(populate_existing=True)
+        )
+        mission_chain = await self.session.scalar(query)
+        if mission_chain is None:
+            raise MissionChainNotFoundError
+
+        # Получаем порядок миссий
+        mission_orders = await self._get_mission_chain_orders(chain_id)
+
+        schema = mission_chain.to_schema()
+        schema.mission_orders = mission_orders
+        return schema
+
+    async def get_mission_chain_by_name(self, name: str) -> MissionChain:
+        query = (
+            select(MissionChainModel)
+            .where(MissionChainModel.name == name)
+            .options(
+                selectinload(MissionChainModel.missions),
+                selectinload(MissionChainModel.dependencies),
+            )
+            .execution_options(populate_existing=True)
+        )
+        mission_chain = await self.session.scalar(query)
+        if mission_chain is None:
+            raise MissionChainNotFoundError
+
+        # Получаем порядок миссий
+        mission_orders = await self._get_mission_chain_orders(mission_chain.id)
+
+        schema = mission_chain.to_schema()
+        schema.mission_orders = mission_orders
+        return schema
+
+    async def list_mission_chains(self) -> MissionChains:
+        query = select(MissionChainModel).options(
+            selectinload(MissionChainModel.missions),
+            selectinload(MissionChainModel.dependencies),
+        )
+        result = await self.session.scalars(query)
+
+        mission_chains = []
+        for row in result:
+            schema = row.to_schema()
+            schema.mission_orders = await self._get_mission_chain_orders(row.id)
+            mission_chains.append(schema)
+
+        return MissionChains(values=mission_chains)
+
+    async def update_mission_chain(self, mission_chain: MissionChain) -> None:
+        query = (
+            update(MissionChainModel)
+            .where(MissionChainModel.id == mission_chain.id)
+            .values({
+                "name": mission_chain.name,
+                "description": mission_chain.description,
+                "reward_xp": mission_chain.reward_xp,
+                "reward_mana": mission_chain.reward_mana,
+            })
+        )
+        try:
+            await self.session.execute(query)
+        except IntegrityError as error:
+            raise MissionChainNameAlreadyExistError from error
+
+    async def delete_mission_chain(self, chain_id: int) -> None:
+        await self.get_mission_chain_by_id(chain_id=chain_id)
+        query = delete(MissionChainModel).where(MissionChainModel.id == chain_id)
+        await self.session.execute(query)
+
+    async def _get_mission_chain_orders(self, chain_id: int) -> list[MissionChainMission]:
+        """Получает порядок миссий в цепочке"""
+        query = (
+            select(MissionChainMissionRelationModel)
+            .where(MissionChainMissionRelationModel.mission_chain_id == chain_id)
+            .order_by(MissionChainMissionRelationModel.order)
+        )
+
+        relations = await self.session.scalars(query)
+        return [
+            MissionChainMission(mission_id=rel.mission_id, order=rel.order) for rel in relations
+        ]
+
+    async def add_mission_to_chain(self, chain_id: int, mission_id: int) -> None:
+        # Получаем следующий порядковый номер
+        max_order_query = select(func.max(MissionChainMissionRelationModel.order)).where(
+            MissionChainMissionRelationModel.mission_chain_id == chain_id
+        )
+        max_order = await self.session.scalar(max_order_query) or 0
+        next_order = max_order + 1
+
+        query = insert(MissionChainMissionRelationModel).values({
+            "mission_chain_id": chain_id,
+            "mission_id": mission_id,
+            "order": next_order,
+        })
+        try:
+            await self.session.execute(query)
+        except IntegrityError as error:
+            raise MissionChainMissionAlreadyExistsError from error
+
+    async def remove_mission_from_chain(self, chain_id: int, mission_id: int) -> None:
+        query = delete(MissionChainMissionRelationModel).where(
+            MissionChainMissionRelationModel.mission_chain_id == chain_id,
+            MissionChainMissionRelationModel.mission_id == mission_id,
+        )
+        await self.session.execute(query)
+
+    async def update_mission_order_in_chain(
+        self, chain_id: int, mission_id: int, new_order: int
+    ) -> None:
+        """Обновляет порядок миссии в цепочке s avtomaticheskim смещением других миссий"""
+        # Сначала получаем текущий порядок миссии
+        current_order_query = select(MissionChainMissionRelationModel.order).where(
+            MissionChainMissionRelationModel.mission_chain_id == chain_id,
+            MissionChainMissionRelationModel.mission_id == mission_id,
+        )
+        current_order = await self.session.scalar(current_order_query)
+
+        if current_order is None:
+            raise MissionNotFoundError
+
+        # Если порядок не изменился, ничего не делаем
+        if current_order == new_order:
+            return
+
+        if current_order < new_order:
+            # Перемещаем миссию вниз: сдвигаем миссии между current_order и new_order вверх
+            shift_query = (
+                update(MissionChainMissionRelationModel)
+                .where(
+                    MissionChainMissionRelationModel.mission_chain_id == chain_id,
+                    MissionChainMissionRelationModel.order > current_order,
+                    MissionChainMissionRelationModel.order <= new_order,
+                    MissionChainMissionRelationModel.mission_id != mission_id,
+                )
+                .values(order=MissionChainMissionRelationModel.order - 1)
+            )
+        else:
+            # Перемещаем миссию вверх: сдвигаем миссии между new_order и current_order вниз
+            shift_query = (
+                update(MissionChainMissionRelationModel)
+                .where(
+                    MissionChainMissionRelationModel.mission_chain_id == chain_id,
+                    MissionChainMissionRelationModel.order >= new_order,
+                    MissionChainMissionRelationModel.order < current_order,
+                    MissionChainMissionRelationModel.mission_id != mission_id,
+                )
+                .values(order=MissionChainMissionRelationModel.order + 1)
+            )
+
+        await self.session.execute(shift_query)
+
+        # Устанавливаем новый порядок для текущей миссии
+        update_query = (
+            update(MissionChainMissionRelationModel)
+            .where(
+                MissionChainMissionRelationModel.mission_chain_id == chain_id,
+                MissionChainMissionRelationModel.mission_id == mission_id,
+            )
+            .values(order=new_order)
+        )
+        await self.session.execute(update_query)
+
+    async def add_mission_dependency(
+        self, chain_id: int, mission_id: int, prerequisite_mission_id: int
+    ) -> None:
+        query = insert(MissionDependencyModel).values({
+            "mission_chain_id": chain_id,
+            "mission_id": mission_id,
+            "prerequisite_mission_id": prerequisite_mission_id,
+        })
+        try:
+            await self.session.execute(query)
+        except IntegrityError as error:
+            raise MissionDependencyAlreadyExistsError from error
+
+    async def remove_mission_dependency(
+        self, chain_id: int, mission_id: int, prerequisite_mission_id: int
+    ) -> None:
+        query = delete(MissionDependencyModel).where(
+            MissionDependencyModel.mission_chain_id == chain_id,
+            MissionDependencyModel.mission_id == mission_id,
+            MissionDependencyModel.prerequisite_mission_id == prerequisite_mission_id,
+        )
+        await self.session.execute(query)

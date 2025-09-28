@@ -29,6 +29,18 @@ from src.core.competencies.use_cases import (
     UpdateCompetencyUseCase,
 )
 from src.core.exceptions import InvalidJWTTokenError, PermissionDeniedError
+from src.core.mission_chains.use_cases import (
+    AddMissionDependencyUseCase,
+    AddMissionToChainUseCase,
+    CreateMissionChainUseCase,
+    DeleteMissionChainUseCase,
+    GetMissionChainDetailUseCase,
+    GetMissionChainsUseCase,
+    RemoveMissionDependencyUseCase,
+    RemoveMissionFromChainUseCase,
+    UpdateMissionChainUseCase,
+    UpdateMissionOrderInChainUseCase,
+)
 from src.core.missions.use_cases import (
     AddCompetencyRewardToMissionUseCase,
     AddSkillRewardToMissionUseCase,
@@ -222,6 +234,68 @@ class MissionProvider(Provider):
         self, storage: MissionStorage
     ) -> RemoveSkillRewardFromMissionUseCase:
         return RemoveSkillRewardFromMissionUseCase(storage=storage)
+
+
+class MissionChainProvider(Provider):
+    scope: Scope = Scope.REQUEST
+
+    @provide
+    def build_create_mission_chain_use_case(
+        self, storage: MissionStorage
+    ) -> CreateMissionChainUseCase:
+        return CreateMissionChainUseCase(storage=storage)
+
+    @provide
+    def build_get_mission_chains_use_case(self, storage: MissionStorage) -> GetMissionChainsUseCase:
+        return GetMissionChainsUseCase(storage=storage)
+
+    @provide
+    def build_get_mission_chain_detail_use_case(
+        self, storage: MissionStorage
+    ) -> GetMissionChainDetailUseCase:
+        return GetMissionChainDetailUseCase(storage=storage)
+
+    @provide
+    def build_update_mission_chain_use_case(
+        self, storage: MissionStorage
+    ) -> UpdateMissionChainUseCase:
+        return UpdateMissionChainUseCase(storage=storage)
+
+    @provide
+    def build_delete_mission_chain_use_case(
+        self, storage: MissionStorage
+    ) -> DeleteMissionChainUseCase:
+        return DeleteMissionChainUseCase(storage=storage)
+
+    @provide
+    def build_add_mission_to_chain_use_case(
+        self, storage: MissionStorage
+    ) -> AddMissionToChainUseCase:
+        return AddMissionToChainUseCase(storage=storage)
+
+    @provide
+    def build_remove_mission_from_chain_use_case(
+        self, storage: MissionStorage
+    ) -> RemoveMissionFromChainUseCase:
+        return RemoveMissionFromChainUseCase(storage=storage)
+
+    @provide
+    def build_add_mission_dependency_use_case(
+        self, storage: MissionStorage
+    ) -> AddMissionDependencyUseCase:
+        return AddMissionDependencyUseCase(storage=storage)
+
+    @provide
+    def build_remove_mission_dependency_use_case(
+        self, storage: MissionStorage
+    ) -> RemoveMissionDependencyUseCase:
+        return RemoveMissionDependencyUseCase(storage=storage)
+
+    @provide
+    def build_update_mission_order_in_chain_use_case(
+        self, storage: MissionStorage
+    ) -> UpdateMissionOrderInChainUseCase:
+        return UpdateMissionOrderInChainUseCase(storage=storage)
 
 
 class CompetencyProvider(Provider):

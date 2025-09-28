@@ -6,6 +6,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from src.core.artifacts.enums import ArtifactRarityEnum
 from src.core.artifacts.schemas import Artifact
 from src.core.competencies.schemas import Competency
+from src.core.mission_chains.schemas import MissionChain, MissionDependency
 from src.core.missions.enums import MissionCategoryEnum
 from src.core.missions.schemas import CompetencyReward, Mission, SkillReward
 from src.core.ranks.schemas import Rank, RankCompetencyRequirement
@@ -144,6 +145,29 @@ class MissionModel(Base):
     skill_rewards: Mapped[list["MissionSkillRewardModel"]] = relationship(
         "MissionSkillRewardModel",
         back_populates="mission",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
+    mission_chains: Mapped[list["MissionChainModel"]] = relationship(
+        "MissionChainModel",
+        secondary="missions_chain_missions",
+        back_populates="missions",
+        lazy="selectin",
+    )
+
+    prerequisite_of_dependencies: Mapped[list["MissionDependencyModel"]] = relationship(
+        "MissionDependencyModel",
+        foreign_keys="[MissionDependencyModel.prerequisite_mission_id]",
+        back_populates="prerequisite_mission",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
+    dependent_of_dependencies: Mapped[list["MissionDependencyModel"]] = relationship(
+        "MissionDependencyModel",
+        foreign_keys="[MissionDependencyModel.mission_id]",
+        back_populates="dependent_mission",
         cascade="all, delete-orphan",
         lazy="selectin",
     )
@@ -536,3 +560,109 @@ class MissionSkillRewardModel(Base):
 
     mission: Mapped["MissionModel"] = relationship(back_populates="skill_rewards")
     skill: Mapped["SkillModel"] = relationship()
+
+
+class MissionChainModel(Base):
+    __tablename__ = "missions_chain"
+    __table_args__ = (UniqueConstraint("name", name="uq_missions_chain_name"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(255))
+    description: Mapped[str] = mapped_column()
+    reward_xp: Mapped[int] = mapped_column()
+    reward_mana: Mapped[int] = mapped_column()
+
+    missions: Mapped[list["MissionModel"]] = relationship(
+        "MissionModel",
+        secondary="missions_chain_missions",
+        back_populates="mission_chains",
+        lazy="selectin",
+    )
+
+    dependencies: Mapped[list["MissionDependencyModel"]] = relationship(
+        "MissionDependencyModel",
+        back_populates="mission_chain",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
+    @classmethod
+    def from_schema(cls, mission_chain: MissionChain) -> "MissionChainModel":
+        return cls(
+            name=mission_chain.name,
+            description=mission_chain.description,
+            reward_xp=mission_chain.reward_xp,
+            reward_mana=mission_chain.reward_mana,
+        )
+
+    def to_schema(self) -> MissionChain:
+        return MissionChain(
+            id=self.id,
+            name=self.name,
+            description=self.description,
+            reward_xp=self.reward_xp,
+            reward_mana=self.reward_mana,
+            missions=[mission.to_schema() for mission in self.missions],
+            dependencies=[dep.to_schema() for dep in self.dependencies],
+            mission_orders=[],  # Будет заполняться в storage
+        )
+
+
+class MissionChainMissionRelationModel(Base):
+    __tablename__ = "missions_chain_missions"
+    __table_args__ = (
+        PrimaryKeyConstraint(
+            "mission_chain_id",
+            "mission_id",
+            name="pk_missions_chain_missions",
+        ),
+    )
+
+    mission_chain_id: Mapped[int] = mapped_column(
+        ForeignKey(MissionChainModel.id, ondelete="CASCADE"),
+        primary_key=True,
+    )
+    mission_id: Mapped[int] = mapped_column(
+        ForeignKey(MissionModel.id, ondelete="CASCADE"),
+        primary_key=True,
+    )
+    order: Mapped[int] = mapped_column(default=1)
+
+
+class MissionDependencyModel(Base):
+    __tablename__ = "missions_dependency"
+    __table_args__ = (
+        PrimaryKeyConstraint(
+            "mission_chain_id",
+            "mission_id",
+            "prerequisite_mission_id",
+            name="pk_missions_dependency",
+        ),
+    )
+
+    mission_chain_id: Mapped[int] = mapped_column(
+        ForeignKey(MissionChainModel.id, ondelete="CASCADE"),
+        primary_key=True,
+    )
+    mission_id: Mapped[int] = mapped_column(
+        ForeignKey(MissionModel.id, ondelete="CASCADE"),
+        primary_key=True,
+    )
+    prerequisite_mission_id: Mapped[int] = mapped_column(
+        ForeignKey(MissionModel.id, ondelete="CASCADE"),
+        primary_key=True,
+    )
+
+    mission_chain: Mapped["MissionChainModel"] = relationship(back_populates="dependencies")
+    dependent_mission: Mapped["MissionModel"] = relationship(
+        foreign_keys=[mission_id], back_populates="dependent_of_dependencies"
+    )
+    prerequisite_mission: Mapped["MissionModel"] = relationship(
+        foreign_keys=[prerequisite_mission_id], back_populates="prerequisite_of_dependencies"
+    )
+
+    def to_schema(self) -> MissionDependency:
+        return MissionDependency(
+            mission_id=self.mission_id,
+            prerequisite_mission_id=self.prerequisite_mission_id,
+        )

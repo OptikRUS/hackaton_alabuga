@@ -2,6 +2,7 @@ from abc import ABCMeta, abstractmethod
 
 from src.core.artifacts.schemas import Artifact, Artifacts
 from src.core.competencies.schemas import Competencies, Competency
+from src.core.mission_chains.schemas import MissionChain, MissionChains
 from src.core.missions.schemas import (
     Mission,
     Missions,
@@ -144,6 +145,56 @@ class MissionStorage(metaclass=ABCMeta):
 
     @abstractmethod
     async def get_user_mission(self, mission_id: int, user_login: str) -> UserMission:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def insert_mission_chain(self, mission_chain: MissionChain) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_mission_chain_by_id(self, chain_id: int) -> MissionChain:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_mission_chain_by_name(self, name: str) -> MissionChain:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def list_mission_chains(self) -> MissionChains:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def update_mission_chain(self, mission_chain: MissionChain) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def delete_mission_chain(self, chain_id: int) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def add_mission_to_chain(self, chain_id: int, mission_id: int) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def remove_mission_from_chain(self, chain_id: int, mission_id: int) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def add_mission_dependency(
+        self, chain_id: int, mission_id: int, prerequisite_mission_id: int
+    ) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def remove_mission_dependency(
+        self, chain_id: int, mission_id: int, prerequisite_mission_id: int
+    ) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def update_mission_order_in_chain(
+        self, chain_id: int, mission_id: int, new_order: int
+    ) -> None:
         raise NotImplementedError
 
 
