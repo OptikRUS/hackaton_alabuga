@@ -30,16 +30,21 @@ class TestGetMissionWithUserTasksUseCase(FactoryFixture):
 
         user_mission = await self.use_case.execute(mission_id=1, user_login="TEST")
 
-        # TODO: по хорошему написать фабрику на user_mission и сравнивать
-        assert user_mission.id == 1
-        assert user_mission.title == "Test Mission"
-        assert user_mission.description == "Test Description"
-        assert user_mission.reward_xp == 100
-        assert user_mission.reward_mana == 50
-        assert user_mission.rank_requirement == 1
-        assert user_mission.category == MissionCategoryEnum.QUEST
-        assert user_mission.user_tasks == []
-        assert not user_mission.is_completed
+        assert user_mission == self.factory.user_mission(
+            mission_id=1,
+            title="Test Mission",
+            description="Test Description",
+            reward_xp=100,
+            reward_mana=50,
+            rank_requirement=1,
+            season_id=1,
+            category=MissionCategoryEnum.QUEST,
+            tasks=None,
+            user_tasks=[],
+            reward_artifacts=None,
+            reward_competencies=None,
+            reward_skills=None,
+        )
 
     async def test_get_mission_with_user_tasks_with_completed_tasks(self) -> None:
         await self.storage.insert_user(
@@ -86,16 +91,28 @@ class TestGetMissionWithUserTasksUseCase(FactoryFixture):
 
         user_mission = await self.use_case.execute(mission_id=1, user_login="TEST")
 
-        # TODO: по хорошему написать фабрику на user_mission и сравнивать
-        assert user_mission.id == 1
-        assert user_mission.title == "Test Mission"
-        assert user_mission.user_tasks is not None
-        assert len(user_mission.user_tasks) == 2
-        assert user_mission.user_tasks[0].title == "Task 1"
-        assert user_mission.user_tasks[0].is_completed is True
-        assert user_mission.user_tasks[1].title == "Task 2"
-        assert user_mission.user_tasks[1].is_completed is False
-        assert not user_mission.is_completed
+        assert user_mission == self.factory.user_mission(
+            mission_id=1,
+            title="Test Mission",
+            description="Test Description",
+            reward_xp=100,
+            reward_mana=50,
+            rank_requirement=1,
+            season_id=1,
+            category=MissionCategoryEnum.QUEST,
+            tasks=None,
+            user_tasks=[
+                self.factory.user_task(
+                    task_id=1, title="Task 1", description="Description 1", is_completed=True
+                ),
+                self.factory.user_task(
+                    task_id=2, title="Task 2", description="Description 2", is_completed=False
+                ),
+            ],
+            reward_artifacts=None,
+            reward_competencies=None,
+            reward_skills=None,
+        )
 
     async def test_get_mission_not_found(self) -> None:
         with pytest.raises(MissionNotFoundError):
