@@ -87,7 +87,16 @@ from src.core.storages import (
     MissionStorage,
     RankStorage,
     SkillStorage,
+    StoreStorage,
     UserStorage,
+)
+from src.core.store.use_cases import (
+    CreateStoreItemUseCase,
+    DeleteStoreItemUseCase,
+    GetStoreItemsUseCase,
+    GetStoreItemUseCase,
+    PurchaseStoreItemUseCase,
+    UpdateStoreItemUseCase,
 )
 from src.core.tasks.use_cases import (
     CreateMissionTaskUseCase,
@@ -511,6 +520,10 @@ class DatabaseProvider(Provider):
         return DatabaseStorage(session=session)
 
     @provide
+    def get_store_storage(self, session: AsyncSession) -> StoreStorage:
+        return DatabaseStorage(session=session)
+
+    @provide
     def get_artifact_storage(self, session: AsyncSession) -> ArtifactStorage:
         return DatabaseStorage(session=session)
 
@@ -565,3 +578,35 @@ class FileStorageProvider(Provider):
     @provide
     async def get_minio_service(self, minio_connection: AioBaseClient) -> MinioService:
         return MinioService(minio_connection=minio_connection)
+
+
+class StoreProvider(Provider):
+    scope = Scope.REQUEST
+
+    @provide
+    async def create_store_item_use_case(self, storage: StoreStorage) -> CreateStoreItemUseCase:
+        return CreateStoreItemUseCase(storage=storage)
+
+    @provide
+    async def get_store_items_use_case(self, storage: StoreStorage) -> GetStoreItemsUseCase:
+        return GetStoreItemsUseCase(storage=storage)
+
+    @provide
+    async def get_store_item_use_case(self, storage: StoreStorage) -> GetStoreItemUseCase:
+        return GetStoreItemUseCase(storage=storage)
+
+    @provide
+    async def update_store_item_use_case(self, storage: StoreStorage) -> UpdateStoreItemUseCase:
+        return UpdateStoreItemUseCase(storage=storage)
+
+    @provide
+    async def delete_store_item_use_case(self, storage: StoreStorage) -> DeleteStoreItemUseCase:
+        return DeleteStoreItemUseCase(storage=storage)
+
+    @provide
+    async def purchase_store_item_use_case(
+        self,
+        storage: StoreStorage,
+        user_storage: UserStorage,
+    ) -> PurchaseStoreItemUseCase:
+        return PurchaseStoreItemUseCase(store_storage=storage, user_storage=user_storage)

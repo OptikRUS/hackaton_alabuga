@@ -9,6 +9,7 @@ from src.api.missions import endpoints as missions
 from src.api.ranks import endpoints as ranks
 from src.api.seasons import endpoints as seasons
 from src.api.skills import endpoints as skills
+from src.api.store import endpoints as store
 from src.api.tasks import endpoints as tasks
 from src.api.users import endpoints as users
 
@@ -22,5 +23,6 @@ root_router.include_router(tasks.router)
 root_router.include_router(competencies.router)
 root_router.include_router(ranks.router)
 root_router.include_router(skills.router)
+root_router.include_router(store.router)
 root_router.include_router(artifacts.router)
 root_router.include_router(media.router)

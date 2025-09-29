@@ -56,8 +56,16 @@ from src.core.storages import (
     MissionStorage,
     RankStorage,
     SkillStorage,
+    StoreStorage,
     UserStorage,
 )
+from src.core.store.exceptions import (
+    InsufficientManaError,
+    StoreItemInsufficientStockError,
+    StoreItemNotFoundError,
+    StoreItemTitleAlreadyExistError,
+)
+from src.core.store.schemas import StoreItem, StoreItems, StorePurchase
 from src.core.tasks.exceptions import (
     TaskNameAlreadyExistError,
     TaskNotFoundError,
@@ -88,6 +96,7 @@ from src.storages.models import (
     RankMissionRelationModel,
     RankModel,
     SkillModel,
+    StoreItemModel,
     UserModel,
     UserTaskRelationModel,
 )
@@ -101,6 +110,7 @@ class DatabaseStorage(
     CompetencyStorage,
     RankStorage,
     SkillStorage,
+    StoreStorage,
 ):
     session: AsyncSession
 
@@ -1051,3 +1061,85 @@ class DatabaseStorage(
             MissionDependencyModel.prerequisite_mission_id == prerequisite_mission_id,
         )
         await self.session.execute(query)
+
+    async def insert_store_item(self, store_item: StoreItem) -> None:
+        query = insert(StoreItemModel).values({
+            "title": store_item.title,
+            "price": store_item.price,
+            "stock": store_item.stock,
+        })
+        try:
+            await self.session.execute(query)
+        except IntegrityError as error:
+            raise StoreItemTitleAlreadyExistError from error
+
+    async def get_store_item_by_id(self, store_item_id: int) -> StoreItem:
+        query = select(StoreItemModel).where(StoreItemModel.id == store_item_id)
+        row = await self.session.scalar(query)
+        if row is None:
+            raise StoreItemNotFoundError
+        return row.to_schema()
+
+    async def get_store_item_by_title(self, title: str) -> StoreItem:
+        query = select(StoreItemModel).where(StoreItemModel.title == title)
+        row = await self.session.scalar(query)
+        if row is None:
+            raise StoreItemNotFoundError
+        return row.to_schema()
+
+    async def list_store_items(self) -> StoreItems:
+        query = select(StoreItemModel)
+        result = await self.session.scalars(query)
+        return StoreItems(values=[row.to_schema() for row in result])
+
+    async def update_store_item(self, store_item: StoreItem) -> None:
+        await self.get_store_item_by_id(store_item_id=store_item.id)
+        query = (
+            update(StoreItemModel)
+            .where(StoreItemModel.id == store_item.id)
+            .values({
+                "title": store_item.title,
+                "price": store_item.price,
+                "stock": store_item.stock,
+            })
+        )
+        try:
+            await self.session.execute(query)
+        except IntegrityError as error:
+            raise StoreItemTitleAlreadyExistError from error
+
+    async def delete_store_item(self, store_item_id: int) -> None:
+        await self.get_store_item_by_id(store_item_id=store_item_id)
+        query = delete(StoreItemModel).where(StoreItemModel.id == store_item_id)
+        await self.session.execute(query)
+
+    async def purchase_store_item(self, purchase: StorePurchase, mana_count: int) -> None:
+        store_item_query = select(StoreItemModel).where(StoreItemModel.id == purchase.store_item_id)
+        store_item_result = await self.session.scalar(store_item_query)
+        if store_item_result is None:
+            raise StoreItemNotFoundError
+
+        if store_item_result.stock <= 0:
+            raise StoreItemInsufficientStockError
+
+        user_query = select(UserModel).where(UserModel.login == purchase.user_login)
+        user_result = await self.session.scalar(user_query)
+        if user_result is None:
+            raise UserNotFoundError
+
+        if user_result.mana < mana_count:
+            raise InsufficientManaError
+
+        stock_query = (
+            update(StoreItemModel)
+            .where(StoreItemModel.id == purchase.store_item_id)
+            .values({"stock": StoreItemModel.stock - 1})
+        )
+        await self.session.execute(stock_query)
+
+        mana_query = (
+            update(UserModel)
+            .where(UserModel.login == purchase.user_login)
+            .values({"mana": UserModel.mana - mana_count})
+        )
+        await self.session.execute(mana_query)

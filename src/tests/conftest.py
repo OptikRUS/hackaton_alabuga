@@ -27,6 +27,7 @@ from src.storages.models import (
     MissionTaskModel,
     RankModel,
     SkillModel,
+    StoreItemModel,
     UserModel,
 )
 from src.tests.mocks.providers import (
@@ -38,6 +39,7 @@ from src.tests.mocks.providers import (
     MissionProviderMock,
     RankProviderMock,
     SkillProviderMock,
+    StoreProviderMock,
     UserProviderMock,
 )
 
@@ -53,6 +55,7 @@ async def container() -> AsyncGenerator[AsyncContainer]:
         CompetencyProviderMock(),
         SkillProviderMock(),
         RankProviderMock(),
+        StoreProviderMock(),
         FileStorageProviderMock(),
         AuthProviderMock(),
     )
@@ -146,6 +149,7 @@ async def clear_tables(engine: AsyncEngine) -> None:
         await conn.execute(delete(CompetencyModel))
         await conn.execute(delete(RankModel))
         await conn.execute(delete(MissionChainModel))
+        await conn.execute(delete(StoreItemModel))
 
 
 @pytest.fixture

@@ -33,8 +33,11 @@ from src.core.storages import (
     MissionStorage,
     RankStorage,
     SkillStorage,
+    StoreStorage,
     UserStorage,
 )
+from src.core.store.exceptions import StoreItemNotFoundError, StoreItemTitleAlreadyExistError
+from src.core.store.schemas import StoreItem, StoreItems, StorePurchase
 from src.core.tasks.exceptions import TaskNameAlreadyExistError, TaskNotFoundError
 from src.core.tasks.schemas import MissionTask, MissionTasks, UserTask
 from src.core.users.exceptions import UserAlreadyExistError, UserNotFoundError
@@ -49,6 +52,7 @@ class StorageMock(
     CompetencyStorage,
     SkillStorage,
     RankStorage,
+    StoreStorage,
 ):
     user_table: dict[str, User | CandidateUser | HRUser] = field(default_factory=dict)
     season_table: dict[str, Season] = field(default_factory=dict)
@@ -70,6 +74,7 @@ class StorageMock(
     mission_chains_missions_relations: dict[int, set[int]] = field(default_factory=dict)
     mission_dependencies: dict[int, set[tuple[int, int]]] = field(default_factory=dict)
     users_tasks_relations: dict[str, dict[int, bool]] = field(default_factory=dict)
+    store_item_table: dict[int, StoreItem] = field(default_factory=dict)
 
     async def insert_user(self, user: User) -> None:
         try:
@@ -726,3 +731,60 @@ class StorageMock(
             category=mission.category,
             user_tasks=user_tasks,
         )
+
+    async def insert_store_item(self, store_item: StoreItem) -> None:
+        for existing in self.store_item_table.values():
+            if existing.title == store_item.title:
+                raise StoreItemTitleAlreadyExistError
+        self.store_item_table[store_item.id] = store_item
+
+    async def get_store_item_by_id(self, store_item_id: int) -> StoreItem:
+        try:
+            return self.store_item_table[store_item_id]
+        except KeyError as error:
+            raise StoreItemNotFoundError from error
+
+    async def get_store_item_by_title(self, title: str) -> StoreItem:
+        for store_item in self.store_item_table.values():
+            if store_item.title == title:
+                return store_item
+        raise StoreItemNotFoundError
+
+    async def list_store_items(self) -> StoreItems:
+        return StoreItems(values=list(self.store_item_table.values()))
+
+    async def update_store_item(self, store_item: StoreItem) -> None:
+        if store_item.id not in self.store_item_table:
+            raise StoreItemNotFoundError
+        self.store_item_table[store_item.id] = store_item
+
+    async def delete_store_item(self, store_item_id: int) -> None:
+        try:
+            del self.store_item_table[store_item_id]
+        except KeyError as error:
+            raise StoreItemNotFoundError from error
+
+    async def purchase_store_item(self, purchase: StorePurchase, mana_count: int) -> None:
+        store_item = self.store_item_table[purchase.store_item_id]
+        updated_store_item = StoreItem(
+            id=store_item.id,
+            title=store_item.title,
+            price=store_item.price,
+            stock=store_item.stock - 1,
+        )
+        self.store_item_table[purchase.store_item_id] = updated_store_item
+
+        user = self.user_table[purchase.user_login]
+        if isinstance(user, CandidateUser):
+            updated_user = CandidateUser(
+                login=user.login,
+                first_name=user.first_name,
+                last_name=user.last_name,
+                password=user.password,
+                role=user.role,
+                rank_id=user.rank_id,
+                exp=user.exp,
+                mana=user.mana - mana_count,
+                artifacts=user.artifacts,
+            )
+            self.user_table[purchase.user_login] = updated_user

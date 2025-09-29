@@ -41,6 +41,12 @@ from src.core.skills.exceptions import (
     SkillNameAlreadyExistError,
     SkillNotFoundError,
 )
+from src.core.store.exceptions import (
+    InsufficientManaError,
+    StoreItemInsufficientStockError,
+    StoreItemNotFoundError,
+    StoreItemTitleAlreadyExistError,
+)
 from src.core.tasks.exceptions import (
     TaskNameAlreadyExistError,
     TaskNotFoundError,
@@ -113,4 +119,8 @@ exception_handlers: (
     SkillNameAlreadyExistError: handler(status_code=status.HTTP_409_CONFLICT),
     SkillNotFoundError: handler(status_code=status.HTTP_404_NOT_FOUND),
     SkillLevelIncreaseTooHighError: handler(status_code=status.HTTP_400_BAD_REQUEST),
+    StoreItemNotFoundError: handler(status_code=status.HTTP_404_NOT_FOUND),
+    StoreItemTitleAlreadyExistError: handler(status_code=status.HTTP_409_CONFLICT),
+    StoreItemInsufficientStockError: handler(status_code=status.HTTP_400_BAD_REQUEST),
+    InsufficientManaError: handler(status_code=status.HTTP_400_BAD_REQUEST),
 }

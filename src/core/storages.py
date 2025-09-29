@@ -10,6 +10,7 @@ from src.core.missions.schemas import (
 from src.core.ranks.schemas import Rank, Ranks
 from src.core.seasons.schemas import Season, Seasons
 from src.core.skills.schemas import Skill, Skills
+from src.core.store.schemas import StoreItem, StoreItems, StorePurchase
 from src.core.tasks.schemas import (
     MissionTask,
     MissionTasks,
@@ -345,4 +346,34 @@ class SkillStorage(metaclass=ABCMeta):
 
     @abstractmethod
     async def delete_skill(self, skill_id: int) -> None:
+        raise NotImplementedError
+
+
+class StoreStorage(metaclass=ABCMeta):
+    @abstractmethod
+    async def insert_store_item(self, store_item: StoreItem) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_store_item_by_id(self, store_item_id: int) -> StoreItem:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_store_item_by_title(self, title: str) -> StoreItem:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def list_store_items(self) -> StoreItems:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def update_store_item(self, store_item: StoreItem) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def delete_store_item(self, store_item_id: int) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def purchase_store_item(self, purchase: StorePurchase, mana_count: int) -> None:
         raise NotImplementedError
