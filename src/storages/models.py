@@ -375,7 +375,7 @@ class RankCompetencyRequirementModel(Base):
     )
     min_level: Mapped[int] = mapped_column()
 
-    competency: Mapped["CompetencyModel"] = relationship()
+    competency: Mapped["CompetencyModel"] = relationship(lazy="selectin")
     rank: Mapped["RankModel"] = relationship(back_populates="required_competencies_rel")
 
 
@@ -537,7 +537,7 @@ class MissionCompetencyRewardModel(Base):
     level_increase: Mapped[int] = mapped_column()
 
     mission: Mapped["MissionModel"] = relationship(back_populates="competency_rewards")
-    competency: Mapped["CompetencyModel"] = relationship()
+    competency: Mapped["CompetencyModel"] = relationship(lazy="selectin")
 
 
 class MissionSkillRewardModel(Base):
@@ -559,7 +559,7 @@ class MissionSkillRewardModel(Base):
     level_increase: Mapped[int] = mapped_column()
 
     mission: Mapped["MissionModel"] = relationship(back_populates="skill_rewards")
-    skill: Mapped["SkillModel"] = relationship()
+    skill: Mapped["SkillModel"] = relationship(lazy="selectin")
 
 
 class MissionChainModel(Base):
