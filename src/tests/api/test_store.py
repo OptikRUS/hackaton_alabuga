@@ -2,12 +2,18 @@ import pytest
 from httpx import codes
 
 from src.core.exceptions import PermissionDeniedError
-from src.core.store.exceptions import StoreItemNotFoundError, StoreItemTitleAlreadyExistError
+from src.core.store.exceptions import (
+    InsufficientManaError,
+    StoreItemInsufficientStockError,
+    StoreItemNotFoundError,
+    StoreItemTitleAlreadyExistError,
+)
 from src.core.store.use_cases import (
     CreateStoreItemUseCase,
     DeleteStoreItemUseCase,
     GetStoreItemsUseCase,
     GetStoreItemUseCase,
+    PurchaseStoreItemUseCase,
     UpdateStoreItemUseCase,
 )
 from src.tests.fixtures import APIFixture, ContainerFixture, FactoryFixture
@@ -291,3 +297,61 @@ class TestDeleteStoreItemAPI(APIFixture, FactoryFixture, ContainerFixture):
         assert response.json() == {"detail": StoreItemNotFoundError.detail}
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(store_item_id=999)
+
+
+class TestPurchaseStoreItemAPI(APIFixture, FactoryFixture, ContainerFixture):
+    @pytest.fixture(autouse=True)
+    async def setup(self) -> None:
+        self.use_case = await self.container.override_use_case(PurchaseStoreItemUseCase)
+
+    def test_not_auth(self) -> None:
+        response = self.api.purchase_store_item(store_item_id=1)
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_purchase_store_item_success(self) -> None:
+        self.use_case.execute.return_value = self.factory.store_item(
+            store_item_id=1,
+            title="Test Item",
+            price=100,
+            stock=9,
+        )
+
+        response = self.candidate_api.purchase_store_item(store_item_id=1)
+
+        assert response.status_code == codes.OK
+        assert response.json() == {
+            "id": 1,
+            "title": "Test Item",
+            "price": 100,
+            "stock": 9,
+        }
+        self.use_case.execute.assert_called_once()
+
+    def test_purchase_store_item_not_found(self) -> None:
+        self.use_case.execute.side_effect = StoreItemNotFoundError
+
+        response = self.candidate_api.purchase_store_item(store_item_id=999)
+
+        assert response.status_code == codes.NOT_FOUND
+        assert response.json() == {"detail": StoreItemNotFoundError.detail}
+        self.use_case.execute.assert_called_once()
+
+    def test_purchase_store_item_insufficient_stock(self) -> None:
+        self.use_case.execute.side_effect = StoreItemInsufficientStockError
+
+        response = self.candidate_api.purchase_store_item(store_item_id=1)
+
+        assert response.status_code == codes.BAD_REQUEST
+        assert response.json() == {"detail": StoreItemInsufficientStockError.detail}
+        self.use_case.execute.assert_called_once()
+
+    def test_purchase_store_item_insufficient_mana(self) -> None:
+        self.use_case.execute.side_effect = InsufficientManaError
+
+        response = self.candidate_api.purchase_store_item(store_item_id=1)
+
+        assert response.status_code == codes.BAD_REQUEST
+        assert response.json() == {"detail": InsufficientManaError.detail}
+        self.use_case.execute.assert_called_once()

@@ -1,7 +1,7 @@
 from pydantic import Field
 
 from src.api.boundary import BoundaryModel
-from src.core.store.schemas import StoreItem, StoreItems
+from src.core.store.schemas import StoreItem, StoreItems, StorePurchase
 
 
 class StoreItemCreateRequest(BoundaryModel):
@@ -46,3 +46,10 @@ class StoreItemsResponse(BoundaryModel):
         return cls(
             values=[StoreItemResponse.from_schema(store_item=item) for item in store_items.values]
         )
+
+
+class StorePurchaseRequest(BoundaryModel):
+    store_item_id: int = Field(default=..., description="ID товара")
+
+    def to_schema(self, user_login: str) -> StorePurchase:
+        return StorePurchase(user_login=user_login, store_item_id=self.store_item_id)

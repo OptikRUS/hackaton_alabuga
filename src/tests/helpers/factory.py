@@ -19,7 +19,7 @@ from src.core.missions.schemas import (
 from src.core.ranks.schemas import Rank, RankCompetencyRequirement, Ranks
 from src.core.seasons.schemas import Season, Seasons
 from src.core.skills.schemas import Skill, Skills
-from src.core.store.schemas import StoreItem, StoreItems
+from src.core.store.schemas import StoreItem, StoreItems, StorePurchase
 from src.core.tasks.schemas import (
     MissionTask,
     MissionTasks,
@@ -348,3 +348,11 @@ class FactoryHelper:
     @classmethod
     def store_items(cls, values: list[StoreItem]) -> StoreItems:
         return StoreItems(values=values)
+
+    @classmethod
+    def store_purchase(
+        cls,
+        user_login: str = "test_user",
+        store_item_id: int = 1,
+    ) -> StorePurchase:
+        return StorePurchase(user_login=user_login, store_item_id=store_item_id)

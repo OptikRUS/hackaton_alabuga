@@ -95,6 +95,7 @@ from src.core.store.use_cases import (
     DeleteStoreItemUseCase,
     GetStoreItemsUseCase,
     GetStoreItemUseCase,
+    PurchaseStoreItemUseCase,
     UpdateStoreItemUseCase,
 )
 from src.core.tasks.use_cases import (
@@ -601,3 +602,11 @@ class StoreProvider(Provider):
     @provide
     async def delete_store_item_use_case(self, storage: StoreStorage) -> DeleteStoreItemUseCase:
         return DeleteStoreItemUseCase(storage=storage)
+
+    @provide
+    async def purchase_store_item_use_case(
+        self,
+        storage: StoreStorage,
+        user_storage: UserStorage,
+    ) -> PurchaseStoreItemUseCase:
+        return PurchaseStoreItemUseCase(store_storage=storage, user_storage=user_storage)

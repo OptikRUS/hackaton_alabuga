@@ -8,12 +8,14 @@ from src.api.store.schemas import (
     StoreItemResponse,
     StoreItemsResponse,
     StoreItemUpdateRequest,
+    StorePurchaseRequest,
 )
 from src.core.store.use_cases import (
     CreateStoreItemUseCase,
     DeleteStoreItemUseCase,
     GetStoreItemsUseCase,
     GetStoreItemUseCase,
+    PurchaseStoreItemUseCase,
     UpdateStoreItemUseCase,
 )
 
@@ -102,3 +104,19 @@ async def delete_store_item(
 ) -> None:
     _ = user
     await use_case.execute(store_item_id=store_item_id)
+
+
+@router.post(
+    path="/store/purchase",
+    openapi_extra=openapi_extra,
+    status_code=status.HTTP_200_OK,
+    summary="Купить товар",
+    description="Покупает товар за ману пользователя",
+)
+async def purchase_store_item(
+    user: FromDishka[JwtUser],
+    body: StorePurchaseRequest,
+    use_case: FromDishka[PurchaseStoreItemUseCase],
+) -> StoreItemResponse:
+    store_item = await use_case.execute(purchase=body.to_schema(user_login=user.login))
+    return StoreItemResponse.from_schema(store_item=store_item)

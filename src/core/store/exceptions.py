@@ -11,3 +11,7 @@ class StoreItemTitleAlreadyExistError(BaseExceptionError):
 
 class StoreItemInsufficientStockError(BaseExceptionError):
     detail: str = "STORE_ITEM_INSUFFICIENT_STOCK_ERROR"
+
+
+class InsufficientManaError(BaseExceptionError):
+    detail: str = "INSUFFICIENT_MANA_ERROR"

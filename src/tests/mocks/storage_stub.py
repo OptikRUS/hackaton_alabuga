@@ -37,7 +37,7 @@ from src.core.storages import (
     UserStorage,
 )
 from src.core.store.exceptions import StoreItemNotFoundError, StoreItemTitleAlreadyExistError
-from src.core.store.schemas import StoreItem, StoreItems
+from src.core.store.schemas import StoreItem, StoreItems, StorePurchase
 from src.core.tasks.exceptions import TaskNameAlreadyExistError, TaskNotFoundError
 from src.core.tasks.schemas import MissionTask, MissionTasks, UserTask
 from src.core.users.exceptions import UserAlreadyExistError, UserNotFoundError
@@ -763,3 +763,28 @@ class StorageMock(
             del self.store_item_table[store_item_id]
         except KeyError as error:
             raise StoreItemNotFoundError from error
+
+    async def purchase_store_item(self, purchase: StorePurchase, mana_count: int) -> None:
+        store_item = self.store_item_table[purchase.store_item_id]
+        updated_store_item = StoreItem(
+            id=store_item.id,
+            title=store_item.title,
+            price=store_item.price,
+            stock=store_item.stock - 1,
+        )
+        self.store_item_table[purchase.store_item_id] = updated_store_item
+
+        user = self.user_table[purchase.user_login]
+        if isinstance(user, CandidateUser):
+            updated_user = CandidateUser(
+                login=user.login,
+                first_name=user.first_name,
+                last_name=user.last_name,
+                password=user.password,
+                role=user.role,
+                rank_id=user.rank_id,
+                exp=user.exp,
+                mana=user.mana - mana_count,
+                artifacts=user.artifacts,
+            )
+            self.user_table[purchase.user_login] = updated_user

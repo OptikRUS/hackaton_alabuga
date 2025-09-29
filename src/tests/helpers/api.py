@@ -433,3 +433,6 @@ class APIHelper:
 
     def delete_store_item(self, store_item_id: int) -> Response:
         return self.client.delete(f"/store/{store_item_id}")
+
+    def purchase_store_item(self, store_item_id: int) -> Response:
+        return self.client.post(url="/store/purchase", json={"store_item_id": store_item_id})

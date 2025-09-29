@@ -1,6 +1,11 @@
 import pytest
 
-from src.core.store.exceptions import StoreItemNotFoundError, StoreItemTitleAlreadyExistError
+from src.core.store.exceptions import (
+    InsufficientManaError,
+    StoreItemInsufficientStockError,
+    StoreItemNotFoundError,
+    StoreItemTitleAlreadyExistError,
+)
 from src.storages.database_storage import DatabaseStorage
 from src.tests.fixtures import FactoryFixture, StorageFixture
 
@@ -11,13 +16,13 @@ class TestStoreStorage(FactoryFixture, StorageFixture):
         self.storage = storage
 
     async def test_insert_store_item(self) -> None:
-        store_item = self.factory.store_item(
-            title="TEST_ITEM",
-            price=100,
-            stock=5,
+        await self.storage.insert_store_item(
+            store_item=self.factory.store_item(
+                title="TEST_ITEM",
+                price=100,
+                stock=5,
+            )
         )
-
-        await self.storage.insert_store_item(store_item=store_item)
 
         result = await self.storage_helper.get_store_item_by_title(title="TEST_ITEM")
         assert result is not None
@@ -101,10 +106,13 @@ class TestStoreStorage(FactoryFixture, StorageFixture):
         store_items = await self.storage.list_store_items()
 
         assert len(store_items.values) >= 2
-        # TODO: нужно сравнить по индексу каждый типа store_items.values[0] и store_items.values[1]
-        titles = [item.title for item in store_items.values]
-        assert "ITEM_1" in titles
-        assert "ITEM_2" in titles
+
+        assert store_items.values[0] is not None
+        assert store_items.values[1] is not None
+        assert store_items.values[0].price == 100
+        assert store_items.values[0].stock == 5
+        assert store_items.values[1].price == 200
+        assert store_items.values[1].stock == 10
 
     async def test_list_store_items_empty(self) -> None:
         store_items = await self.storage.list_store_items()
@@ -190,3 +198,133 @@ class TestStoreStorage(FactoryFixture, StorageFixture):
     async def test_delete_store_item_not_found(self) -> None:
         with pytest.raises(StoreItemNotFoundError):
             await self.storage.delete_store_item(store_item_id=999)
+
+    async def test_purchase_store_item(self) -> None:
+        user = await self.storage_helper.insert_user(
+            user=self.factory.candidate(
+                login="test_user",
+                mana=200,
+            )
+        )
+        assert user is not None
+
+        store_item = await self.storage_helper.insert_store_item(
+            store_item=self.factory.store_item(
+                title="TEST_ITEM",
+                price=100,
+                stock=5,
+            )
+        )
+        assert store_item is not None
+
+        await self.storage.purchase_store_item(
+            purchase=self.factory.store_purchase(
+                user_login="test_user",
+                store_item_id=store_item.id,
+            ),
+            mana_count=100,
+        )
+
+        updated_stock = await self.storage_helper.get_store_item_stock(store_item_id=store_item.id)
+        assert updated_stock == 4
+
+        updated_mana = await self.storage_helper.get_user_mana(user_login="test_user")
+        assert updated_mana == 100
+
+    async def test_purchase_store_item_multiple_times(self) -> None:
+        user = await self.storage_helper.insert_user(
+            user=self.factory.candidate(
+                login="test_user",
+                mana=500,
+            )
+        )
+        assert user is not None
+
+        store_item = await self.storage_helper.insert_store_item(
+            store_item=self.factory.store_item(
+                title="TEST_ITEM",
+                price=100,
+                stock=3,
+            )
+        )
+        assert store_item is not None
+
+        # Выполняем покупку дважды
+        await self.storage.purchase_store_item(
+            purchase=self.factory.store_purchase(
+                user_login="test_user",
+                store_item_id=store_item.id,
+            ),
+            mana_count=100,
+        )
+
+        await self.storage.purchase_store_item(
+            purchase=self.factory.store_purchase(
+                user_login="test_user",
+                store_item_id=store_item.id,
+            ),
+            mana_count=100,
+        )
+
+        updated_stock = await self.storage_helper.get_store_item_stock(store_item_id=store_item.id)
+        assert updated_stock == 1
+
+        updated_mana = await self.storage_helper.get_user_mana(user_login="test_user")
+        assert updated_mana == 300
+
+    async def test_purchase_store_item_zero_stock(self) -> None:
+        user = await self.storage_helper.insert_user(
+            user=self.factory.candidate(
+                login="test_user",
+                mana=200,
+            )
+        )
+        assert user is not None
+
+        store_item = await self.storage_helper.insert_store_item(
+            store_item=self.factory.store_item(
+                title="TEST_ITEM",
+                price=100,
+                stock=0,
+            )
+        )
+        assert store_item is not None
+
+        with pytest.raises(StoreItemInsufficientStockError):
+            await self.storage.purchase_store_item(
+                purchase=self.factory.store_purchase(
+                    user_login="test_user",
+                    store_item_id=store_item.id,
+                ),
+                mana_count=100,
+            )
+
+        updated_mana = await self.storage_helper.get_user_mana(user_login="test_user")
+        assert updated_mana == 200
+
+    async def test_purchase_store_item_insufficient_mana(self) -> None:
+        user = await self.storage_helper.insert_user(
+            user=self.factory.candidate(
+                login="test_user",
+                mana=50,
+            )
+        )
+        assert user is not None
+
+        store_item = await self.storage_helper.insert_store_item(
+            store_item=self.factory.store_item(
+                title="TEST_ITEM",
+                price=100,
+                stock=5,
+            )
+        )
+        assert store_item is not None
+
+        with pytest.raises(InsufficientManaError):
+            await self.storage.purchase_store_item(
+                purchase=self.factory.store_purchase(
+                    user_login="test_user",
+                    store_item_id=store_item.id,
+                ),
+                mana_count=100,
+            )

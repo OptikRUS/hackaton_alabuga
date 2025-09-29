@@ -83,6 +83,7 @@ from src.core.store.use_cases import (
     DeleteStoreItemUseCase,
     GetStoreItemsUseCase,
     GetStoreItemUseCase,
+    PurchaseStoreItemUseCase,
     UpdateStoreItemUseCase,
 )
 from src.core.tasks.use_cases import (
@@ -456,3 +457,7 @@ class StoreProviderMock(Provider):
     @provide
     def override_delete_store_item_use_case(self) -> DeleteStoreItemUseCase:
         return AsyncMock(spec=DeleteStoreItemUseCase)
+
+    @provide
+    def override_purchase_store_item_use_case(self) -> PurchaseStoreItemUseCase:
+        return AsyncMock(spec=PurchaseStoreItemUseCase)

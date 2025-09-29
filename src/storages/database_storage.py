@@ -60,10 +60,12 @@ from src.core.storages import (
     UserStorage,
 )
 from src.core.store.exceptions import (
+    InsufficientManaError,
+    StoreItemInsufficientStockError,
     StoreItemNotFoundError,
     StoreItemTitleAlreadyExistError,
 )
-from src.core.store.schemas import StoreItem, StoreItems
+from src.core.store.schemas import StoreItem, StoreItems, StorePurchase
 from src.core.tasks.exceptions import (
     TaskNameAlreadyExistError,
     TaskNotFoundError,
@@ -1110,3 +1112,34 @@ class DatabaseStorage(
         await self.get_store_item_by_id(store_item_id=store_item_id)
         query = delete(StoreItemModel).where(StoreItemModel.id == store_item_id)
         await self.session.execute(query)
+
+    async def purchase_store_item(self, purchase: StorePurchase, mana_count: int) -> None:
+        store_item_query = select(StoreItemModel).where(StoreItemModel.id == purchase.store_item_id)
+        store_item_result = await self.session.scalar(store_item_query)
+        if store_item_result is None:
+            raise StoreItemNotFoundError
+
+        if store_item_result.stock <= 0:
+            raise StoreItemInsufficientStockError
+
+        user_query = select(UserModel).where(UserModel.login == purchase.user_login)
+        user_result = await self.session.scalar(user_query)
+        if user_result is None:
+            raise UserNotFoundError
+
+        if user_result.mana < mana_count:
+            raise InsufficientManaError
+
+        stock_query = (
+            update(StoreItemModel)
+            .where(StoreItemModel.id == purchase.store_item_id)
+            .values({"stock": StoreItemModel.stock - 1})
+        )
+        await self.session.execute(stock_query)
+
+        mana_query = (
+            update(UserModel)
+            .where(UserModel.login == purchase.user_login)
+            .values({"mana": UserModel.mana - mana_count})
+        )
+        await self.session.execute(mana_query)

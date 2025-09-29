@@ -12,3 +12,9 @@ class StoreItem:
 @dataclass
 class StoreItems:
     values: list[StoreItem]
+
+
+@dataclass
+class StorePurchase:
+    user_login: str
+    store_item_id: int
