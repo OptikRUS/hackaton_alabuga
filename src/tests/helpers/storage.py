@@ -11,6 +11,7 @@ from src.core.missions.schemas import Mission
 from src.core.ranks.schemas import Rank
 from src.core.seasons.schemas import Season
 from src.core.skills.schemas import Skill
+from src.core.store.schemas import StoreItem
 from src.core.tasks.schemas import MissionTask, UserTask
 from src.core.users.schemas import User
 from src.storages.models import (
@@ -24,6 +25,7 @@ from src.storages.models import (
     RankCompetencyRequirementModel,
     RankModel,
     SkillModel,
+    StoreItemModel,
     UserModel,
     UserTaskRelationModel,
 )
@@ -333,3 +335,25 @@ class StorageHelper:
         )
         result = await self.session.scalars(query)
         return list(result)
+
+    async def insert_store_item(self, store_item: StoreItem) -> StoreItemModel | None:
+        query = (
+            insert(StoreItemModel)
+            .values(
+                {
+                    "title": store_item.title,
+                    "price": store_item.price,
+                    "stock": store_item.stock,
+                },
+            )
+            .returning(StoreItemModel)
+        )
+        return await self.session.scalar(query)  # type: ignore[no-any-return]
+
+    async def get_store_item_by_id(self, store_item_id: int) -> StoreItemModel | None:
+        query = select(StoreItemModel).where(StoreItemModel.id == store_item_id)
+        return await self.session.scalar(query)  # type: ignore[no-any-return]
+
+    async def get_store_item_by_title(self, title: str) -> StoreItemModel | None:
+        query = select(StoreItemModel).where(StoreItemModel.title == title)
+        return await self.session.scalar(query)  # type: ignore[no-any-return]

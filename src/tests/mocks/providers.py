@@ -78,6 +78,13 @@ from src.core.skills.use_cases import (
     GetSkillsUseCase,
     UpdateSkillUseCase,
 )
+from src.core.store.use_cases import (
+    CreateStoreItemUseCase,
+    DeleteStoreItemUseCase,
+    GetStoreItemsUseCase,
+    GetStoreItemUseCase,
+    UpdateStoreItemUseCase,
+)
 from src.core.tasks.use_cases import (
     CreateMissionTaskUseCase,
     DeleteMissionTaskUseCase,
@@ -425,3 +432,27 @@ class MissionChainProviderMock(Provider):
     @provide
     def override_update_mission_order_in_chain_use_case(self) -> UpdateMissionOrderInChainUseCase:
         return AsyncMock(spec=UpdateMissionOrderInChainUseCase)
+
+
+class StoreProviderMock(Provider):
+    scope: Scope = Scope.APP
+
+    @provide
+    def override_create_store_item_use_case(self) -> CreateStoreItemUseCase:
+        return AsyncMock(spec=CreateStoreItemUseCase)
+
+    @provide
+    def override_get_store_items_use_case(self) -> GetStoreItemsUseCase:
+        return AsyncMock(spec=GetStoreItemsUseCase)
+
+    @provide
+    def override_get_store_item_use_case(self) -> GetStoreItemUseCase:
+        return AsyncMock(spec=GetStoreItemUseCase)
+
+    @provide
+    def override_update_store_item_use_case(self) -> UpdateStoreItemUseCase:
+        return AsyncMock(spec=UpdateStoreItemUseCase)
+
+    @provide
+    def override_delete_store_item_use_case(self) -> DeleteStoreItemUseCase:
+        return AsyncMock(spec=DeleteStoreItemUseCase)

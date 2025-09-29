@@ -12,6 +12,7 @@ from src.core.missions.schemas import CompetencyReward, Mission, SkillReward
 from src.core.ranks.schemas import Rank, RankCompetencyRequirement
 from src.core.seasons.schemas import Season
 from src.core.skills.schemas import Skill
+from src.core.store.schemas import StoreItem
 from src.core.tasks.schemas import MissionTask, UserTask
 from src.core.users.enums import UserRoleEnum
 from src.core.users.schemas import CandidateUser, User
@@ -665,4 +666,21 @@ class MissionDependencyModel(Base):
         return MissionDependency(
             mission_id=self.mission_id,
             prerequisite_mission_id=self.prerequisite_mission_id,
+        )
+
+
+class StoreItemModel(Base):
+    __tablename__ = "store_item"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    title: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    price: Mapped[int] = mapped_column(nullable=False)
+    stock: Mapped[int] = mapped_column(nullable=False)
+
+    def to_schema(self) -> StoreItem:
+        return StoreItem(
+            id=self.id,
+            title=self.title,
+            price=self.price,
+            stock=self.stock,
         )

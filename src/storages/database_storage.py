@@ -56,8 +56,14 @@ from src.core.storages import (
     MissionStorage,
     RankStorage,
     SkillStorage,
+    StoreStorage,
     UserStorage,
 )
+from src.core.store.exceptions import (
+    StoreItemNotFoundError,
+    StoreItemTitleAlreadyExistError,
+)
+from src.core.store.schemas import StoreItem, StoreItems
 from src.core.tasks.exceptions import (
     TaskNameAlreadyExistError,
     TaskNotFoundError,
@@ -88,6 +94,7 @@ from src.storages.models import (
     RankMissionRelationModel,
     RankModel,
     SkillModel,
+    StoreItemModel,
     UserModel,
     UserTaskRelationModel,
 )
@@ -101,6 +108,7 @@ class DatabaseStorage(
     CompetencyStorage,
     RankStorage,
     SkillStorage,
+    StoreStorage,
 ):
     session: AsyncSession
 
@@ -1050,4 +1058,55 @@ class DatabaseStorage(
             MissionDependencyModel.mission_id == mission_id,
             MissionDependencyModel.prerequisite_mission_id == prerequisite_mission_id,
         )
+        await self.session.execute(query)
+
+    async def insert_store_item(self, store_item: StoreItem) -> None:
+        query = insert(StoreItemModel).values({
+            "title": store_item.title,
+            "price": store_item.price,
+            "stock": store_item.stock,
+        })
+        try:
+            await self.session.execute(query)
+        except IntegrityError as error:
+            raise StoreItemTitleAlreadyExistError from error
+
+    async def get_store_item_by_id(self, store_item_id: int) -> StoreItem:
+        query = select(StoreItemModel).where(StoreItemModel.id == store_item_id)
+        row = await self.session.scalar(query)
+        if row is None:
+            raise StoreItemNotFoundError
+        return row.to_schema()
+
+    async def get_store_item_by_title(self, title: str) -> StoreItem:
+        query = select(StoreItemModel).where(StoreItemModel.title == title)
+        row = await self.session.scalar(query)
+        if row is None:
+            raise StoreItemNotFoundError
+        return row.to_schema()
+
+    async def list_store_items(self) -> StoreItems:
+        query = select(StoreItemModel)
+        result = await self.session.scalars(query)
+        return StoreItems(values=[row.to_schema() for row in result])
+
+    async def update_store_item(self, store_item: StoreItem) -> None:
+        await self.get_store_item_by_id(store_item_id=store_item.id)
+        query = (
+            update(StoreItemModel)
+            .where(StoreItemModel.id == store_item.id)
+            .values({
+                "title": store_item.title,
+                "price": store_item.price,
+                "stock": store_item.stock,
+            })
+        )
+        try:
+            await self.session.execute(query)
+        except IntegrityError as error:
+            raise StoreItemTitleAlreadyExistError from error
+
+    async def delete_store_item(self, store_item_id: int) -> None:
+        await self.get_store_item_by_id(store_item_id=store_item_id)
+        query = delete(StoreItemModel).where(StoreItemModel.id == store_item_id)
         await self.session.execute(query)

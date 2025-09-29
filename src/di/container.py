@@ -11,6 +11,7 @@ from src.di.providers import (
     MissionProvider,
     RankProvider,
     SkillProvider,
+    StoreProvider,
     UserProvider,
 )
 
@@ -27,5 +28,6 @@ def build_container() -> AsyncContainer:
         CompetencyProvider(),
         RankProvider(),
         SkillProvider(),
+        StoreProvider(),
         DatabaseProvider(),
     )

@@ -19,6 +19,7 @@ from src.core.missions.schemas import (
 from src.core.ranks.schemas import Rank, RankCompetencyRequirement, Ranks
 from src.core.seasons.schemas import Season, Seasons
 from src.core.skills.schemas import Skill, Skills
+from src.core.store.schemas import StoreItem, StoreItems
 from src.core.tasks.schemas import (
     MissionTask,
     MissionTasks,
@@ -328,3 +329,22 @@ class FactoryHelper:
         if skill is None:
             skill = cls.skill()
         return SkillReward(skill=skill, level_increase=level_increase)
+
+    @classmethod
+    def store_item(
+        cls,
+        store_item_id: int = 0,
+        title: str = "TEST",
+        price: int = 100,
+        stock: int = 10,
+    ) -> StoreItem:
+        return StoreItem(
+            id=store_item_id,
+            title=title,
+            price=price,
+            stock=stock,
+        )
+
+    @classmethod
+    def store_items(cls, values: list[StoreItem]) -> StoreItems:
+        return StoreItems(values=values)

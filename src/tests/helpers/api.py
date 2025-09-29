@@ -412,3 +412,24 @@ class APIHelper:
             f"/mission-chains/{chain_id}/missions/{mission_id}/order",
             params={"new_order": new_order},
         )
+
+    def create_store_item(self, title: str, price: int, stock: int) -> Response:
+        return self.client.post(
+            url="/store",
+            json={"title": title, "price": price, "stock": stock},
+        )
+
+    def get_store_items(self) -> Response:
+        return self.client.get("/store")
+
+    def get_store_item(self, store_item_id: int) -> Response:
+        return self.client.get(f"/store/{store_item_id}")
+
+    def update_store_item(self, store_item_id: int, title: str, price: int, stock: int) -> Response:
+        return self.client.put(
+            url=f"/store/{store_item_id}",
+            json={"title": title, "price": price, "stock": stock},
+        )
+
+    def delete_store_item(self, store_item_id: int) -> Response:
+        return self.client.delete(f"/store/{store_item_id}")
