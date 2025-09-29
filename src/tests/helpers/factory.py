@@ -2,7 +2,7 @@ from datetime import UTC, datetime
 
 from src.core.artifacts.enums import ArtifactRarityEnum
 from src.core.artifacts.schemas import Artifact, Artifacts
-from src.core.competencies.schemas import Competencies, Competency
+from src.core.competencies.schemas import Competencies, Competency, UserCompetency
 from src.core.mission_chains.schemas import (
     MissionChain,
     MissionChainMission,
@@ -45,6 +45,12 @@ class FactoryHelper:
             last_name=last_name,
             password=password,
             role=role,
+            rank_id=1,
+            exp=0,
+            mana=0,
+            artifacts=[],
+            competencies=[],
+            skills=[],
         )
 
     @classmethod
@@ -71,10 +77,11 @@ class FactoryHelper:
         last_name: str = "TEST",
         password: str = "TEST",  # noqa: S107
         role: UserRoleEnum = UserRoleEnum.CANDIDATE,
-        rank_id: int = 0,
+        rank_id: int = 1,
         exp: int = 0,
         mana: int = 0,
         artifacts: list[Artifact] | None = None,
+        competencies: list[UserCompetency] | None = None,
     ) -> CandidateUser:
         return CandidateUser(
             login=login,
@@ -86,6 +93,7 @@ class FactoryHelper:
             exp=exp,
             mana=mana,
             artifacts=artifacts,
+            competencies=competencies,
         )
 
     @classmethod

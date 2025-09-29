@@ -2,7 +2,7 @@ from pydantic import Field
 
 from src.api.artifacts.schemas import ArtifactResponse
 from src.api.boundary import BoundaryModel
-from src.api.competencies.schemas import CompetencyResponse
+from src.api.competencies.schemas import CompetencyResponse, UserCompetencyResponse
 from src.api.skills.schemas import SkillResponse
 from src.core.missions.schemas import CompetencyReward, Mission, SkillReward
 from src.core.tasks.schemas import UserTask
@@ -52,6 +52,49 @@ class UserResponse(BoundaryModel):
             first_name=user.first_name,
             last_name=user.last_name,
             role=user.role,
+        )
+
+
+class UsersListResponse(BoundaryModel):
+    users: list[UserResponse] = Field(default_factory=list, description="Список пользователей")
+
+    @classmethod
+    def from_schema(cls, users: list[User]) -> "UsersListResponse":
+        return cls(users=[UserResponse.from_schema(user) for user in users])
+
+
+class UserDetailedResponse(BoundaryModel):
+    login: str = Field(default=..., description="Логин пользователя")
+    first_name: str = Field(default=..., description="Имя пользователя")
+    last_name: str = Field(default=..., description="Фамилия пользователя")
+    role: str = Field(default=..., description="Роль пользователя")
+    rank_id: int = Field(default=..., description="ID ранга пользователя")
+    exp: int = Field(default=..., description="Опыт пользователя")
+    mana: int = Field(default=..., description="Мана пользователя")
+    artifacts: list[ArtifactResponse] = Field(
+        default_factory=list, description="Артефакты пользователя"
+    )
+    competencies: list[UserCompetencyResponse] = Field(
+        default_factory=list, description="Компетенции пользователя"
+    )
+
+    @classmethod
+    def from_schema(cls, user: User) -> "UserDetailedResponse":
+        return cls(
+            login=user.login,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            role=user.role,
+            rank_id=user.rank_id,
+            exp=user.exp,
+            mana=user.mana,
+            artifacts=[
+                ArtifactResponse.from_schema(artifact) for artifact in (user.artifacts or [])
+            ],
+            competencies=[
+                UserCompetencyResponse.from_schema(competency)
+                for competency in (user.competencies or [])
+            ],
         )
 
 

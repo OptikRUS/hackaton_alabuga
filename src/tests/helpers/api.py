@@ -436,3 +436,49 @@ class APIHelper:
 
     def purchase_store_item(self, store_item_id: int) -> Response:
         return self.client.post(url="/store/purchase", json={"store_item_id": store_item_id})
+
+    def list_users(self) -> Response:
+        return self.client.get("/users")
+
+    def get_user(self, user_login: str) -> Response:
+        return self.client.get(f"/users/{user_login}")
+
+    def add_competency_to_user(
+        self, user_login: str, competency_id: int, level: int = 0
+    ) -> Response:
+        return self.client.post(
+            f"/users/{user_login}/competencies/{competency_id}", params={"level": level}
+        )
+
+    def update_user_competency_level(
+        self, user_login: str, competency_id: int, level: int
+    ) -> Response:
+        return self.client.put(
+            f"/users/{user_login}/competencies/{competency_id}", params={"level": level}
+        )
+
+    def remove_competency_from_user(self, user_login: str, competency_id: int) -> Response:
+        return self.client.delete(f"/users/{user_login}/competencies/{competency_id}")
+
+    def add_skill_to_user(
+        self, user_login: str, competency_id: int, skill_id: int, level: int = 0
+    ) -> Response:
+        return self.client.post(
+            f"/users/{user_login}/competencies/{competency_id}/skills/{skill_id}",
+            params={"level": level},
+        )
+
+    def update_user_skill_level(
+        self, user_login: str, competency_id: int, skill_id: int, level: int
+    ) -> Response:
+        return self.client.put(
+            f"/users/{user_login}/competencies/{competency_id}/skills/{skill_id}",
+            params={"level": level},
+        )
+
+    def remove_skill_from_user(
+        self, user_login: str, competency_id: int, skill_id: int
+    ) -> Response:
+        return self.client.delete(
+            f"/users/{user_login}/competencies/{competency_id}/skills/{skill_id}"
+        )

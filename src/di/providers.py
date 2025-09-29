@@ -15,6 +15,7 @@ from src.core.artifacts.use_cases import (
     DeleteArtifactUseCase,
     GetArtifactDetailUseCase,
     GetArtifactsUseCase,
+    GetUserArtifactsUseCase,
     RemoveArtifactFromMissionUseCase,
     RemoveArtifactFromUserUseCase,
     UpdateArtifactUseCase,
@@ -106,7 +107,21 @@ from src.core.tasks.use_cases import (
     UpdateMissionTaskUseCase,
 )
 from src.core.users.enums import UserRoleEnum
-from src.core.users.use_cases import CreateUserUseCase, GetUserUseCase, LoginUserUseCase
+from src.core.users.use_cases import (
+    AddCompetencyToUserUseCase,
+    AddSkillToUserUseCase,
+    CreateUserUseCase,
+    GetUserCompetenciesUseCase,
+    GetUserSkillsUseCase,
+    GetUserUseCase,
+    GetUserWithRelationsUseCase,
+    ListUsersUseCase,
+    LoginUserUseCase,
+    RemoveCompetencyFromUserUseCase,
+    RemoveSkillFromUserUseCase,
+    UpdateUserCompetencyLevelUseCase,
+    UpdateUserSkillLevelUseCase,
+)
 from src.services.minio import MinioService
 from src.services.user_password_service import UserPasswordService
 from src.storages.database import async_session
@@ -129,12 +144,66 @@ class UserProvider(Provider):
         return GetUserUseCase(storage=storage)
 
     @provide
+    def build_get_user_with_relations_use_case(
+        self, storage: UserStorage
+    ) -> GetUserWithRelationsUseCase:
+        return GetUserWithRelationsUseCase(storage=storage)
+
+    @provide
+    def build_list_users_use_case(self, storage: UserStorage) -> ListUsersUseCase:
+        return ListUsersUseCase(storage=storage)
+
+    @provide
     def build_login_user_use_case(
         self,
         storage: UserStorage,
         password_service: PasswordService,
     ) -> LoginUserUseCase:
         return LoginUserUseCase(storage=storage, password_service=password_service)
+
+    @provide
+    def build_add_competency_to_user_use_case(
+        self, storage: UserStorage
+    ) -> AddCompetencyToUserUseCase:
+        return AddCompetencyToUserUseCase(storage=storage)
+
+    @provide
+    def build_remove_competency_from_user_use_case(
+        self, storage: UserStorage
+    ) -> RemoveCompetencyFromUserUseCase:
+        return RemoveCompetencyFromUserUseCase(storage=storage)
+
+    @provide
+    def build_update_user_competency_level_use_case(
+        self, storage: UserStorage
+    ) -> UpdateUserCompetencyLevelUseCase:
+        return UpdateUserCompetencyLevelUseCase(storage=storage)
+
+    @provide
+    def build_add_skill_to_user_use_case(self, storage: UserStorage) -> AddSkillToUserUseCase:
+        return AddSkillToUserUseCase(storage=storage)
+
+    @provide
+    def build_remove_skill_from_user_use_case(
+        self, storage: UserStorage
+    ) -> RemoveSkillFromUserUseCase:
+        return RemoveSkillFromUserUseCase(storage=storage)
+
+    @provide
+    def build_update_user_skill_level_use_case(
+        self, storage: UserStorage
+    ) -> UpdateUserSkillLevelUseCase:
+        return UpdateUserSkillLevelUseCase(storage=storage)
+
+    @provide
+    def build_get_user_competencies_use_case(
+        self, storage: UserStorage
+    ) -> GetUserCompetenciesUseCase:
+        return GetUserCompetenciesUseCase(storage=storage)
+
+    @provide
+    def build_get_user_skills_use_case(self, storage: UserStorage) -> GetUserSkillsUseCase:
+        return GetUserSkillsUseCase(storage=storage)
 
 
 class MissionProvider(Provider):
@@ -488,6 +557,12 @@ class ArtifactProvider(Provider):
         self, storage: ArtifactStorage, user_storage: UserStorage
     ) -> RemoveArtifactFromUserUseCase:
         return RemoveArtifactFromUserUseCase(storage=storage, user_storage=user_storage)
+
+    @provide
+    def build_get_user_artifacts_use_case(
+        self, user_storage: UserStorage
+    ) -> GetUserArtifactsUseCase:
+        return GetUserArtifactsUseCase(user_storage=user_storage)
 
 
 class DatabaseProvider(Provider):

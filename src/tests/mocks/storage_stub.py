@@ -788,3 +788,41 @@ class StorageMock(
                 artifacts=user.artifacts,
             )
             self.user_table[purchase.user_login] = updated_user
+
+    # UserStorage methods for competencies and skills
+    async def get_user_by_login_with_relations(self, login: str) -> User:
+        try:
+            return self.user_table[login]
+        except KeyError as error:
+            raise UserNotFoundError from error
+
+    async def list_users(self) -> list[User]:
+        return list(self.user_table.values())
+
+    async def add_competency_to_user(
+        self, user_login: str, competency_id: int, level: int = 0
+    ) -> None:
+        pass  # Mock implementation
+
+    async def remove_competency_from_user(self, user_login: str, competency_id: int) -> None:
+        pass  # Mock implementation
+
+    async def update_user_competency_level(
+        self, user_login: str, competency_id: int, level: int
+    ) -> None:
+        pass  # Mock implementation
+
+    async def add_skill_to_user(
+        self, user_login: str, skill_id: int, competency_id: int, level: int = 0
+    ) -> None:
+        pass  # Mock implementation
+
+    async def remove_skill_from_user(
+        self, user_login: str, skill_id: int, competency_id: int
+    ) -> None:
+        pass  # Mock implementation
+
+    async def update_user_skill_level(
+        self, user_login: str, skill_id: int, competency_id: int, level: int
+    ) -> None:
+        pass  # Mock implementation

@@ -94,7 +94,21 @@ from src.core.tasks.use_cases import (
     UpdateMissionTaskUseCase,
 )
 from src.core.users.enums import UserRoleEnum
-from src.core.users.use_cases import CreateUserUseCase, GetUserUseCase, LoginUserUseCase
+from src.core.users.use_cases import (
+    AddCompetencyToUserUseCase,
+    AddSkillToUserUseCase,
+    CreateUserUseCase,
+    GetUserCompetenciesUseCase,
+    GetUserSkillsUseCase,
+    GetUserUseCase,
+    GetUserWithRelationsUseCase,
+    ListUsersUseCase,
+    LoginUserUseCase,
+    RemoveCompetencyFromUserUseCase,
+    RemoveSkillFromUserUseCase,
+    UpdateUserCompetencyLevelUseCase,
+    UpdateUserSkillLevelUseCase,
+)
 from src.services.minio import MinioService
 from src.tests.mocks.user_password import UserPasswordServiceMock
 
@@ -113,6 +127,46 @@ class UserProviderMock(Provider):
     @provide
     def override_login_user_use_case(self) -> LoginUserUseCase:
         return AsyncMock(spec=LoginUserUseCase)
+
+    @provide
+    def override_get_user_with_relations_use_case(self) -> GetUserWithRelationsUseCase:
+        return AsyncMock(spec=GetUserWithRelationsUseCase)
+
+    @provide
+    def override_list_users_use_case(self) -> ListUsersUseCase:
+        return AsyncMock(spec=ListUsersUseCase)
+
+    @provide
+    def override_add_competency_to_user_use_case(self) -> AddCompetencyToUserUseCase:
+        return AsyncMock(spec=AddCompetencyToUserUseCase)
+
+    @provide
+    def override_remove_competency_from_user_use_case(self) -> RemoveCompetencyFromUserUseCase:
+        return AsyncMock(spec=RemoveCompetencyFromUserUseCase)
+
+    @provide
+    def override_update_user_competency_level_use_case(self) -> UpdateUserCompetencyLevelUseCase:
+        return AsyncMock(spec=UpdateUserCompetencyLevelUseCase)
+
+    @provide
+    def override_add_skill_to_user_use_case(self) -> AddSkillToUserUseCase:
+        return AsyncMock(spec=AddSkillToUserUseCase)
+
+    @provide
+    def override_remove_skill_from_user_use_case(self) -> RemoveSkillFromUserUseCase:
+        return AsyncMock(spec=RemoveSkillFromUserUseCase)
+
+    @provide
+    def override_update_user_skill_level_use_case(self) -> UpdateUserSkillLevelUseCase:
+        return AsyncMock(spec=UpdateUserSkillLevelUseCase)
+
+    @provide
+    def override_get_user_competencies_use_case(self) -> GetUserCompetenciesUseCase:
+        return AsyncMock(spec=GetUserCompetenciesUseCase)
+
+    @provide
+    def override_get_user_skills_use_case(self) -> GetUserSkillsUseCase:
+        return AsyncMock(spec=GetUserSkillsUseCase)
 
 
 class MissionProviderMock(Provider):

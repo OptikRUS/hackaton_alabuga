@@ -97,7 +97,9 @@ from src.storages.models import (
     RankModel,
     SkillModel,
     StoreItemModel,
+    UserCompetencyModel,
     UserModel,
+    UserSkillModel,
     UserTaskRelationModel,
 )
 
@@ -122,7 +124,7 @@ class DatabaseStorage(
                 "last_name": user.last_name,
                 "password": user.password,
                 "role": user.role,
-                "rank_id": 0,
+                "rank_id": 1,
                 "exp": 0,
                 "mana": 0,
             },
@@ -134,10 +136,21 @@ class DatabaseStorage(
             raise UserAlreadyExistError from error
 
     async def get_user_by_login(self, login: str) -> User:
+        query = select(UserModel).where(UserModel.login == login)
+        user = await self.session.scalar(query)
+        if user is None:
+            raise UserNotFoundError
+        return user.to_schema()
+
+    async def get_user_by_login_with_relations(self, login: str) -> User:
         query = (
             select(UserModel)
             .where(UserModel.login == login)
-            .options(selectinload(UserModel.artifacts))
+            .options(
+                selectinload(UserModel.artifacts),
+                selectinload(UserModel.competencies),
+                selectinload(UserModel.skills),
+            )
         )
         user = await self.session.scalar(query)
         if user is None:
@@ -148,12 +161,25 @@ class DatabaseStorage(
         query = (
             select(UserModel)
             .where(UserModel.login == login)
-            .options(selectinload(UserModel.artifacts))
+            .options(
+                selectinload(UserModel.artifacts),
+                selectinload(UserModel.competencies),
+                selectinload(UserModel.skills),
+            )
         )
         candidate = await self.session.scalar(query)
         if candidate is None:
             raise UserNotFoundError
         return candidate.to_candidate_schema()
+
+    async def list_users(self) -> list[User]:
+        query = select(UserModel).options(
+            selectinload(UserModel.artifacts),
+            selectinload(UserModel.competencies),
+            selectinload(UserModel.skills),
+        )
+        users = await self.session.scalars(query)
+        return [user.to_schema() for user in users]
 
     async def insert_season(self, season: Season) -> None:
         query = (
@@ -507,6 +533,71 @@ class DatabaseStorage(
         query = delete(ArtifactUserRelationModel).where(
             ArtifactUserRelationModel.user_login == user_login,
             ArtifactUserRelationModel.artifact_id == artifact_id,
+        )
+        await self.session.execute(query)
+
+    async def add_competency_to_user(
+        self, user_login: str, competency_id: int, level: int = 0
+    ) -> None:
+        query = insert(UserCompetencyModel).values({
+            "user_login": user_login,
+            "competency_id": competency_id,
+            "level": level,
+        })
+        await self.session.execute(query)
+
+    async def remove_competency_from_user(self, user_login: str, competency_id: int) -> None:
+        query = delete(UserCompetencyModel).where(
+            UserCompetencyModel.user_login == user_login,
+            UserCompetencyModel.competency_id == competency_id,
+        )
+        await self.session.execute(query)
+
+    async def update_user_competency_level(
+        self, user_login: str, competency_id: int, level: int
+    ) -> None:
+        query = (
+            update(UserCompetencyModel)
+            .where(
+                UserCompetencyModel.user_login == user_login,
+                UserCompetencyModel.competency_id == competency_id,
+            )
+            .values(level=level)
+        )
+        await self.session.execute(query)
+
+    async def add_skill_to_user(
+        self, user_login: str, skill_id: int, competency_id: int, level: int = 0
+    ) -> None:
+        query = insert(UserSkillModel).values({
+            "user_login": user_login,
+            "skill_id": skill_id,
+            "competency_id": competency_id,
+            "level": level,
+        })
+        await self.session.execute(query)
+
+    async def remove_skill_from_user(
+        self, user_login: str, skill_id: int, competency_id: int
+    ) -> None:
+        query = delete(UserSkillModel).where(
+            UserSkillModel.user_login == user_login,
+            UserSkillModel.skill_id == skill_id,
+            UserSkillModel.competency_id == competency_id,
+        )
+        await self.session.execute(query)
+
+    async def update_user_skill_level(
+        self, user_login: str, skill_id: int, competency_id: int, level: int
+    ) -> None:
+        query = (
+            update(UserSkillModel)
+            .where(
+                UserSkillModel.user_login == user_login,
+                UserSkillModel.skill_id == skill_id,
+                UserSkillModel.competency_id == competency_id,
+            )
+            .values(level=level)
         )
         await self.session.execute(query)
 

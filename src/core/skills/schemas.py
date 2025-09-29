@@ -9,5 +9,18 @@ class Skill:
 
 
 @dataclass
+class UserSkill:
+    id: int
+    name: str
+    max_level: int
+    user_level: int
+
+
+@dataclass
 class Skills:
     values: list[Skill]
+
+
+@dataclass
+class UserSkills:
+    values: list[UserSkill]

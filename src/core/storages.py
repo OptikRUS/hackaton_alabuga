@@ -29,7 +29,49 @@ class UserStorage(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
+    async def get_user_by_login_with_relations(self, login: str) -> User:
+        raise NotImplementedError
+
+    @abstractmethod
     async def get_candidate_by_login(self, login: str) -> CandidateUser:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def list_users(self) -> list[User]:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def add_competency_to_user(
+        self, user_login: str, competency_id: int, level: int = 0
+    ) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def remove_competency_from_user(self, user_login: str, competency_id: int) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def update_user_competency_level(
+        self, user_login: str, competency_id: int, level: int
+    ) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def add_skill_to_user(
+        self, user_login: str, skill_id: int, competency_id: int, level: int = 0
+    ) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def remove_skill_from_user(
+        self, user_login: str, skill_id: int, competency_id: int
+    ) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def update_user_skill_level(
+        self, user_login: str, skill_id: int, competency_id: int, level: int
+    ) -> None:
         raise NotImplementedError
 
 

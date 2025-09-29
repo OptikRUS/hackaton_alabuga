@@ -5,13 +5,13 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 from src.core.artifacts.enums import ArtifactRarityEnum
 from src.core.artifacts.schemas import Artifact
-from src.core.competencies.schemas import Competency
+from src.core.competencies.schemas import Competency, UserCompetency
 from src.core.mission_chains.schemas import MissionChain, MissionDependency
 from src.core.missions.enums import MissionCategoryEnum
 from src.core.missions.schemas import CompetencyReward, Mission, SkillReward
 from src.core.ranks.schemas import Rank, RankCompetencyRequirement
 from src.core.seasons.schemas import Season
-from src.core.skills.schemas import Skill
+from src.core.skills.schemas import Skill, UserSkill
 from src.core.store.schemas import StoreItem
 from src.core.tasks.schemas import MissionTask, UserTask
 from src.core.users.enums import UserRoleEnum
@@ -46,6 +46,18 @@ class UserModel(Base):
         lazy="selectin",
     )
 
+    competencies: Mapped[list["UserCompetencyModel"]] = relationship(
+        "UserCompetencyModel",
+        back_populates="user",
+        lazy="selectin",
+    )
+
+    skills: Mapped[list["UserSkillModel"]] = relationship(
+        "UserSkillModel",
+        back_populates="user",
+        lazy="selectin",
+    )
+
     @classmethod
     def from_schema(cls, user: User) -> "UserModel":
         return cls(
@@ -63,6 +75,12 @@ class UserModel(Base):
             role=UserRoleEnum(self.role),
             first_name=self.first_name,
             last_name=self.last_name,
+            artifacts=[artifact.to_schema() for artifact in self.artifacts],
+            rank_id=self.rank_id,
+            exp=self.exp,
+            mana=self.mana,
+            competencies=[comp.to_schema() for comp in self.competencies],
+            skills=[skill.to_schema() for skill in self.skills],
         )
 
     def to_candidate_schema(self) -> CandidateUser:
@@ -76,6 +94,7 @@ class UserModel(Base):
             first_name=self.first_name,
             last_name=self.last_name,
             artifacts=[artifact.to_schema() for artifact in self.artifacts],
+            competencies=[comp.to_schema() for comp in self.competencies],
         )
 
 
@@ -666,6 +685,92 @@ class MissionDependencyModel(Base):
         return MissionDependency(
             mission_id=self.mission_id,
             prerequisite_mission_id=self.prerequisite_mission_id,
+        )
+
+
+class UserSkillModel(Base):
+    __tablename__ = "users_skills"
+    __table_args__ = (
+        PrimaryKeyConstraint(
+            "user_login",
+            "skill_id",
+            "competency_id",
+            name="pk_users_skills",
+        ),
+    )
+
+    user_login: Mapped[str] = mapped_column(
+        ForeignKey(UserModel.login, ondelete="CASCADE"),
+        primary_key=True,
+    )
+    skill_id: Mapped[int] = mapped_column(
+        ForeignKey(SkillModel.id, ondelete="CASCADE"),
+        primary_key=True,
+    )
+    competency_id: Mapped[int] = mapped_column(
+        ForeignKey(CompetencyModel.id, ondelete="CASCADE"),
+        primary_key=True,
+    )
+    level: Mapped[int] = mapped_column(default=0, nullable=False)
+
+    user: Mapped["UserModel"] = relationship("UserModel", lazy="selectin")
+    skill: Mapped["SkillModel"] = relationship("SkillModel", lazy="selectin")
+    competency: Mapped["CompetencyModel"] = relationship("CompetencyModel", lazy="selectin")
+
+    def to_schema(self) -> UserSkill:
+        return UserSkill(
+            id=self.skill.id,
+            name=self.skill.name,
+            max_level=self.skill.max_level,
+            user_level=self.level,
+        )
+
+
+class UserCompetencyModel(Base):
+    __tablename__ = "users_competencies"
+    __table_args__ = (
+        PrimaryKeyConstraint(
+            "user_login",
+            "competency_id",
+            name="pk_users_competencies",
+        ),
+    )
+
+    user_login: Mapped[str] = mapped_column(
+        ForeignKey(UserModel.login, ondelete="CASCADE"),
+        primary_key=True,
+    )
+    competency_id: Mapped[int] = mapped_column(
+        ForeignKey(CompetencyModel.id, ondelete="CASCADE"),
+        primary_key=True,
+    )
+    level: Mapped[int] = mapped_column(default=0, nullable=False)
+
+    user: Mapped["UserModel"] = relationship("UserModel", lazy="selectin")
+    competency: Mapped["CompetencyModel"] = relationship("CompetencyModel", lazy="selectin")
+
+    def to_schema(self) -> UserCompetency:
+        user_skills = []
+        user_level = 0
+        user_skills_dict = {}
+        for user_skill_model in self.user.skills:
+            if user_skill_model.competency_id == self.competency_id:
+                user_skills_dict[user_skill_model.skill_id] = user_skill_model.level
+
+        for skill in self.competency.skills or []:
+            skill_user_level = user_skills_dict.get(skill.id, 0)
+            user_skill = UserSkill(
+                id=skill.id, name=skill.name, max_level=skill.max_level, user_level=skill_user_level
+            )
+            user_skills.append(user_skill)
+            user_level += user_skill.user_level
+
+        return UserCompetency(
+            id=self.competency.id,
+            name=self.competency.name,
+            max_level=self.competency.max_level,
+            user_level=user_level,
+            skills=user_skills,
         )
 
 
