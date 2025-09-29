@@ -17,7 +17,7 @@ services:
       - alabuga.postgres.network
       - alabuga.minio.network
     environment:
-      - SERVER_HOST=8080
+      - SERVER_HOST=${SERVER_HOST:-0.0.0.0}
       - APP_PORT=8080
       - DB_HOST=postgres
       - DB_PORT=5432
