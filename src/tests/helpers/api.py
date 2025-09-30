@@ -443,6 +443,32 @@ class APIHelper:
     def get_user(self, user_login: str) -> Response:
         return self.client.get(f"/users/{user_login}")
 
+    def update_user(
+        self,
+        user_login: str,
+        first_name: str | None = None,
+        last_name: str | None = None,
+        password: str | None = None,
+        mana: int | None = None,
+        rank_id: int | None = None,
+        exp: int | None = None,
+    ) -> Response:
+        json_data = {}
+        if first_name is not None:
+            json_data["first_name"] = first_name
+        if last_name is not None:
+            json_data["last_name"] = last_name
+        if password is not None:
+            json_data["password"] = password
+        if mana is not None:
+            json_data["mana"] = str(mana)
+        if rank_id is not None:
+            json_data["rank_id"] = str(rank_id)
+        if exp is not None:
+            json_data["exp"] = str(exp)
+
+        return self.client.put(f"/users/{user_login}", json=json_data)
+
     def add_competency_to_user(
         self, user_login: str, competency_id: int, level: int = 0
     ) -> Response:

@@ -74,6 +74,10 @@ class UserStorage(metaclass=ABCMeta):
     ) -> None:
         raise NotImplementedError
 
+    @abstractmethod
+    async def update_user(self, user: User) -> None:
+        raise NotImplementedError
+
 
 class MissionStorage(metaclass=ABCMeta):
     @abstractmethod

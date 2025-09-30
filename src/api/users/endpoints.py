@@ -12,6 +12,7 @@ from src.api.users.schemas import (
     UserResponse,
     UsersListResponse,
     UserTokenResponse,
+    UserUpdateRequest,
 )
 from src.core.artifacts.use_cases import (
     AddArtifactToUserUseCase,
@@ -29,6 +30,7 @@ from src.core.users.use_cases import (
     RemoveSkillFromUserUseCase,
     UpdateUserCompetencyLevelUseCase,
     UpdateUserSkillLevelUseCase,
+    UpdateUserUseCase,
 )
 
 router = APIRouter(tags=["users"], route_class=DishkaRoute)
@@ -36,8 +38,8 @@ router = APIRouter(tags=["users"], route_class=DishkaRoute)
 
 @router.post(
     path="/users/register",
-    summary="Регистрация пользователя",
-    description="Создает нового пользователя в системе с указанными данными",
+    summary="Рegictraciya pol'zoBatelya",
+    description="Сozdaet noBogo pol'zoBatelya B cicteme c ykazannymi dannymi",
 )
 async def register_user(
     body: HRUserRegistrationRequest,
@@ -49,8 +51,8 @@ async def register_user(
 
 @router.post(
     path="/mobile/users/register",
-    summary="Регистрация кандидата",
-    description="Создает нового кандидата в системе с указанными данными",
+    summary="Рegictraciya kandidata",
+    description="Сozdaet noBogo kandidata B cicteme c ykazannymi dannymi",
 )
 async def register_candidate(
     body: CandidateUserRegistrationRequest,
@@ -62,8 +64,8 @@ async def register_candidate(
 
 @router.post(
     path="/users/login",
-    summary="Вход в систему",
-    description="Аутентификация пользователя и получение JWT токена",
+    summary="Вhod B cictemy",
+    description="Аytentifikaciya pol'zoBatelya i polychenie JWT tokena",
 )
 async def user_login(
     body: UserLoginRequest,
@@ -76,8 +78,8 @@ async def user_login(
 @router.get(
     path="/users/me",
     openapi_extra=openapi_extra,
-    summary="Получить информацию о текущем пользователе",
-    description="Возвращает данные авторизованного пользователя с рангом и артефактами",
+    summary="Пolychit' informaciyu o tekyshem pol'zoBatele",
+    description="ВozBrashaet dannye aBtorizoBannogo pol'zoBatelya c rangom i artefaktami",
 )
 async def get_me(
     user: FromDishka[JwtUser], use_case: FromDishka[GetUserWithRelationsUseCase]
@@ -89,8 +91,8 @@ async def get_me(
 @router.get(
     path="/users",
     openapi_extra=openapi_extra,
-    summary="Получить список пользователей",
-    description="Возвращает список всех пользователей в системе",
+    summary="Пolychit' cpicok pol'zoBatelej",
+    description="ВozBrashaet cpicok Bceh pol'zoBatelej B cicteme",
 )
 async def list_users(
     user: FromDishka[JwtHRUser],
@@ -104,8 +106,8 @@ async def list_users(
 @router.get(
     path="/users/{user_login}",
     openapi_extra=openapi_extra,
-    summary="Получить информацию о пользователе",
-    description="Возвращает детальную информацию о конкретном пользователе",
+    summary="Пolychit' informaciyu o pol'zoBatele",
+    description="ВozBrashaet detal'nyyu informaciyu o konkretnom pol'zoBatele",
 )
 async def get_user(
     user_login: str,
@@ -117,12 +119,40 @@ async def get_user(
     return UserDetailedResponse.from_schema(user=user_data)
 
 
+@router.put(
+    path="/users/{user_login}",
+    openapi_extra=openapi_extra,
+    summary="О6noBit' 6azoByyu informaciyu pol'zoBatelya",
+    description=(
+        "О6noBlyaet 6azoByyu informaciyu pol'zoBatelya "
+        "(imya, familiya, parol', mana, rang, opyt) "
+        "6ez izmeneniya kompetencij, naBykoB i artefaktoB"
+    ),
+)
+async def update_user(
+    user_login: str,
+    body: UserUpdateRequest,
+    user: FromDishka[JwtHRUser],
+    get_user_use_case: FromDishka[GetUserWithRelationsUseCase],
+    update_user_use_case: FromDishka[UpdateUserUseCase],
+) -> UserResponse:
+    _ = user
+    current_user = await get_user_use_case.execute(login=user_login)
+
+    updated_user = body.to_schema(login=user_login, current_user=current_user)
+
+    await update_user_use_case.execute(user=updated_user)
+
+    updated_user_data = await get_user_use_case.execute(login=user_login)
+    return UserResponse.from_schema(user=updated_user_data)
+
+
 @router.post(
     path="/users/{user_login}/artifacts/{artifact_id}",
     openapi_extra=openapi_extra,
     status_code=status.HTTP_200_OK,
-    summary="Добавить артефакт пользователю",
-    description="Назначает артефакт указанному пользователю",
+    summary="Дo6aBit' artefakt pol'zoBatelyu",
+    description="Нaznachaet artefakt ykazannomy pol'zoBatelyu",
 )
 async def add_artifact_to_user(
     user_login: str,
@@ -139,8 +169,8 @@ async def add_artifact_to_user(
     path="/users/{user_login}/artifacts/{artifact_id}",
     openapi_extra=openapi_extra,
     status_code=status.HTTP_200_OK,
-    summary="Удалить артефакт у пользователя",
-    description="Убирает артефакт у указанного пользователя",
+    summary="Уdalit' artefakt y pol'zoBatelya",
+    description="У6iraet artefakt y ykazannogo pol'zoBatelya",
 )
 async def remove_artifact_from_user(
     user_login: str,
@@ -157,8 +187,10 @@ async def remove_artifact_from_user(
     path="/users/missions/{mission_id}",
     openapi_extra=openapi_extra,
     status_code=status.HTTP_200_OK,
-    summary="Получить миссию пользователя",
-    description="Возвращает миссию с задачами и статусом их выполнения для текущего пользователя",
+    summary="Пolychit' micciyu pol'zoBatelya",
+    description=(
+        "ВozBrashaet micciyu c zadachami i ctatycom ih Bypolneniya dlya tekyshego pol'zoBatelya"
+    ),
 )
 async def get_user_mission(
     mission_id: int,
@@ -173,8 +205,8 @@ async def get_user_mission(
     path="/users/{user_login}/competencies/{competency_id}",
     openapi_extra=openapi_extra,
     status_code=status.HTTP_201_CREATED,
-    summary="Добавить компетенцию пользователю",
-    description="Добавляет компетенцию указанному пользователю с заданным уровнем",
+    summary="Дo6aBit' kompetenciyu pol'zoBatelyu",
+    description="Дo6aBlyaet kompetenciyu ykazannomy pol'zoBatelyu c zadannym yroBnem",
 )
 async def add_competency_to_user(
     use_case: FromDishka[AddCompetencyToUserUseCase],
@@ -192,8 +224,8 @@ async def add_competency_to_user(
     path="/users/{user_login}/competencies/{competency_id}",
     openapi_extra=openapi_extra,
     status_code=status.HTTP_200_OK,
-    summary="Обновить уровень компетенции пользователя",
-    description="Обновляет уровень компетенции у указанного пользователя",
+    summary="О6noBit' yroBen' kompetencii pol'zoBatelya",
+    description="О6noBlyaet yroBen' kompetencii y ykazannogo pol'zoBatelya",
 )
 async def update_user_competency_level(
     user_login: str,
@@ -211,8 +243,8 @@ async def update_user_competency_level(
     path="/users/{user_login}/competencies/{competency_id}",
     openapi_extra=openapi_extra,
     status_code=status.HTTP_200_OK,
-    summary="Удалить компетенцию у пользователя",
-    description="Убирает компетенцию у указанного пользователя",
+    summary="Уdalit' kompetenciyu y pol'zoBatelya",
+    description="У6iraet kompetenciyu y ykazannogo pol'zoBatelya",
 )
 async def remove_competency_from_user(
     user_login: str,
@@ -229,8 +261,8 @@ async def remove_competency_from_user(
     path="/users/{user_login}/competencies/{competency_id}/skills/{skill_id}",
     openapi_extra=openapi_extra,
     status_code=status.HTTP_201_CREATED,
-    summary="Добавить скил пользователю в компетенции",
-    description="Добавляет скил указанному пользователю в рамках компетенции с заданным уровнем",
+    summary="Дo6aBit' ckil pol'zoBatelyu B kompetencii",
+    description="Дo6aBlyaet ckil ykazannomy pol'zoBatelyu B ramkah kompetencii c zadannym yroBnem",
 )
 async def add_skill_to_user(
     use_case: FromDishka[AddSkillToUserUseCase],
@@ -251,8 +283,8 @@ async def add_skill_to_user(
     path="/users/{user_login}/competencies/{competency_id}/skills/{skill_id}",
     openapi_extra=openapi_extra,
     status_code=status.HTTP_200_OK,
-    summary="Обновить уровень скила пользователя в компетенции",
-    description="Обновляет уровень скила у указанного пользователя в рамках компетенции",
+    summary="О6noBit' yroBen' ckila pol'zoBatelya B kompetencii",
+    description="О6noBlyaet yroBen' ckila y ykazannogo pol'zoBatelya B ramkah kompetencii",
 )
 async def update_user_skill_level(
     user_login: str,
@@ -273,8 +305,8 @@ async def update_user_skill_level(
     path="/users/{user_login}/competencies/{competency_id}/skills/{skill_id}",
     openapi_extra=openapi_extra,
     status_code=status.HTTP_200_OK,
-    summary="Удалить скил у пользователя в компетенции",
-    description="Убирает скил у указанного пользователя в рамках компетенции",
+    summary="Уdalit' ckil y pol'zoBatelya B kompetencii",
+    description="У6iraet ckil y ykazannogo pol'zoBatelya B ramkah kompetencii",
 )
 async def remove_skill_from_user(
     user_login: str,

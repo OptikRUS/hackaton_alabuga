@@ -75,6 +75,8 @@ class StorageMock(
     mission_dependencies: dict[int, set[tuple[int, int]]] = field(default_factory=dict)
     users_tasks_relations: dict[str, dict[int, bool]] = field(default_factory=dict)
     store_item_table: dict[int, StoreItem] = field(default_factory=dict)
+    users_competencies_relations: dict[str, dict[int, int]] = field(default_factory=dict)
+    users_skills_relations: dict[str, dict[int, dict[int, int]]] = field(default_factory=dict)
 
     async def insert_user(self, user: User) -> None:
         try:
@@ -802,27 +804,97 @@ class StorageMock(
     async def add_competency_to_user(
         self, user_login: str, competency_id: int, level: int = 0
     ) -> None:
-        pass  # Mock implementation
+        if user_login not in self.user_table:
+            raise UserNotFoundError
+        if competency_id not in self.competencies_table:
+            raise CompetencyNotFoundError
+
+        if user_login not in self.users_competencies_relations:
+            self.users_competencies_relations[user_login] = {}
+        self.users_competencies_relations[user_login][competency_id] = level
 
     async def remove_competency_from_user(self, user_login: str, competency_id: int) -> None:
-        pass  # Mock implementation
+        if user_login not in self.user_table:
+            raise UserNotFoundError
+        if competency_id not in self.competencies_table:
+            raise CompetencyNotFoundError
+
+        if user_login in self.users_competencies_relations:
+            self.users_competencies_relations[user_login].pop(competency_id, None)
+            if not self.users_competencies_relations[user_login]:
+                del self.users_competencies_relations[user_login]
 
     async def update_user_competency_level(
         self, user_login: str, competency_id: int, level: int
     ) -> None:
-        pass  # Mock implementation
+        if user_login not in self.user_table:
+            raise UserNotFoundError
+        if competency_id not in self.competencies_table:
+            raise CompetencyNotFoundError
+
+        if user_login not in self.users_competencies_relations:
+            raise UserNotFoundError
+        if competency_id not in self.users_competencies_relations[user_login]:
+            raise UserNotFoundError
+
+        self.users_competencies_relations[user_login][competency_id] = level
 
     async def add_skill_to_user(
         self, user_login: str, skill_id: int, competency_id: int, level: int = 0
     ) -> None:
-        pass  # Mock implementation
+        if user_login not in self.user_table:
+            raise UserNotFoundError
+        if skill_id not in self.skill_table:
+            raise SkillNotFoundError
+        if competency_id not in self.competencies_table:
+            raise CompetencyNotFoundError
+
+        if user_login not in self.users_skills_relations:
+            self.users_skills_relations[user_login] = {}
+        if skill_id not in self.users_skills_relations[user_login]:
+            self.users_skills_relations[user_login][skill_id] = {}
+        self.users_skills_relations[user_login][skill_id][competency_id] = level
 
     async def remove_skill_from_user(
         self, user_login: str, skill_id: int, competency_id: int
     ) -> None:
-        pass  # Mock implementation
+        if user_login not in self.user_table:
+            raise UserNotFoundError
+        if skill_id not in self.skill_table:
+            raise SkillNotFoundError
+        if competency_id not in self.competencies_table:
+            raise CompetencyNotFoundError
+
+        if (
+            user_login in self.users_skills_relations
+            and skill_id in self.users_skills_relations[user_login]
+        ):
+            self.users_skills_relations[user_login][skill_id].pop(competency_id, None)
+            if not self.users_skills_relations[user_login][skill_id]:
+                del self.users_skills_relations[user_login][skill_id]
+            if not self.users_skills_relations[user_login]:
+                del self.users_skills_relations[user_login]
 
     async def update_user_skill_level(
         self, user_login: str, skill_id: int, competency_id: int, level: int
     ) -> None:
-        pass  # Mock implementation
+        if user_login not in self.user_table:
+            raise UserNotFoundError
+        if skill_id not in self.skill_table:
+            raise SkillNotFoundError
+        if competency_id not in self.competencies_table:
+            raise CompetencyNotFoundError
+
+        if user_login not in self.users_skills_relations:
+            raise UserNotFoundError
+        if skill_id not in self.users_skills_relations[user_login]:
+            raise UserNotFoundError
+        if competency_id not in self.users_skills_relations[user_login][skill_id]:
+            raise UserNotFoundError
+
+        self.users_skills_relations[user_login][skill_id][competency_id] = level
+
+    async def update_user(self, user: User) -> None:
+        if user.login not in self.user_table:
+            raise UserNotFoundError
+        self.user_table[user.login] = user

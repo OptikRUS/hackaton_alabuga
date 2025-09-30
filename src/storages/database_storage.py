@@ -601,6 +601,22 @@ class DatabaseStorage(
         )
         await self.session.execute(query)
 
+    async def update_user(self, user: User) -> None:
+        query = (
+            update(UserModel)
+            .where(UserModel.login == user.login)
+            .values(
+                first_name=user.first_name,
+                last_name=user.last_name,
+                password=user.password,
+                role=user.role,
+                rank_id=user.rank_id,
+                exp=user.exp,
+                mana=user.mana,
+            )
+        )
+        await self.session.execute(query)
+
     async def insert_competency(self, competency: Competency) -> None:
         query = (
             insert(CompetencyModel)

@@ -108,6 +108,7 @@ from src.core.users.use_cases import (
     RemoveSkillFromUserUseCase,
     UpdateUserCompetencyLevelUseCase,
     UpdateUserSkillLevelUseCase,
+    UpdateUserUseCase,
 )
 from src.services.minio import MinioService
 from src.tests.mocks.user_password import UserPasswordServiceMock
@@ -167,6 +168,10 @@ class UserProviderMock(Provider):
     @provide
     def override_get_user_skills_use_case(self) -> GetUserSkillsUseCase:
         return AsyncMock(spec=GetUserSkillsUseCase)
+
+    @provide
+    def override_update_user_use_case(self) -> UpdateUserUseCase:
+        return AsyncMock(spec=UpdateUserUseCase)
 
 
 class MissionProviderMock(Provider):

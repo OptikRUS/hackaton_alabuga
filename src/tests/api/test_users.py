@@ -28,6 +28,7 @@ from src.core.users.use_cases import (
     RemoveSkillFromUserUseCase,
     UpdateUserCompetencyLevelUseCase,
     UpdateUserSkillLevelUseCase,
+    UpdateUserUseCase,
 )
 from src.tests.fixtures import APIFixture, ContainerFixture, FactoryFixture
 
@@ -943,3 +944,168 @@ class TestRemoveSkillFromUserAPI(APIFixture, FactoryFixture, ContainerFixture):
         self.use_case.execute.assert_awaited_once_with(
             user_login="testuser", skill_id=1, competency_id=1
         )
+
+
+class TestUpdateUserAPI(APIFixture, FactoryFixture, ContainerFixture):
+    @pytest.fixture(autouse=True)
+    async def setup(self) -> None:
+        self.get_user_use_case = await self.container.override_use_case(GetUserWithRelationsUseCase)
+        self.update_user_use_case = await self.container.override_use_case(UpdateUserUseCase)
+
+    def test_not_auth(self) -> None:
+        response = self.api.update_user(
+            user_login="testuser",
+            first_name="NewName",
+            last_name="NewLastName",
+        )
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_candidate_forbidden(self) -> None:
+        response = self.candidate_api.update_user(
+            user_login="testuser",
+            first_name="NewName",
+            last_name="NewLastName",
+        )
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": PermissionDeniedError.detail}
+
+    def test_update_user_success(self) -> None:
+        current_user = self.factory.user(
+            login="testuser",
+            password="old_password",
+            first_name="OldName",
+            last_name="OldLastName",
+            role=UserRoleEnum.CANDIDATE,
+            rank_id=1,
+            exp=100,
+            mana=50,
+        )
+        self.get_user_use_case.execute.return_value = current_user
+
+        updated_user = self.factory.user(
+            login="testuser",
+            password="new_password",
+            first_name="NewName",
+            last_name="NewLastName",
+            role=UserRoleEnum.CANDIDATE,
+            rank_id=2,
+            exp=200,
+            mana=100,
+        )
+        self.get_user_use_case.execute.side_effect = [current_user, updated_user]
+        self.update_user_use_case.execute.return_value = None
+
+        response = self.hr_api.update_user(
+            user_login="testuser",
+            first_name="NewName",
+            last_name="NewLastName",
+            password="new_password",
+            mana=100,
+            rank_id=2,
+            exp=200,
+        )
+
+        assert response.status_code == codes.OK
+        assert response.json() == {
+            "login": "testuser",
+            "firstName": "NewName",
+            "lastName": "NewLastName",
+            "role": "candidate",
+        }
+
+        assert self.get_user_use_case.execute.call_count == 2
+        self.get_user_use_case.execute.assert_awaited_with(login="testuser")
+
+        self.update_user_use_case.execute.assert_called_once()
+        self.update_user_use_case.execute.assert_awaited_once()
+
+    def test_update_user_partial_update(self) -> None:
+        current_user = self.factory.user(
+            login="testuser",
+            password="password",
+            first_name="OldName",
+            last_name="OldLastName",
+            role=UserRoleEnum.CANDIDATE,
+            rank_id=1,
+            exp=100,
+            mana=50,
+        )
+        self.get_user_use_case.execute.return_value = current_user
+
+        updated_user = self.factory.user(
+            login="testuser",
+            password="password",
+            first_name="NewName",
+            last_name="OldLastName",
+            role=UserRoleEnum.CANDIDATE,
+            rank_id=1,
+            exp=100,
+            mana=50,
+        )
+        self.get_user_use_case.execute.side_effect = [current_user, updated_user]
+        self.update_user_use_case.execute.return_value = None
+
+        response = self.hr_api.update_user(
+            user_login="testuser",
+            first_name="NewName",
+        )
+
+        assert response.status_code == codes.OK
+        assert response.json() == {
+            "login": "testuser",
+            "firstName": "NewName",
+            "lastName": "OldLastName",
+            "role": "candidate",
+        }
+
+    def test_update_user_not_found(self) -> None:
+        self.get_user_use_case.execute.side_effect = UserNotFoundError
+
+        response = self.hr_api.update_user(
+            user_login="nonexistent",
+            first_name="NewName",
+        )
+
+        assert response.status_code == codes.NOT_FOUND
+        assert response.json() == {"detail": UserNotFoundError.detail}
+        self.get_user_use_case.execute.assert_called_once()
+        self.get_user_use_case.execute.assert_awaited_once_with(login="nonexistent")
+
+    def test_update_user_empty_request(self) -> None:
+        current_user = self.factory.user(
+            login="testuser",
+            password="password",
+            first_name="OldName",
+            last_name="OldLastName",
+            role=UserRoleEnum.CANDIDATE,
+            rank_id=1,
+            exp=100,
+            mana=50,
+        )
+        self.get_user_use_case.execute.return_value = current_user
+
+        updated_user = self.factory.user(
+            login="testuser",
+            password="password",
+            first_name="OldName",
+            last_name="OldLastName",
+            role=UserRoleEnum.CANDIDATE,
+            rank_id=1,
+            exp=100,
+            mana=50,
+        )
+        self.get_user_use_case.execute.side_effect = [current_user, updated_user]
+        self.update_user_use_case.execute.return_value = None
+
+        response = self.hr_api.update_user(user_login="testuser")
+
+        assert response.status_code == codes.OK
+        assert response.json() == {
+            "login": "testuser",
+            "firstName": "OldName",
+            "lastName": "OldLastName",
+            "role": "candidate",
+        }

@@ -136,3 +136,17 @@ class GetUserSkillsUseCase(UseCase):
     async def execute(self, user_login: str) -> list[UserSkill]:
         user = await self.storage.get_user_by_login_with_relations(login=user_login)
         return user.skills or []
+
+
+@dataclass
+class UpdateUserUseCase(UseCase):
+    storage: UserStorage
+    password_service: PasswordService
+
+    async def execute(self, user: User) -> None:
+        await self.storage.get_user_by_login(login=user.login)
+
+        if user.password:
+            user.password = self.password_service.generate_password_hash(password=user.password)
+
+        await self.storage.update_user(user=user)

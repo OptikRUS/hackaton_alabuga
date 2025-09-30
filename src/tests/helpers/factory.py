@@ -38,6 +38,9 @@ class FactoryHelper:
         last_name: str = "TEST",
         password: str = "TEST",  # noqa: S107
         role: UserRoleEnum = UserRoleEnum.HR,
+        rank_id: int = 1,
+        exp: int = 0,
+        mana: int = 0,
     ) -> User:
         return User(
             login=login,
@@ -45,9 +48,9 @@ class FactoryHelper:
             last_name=last_name,
             password=password,
             role=role,
-            rank_id=1,
-            exp=0,
-            mana=0,
+            rank_id=rank_id,
+            exp=exp,
+            mana=mana,
             artifacts=[],
             competencies=[],
             skills=[],

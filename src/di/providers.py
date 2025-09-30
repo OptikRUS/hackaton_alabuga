@@ -121,6 +121,7 @@ from src.core.users.use_cases import (
     RemoveSkillFromUserUseCase,
     UpdateUserCompetencyLevelUseCase,
     UpdateUserSkillLevelUseCase,
+    UpdateUserUseCase,
 )
 from src.services.minio import MinioService
 from src.services.user_password_service import UserPasswordService
@@ -204,6 +205,14 @@ class UserProvider(Provider):
     @provide
     def build_get_user_skills_use_case(self, storage: UserStorage) -> GetUserSkillsUseCase:
         return GetUserSkillsUseCase(storage=storage)
+
+    @provide
+    def build_update_user_use_case(
+        self,
+        storage: UserStorage,
+        password_service: PasswordService,
+    ) -> UpdateUserUseCase:
+        return UpdateUserUseCase(storage=storage, password_service=password_service)
 
 
 class MissionProvider(Provider):

@@ -107,6 +107,27 @@ class UserTokenResponse(BoundaryModel):
     token: str
 
 
+class UserUpdateRequest(BoundaryModel):
+    first_name: str | None = Field(default=None, description="Имя пользователя")
+    last_name: str | None = Field(default=None, description="Фамилия пользователя")
+    password: str | None = Field(default=None, description="Пароль пользователя")
+    mana: int | None = Field(default=None, description="Мана пользователя")
+    rank_id: int | None = Field(default=None, description="ID ранга пользователя")
+    exp: int | None = Field(default=None, description="Опыт пользователя")
+
+    def to_schema(self, login: str, current_user: User) -> User:
+        return User(
+            login=login,
+            first_name=self.first_name if self.first_name is not None else current_user.first_name,
+            last_name=self.last_name if self.last_name is not None else current_user.last_name,
+            password=self.password if self.password is not None else current_user.password,
+            role=current_user.role,
+            rank_id=self.rank_id if self.rank_id is not None else current_user.rank_id,
+            exp=self.exp if self.exp is not None else current_user.exp,
+            mana=self.mana if self.mana is not None else current_user.mana,
+        )
+
+
 class UserTaskResponse(BoundaryModel):
     id: int = Field(default=..., description="Идентификатор задачи")
     title: str = Field(default=..., description="Название задачи")
