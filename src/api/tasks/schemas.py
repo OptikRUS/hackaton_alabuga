@@ -1,7 +1,7 @@
 from pydantic import Field
 
 from src.api.boundary import BoundaryModel
-from src.core.tasks.schemas import MissionTask, MissionTasks, TaskApproveParams
+from src.core.tasks.schemas import MissionTask, MissionTasks
 
 
 class TaskCreateRequest(BoundaryModel):
@@ -36,10 +36,3 @@ class TasksResponse(BoundaryModel):
     @classmethod
     def from_schema(cls, tasks: MissionTasks) -> "TasksResponse":
         return cls(values=[TaskResponse.from_schema(task=task) for task in tasks.values])
-
-
-class TaskApproveRequest(BoundaryModel):
-    user_login: str = Field(default=..., description="Логин пользователя")
-
-    def to_schema(self, task_id: int) -> TaskApproveParams:
-        return TaskApproveParams(task_id=task_id, user_login=self.user_login)

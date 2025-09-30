@@ -42,11 +42,13 @@ from src.core.missions.use_cases import (
     AddCompetencyRewardToMissionUseCase,
     AddSkillRewardToMissionUseCase,
     AddTaskToMissionUseCase,
+    ApproveUserMissionUseCase,
     CreateMissionUseCase,
     DeleteMissionUseCase,
     GetMissionDetailUseCase,
     GetMissionsUseCase,
     GetMissionWithUserTasksUseCase,
+    GetUserMissionsUseCase,
     RemoveCompetencyRewardFromMissionUseCase,
     RemoveSkillRewardFromMissionUseCase,
     RemoveTaskFromMissionUseCase,
@@ -259,6 +261,14 @@ class MissionProviderMock(Provider):
     @provide
     def override_get_mission_with_user_tasks_use_case(self) -> GetMissionWithUserTasksUseCase:
         return AsyncMock(spec=GetMissionWithUserTasksUseCase)
+
+    @provide
+    def override_get_user_missions_use_case(self) -> GetUserMissionsUseCase:
+        return AsyncMock(spec=GetUserMissionsUseCase)
+
+    @provide
+    def override_approve_user_mission_use_case(self) -> ApproveUserMissionUseCase:
+        return AsyncMock(spec=ApproveUserMissionUseCase)
 
     @provide
     def override_task_approve_use_case(self) -> TaskApproveUseCase:

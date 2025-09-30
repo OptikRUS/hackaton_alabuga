@@ -5,7 +5,7 @@ from src.api.boundary import BoundaryModel
 from src.api.competencies.schemas import CompetencyResponse, UserCompetencyResponse
 from src.api.skills.schemas import SkillResponse
 from src.core.missions.schemas import CompetencyReward, Mission, SkillReward
-from src.core.tasks.schemas import UserTask
+from src.core.tasks.schemas import TaskApproveParams, UserTask
 from src.core.users.enums import UserRoleEnum
 from src.core.users.schemas import CandidateUser, HRUser, User
 
@@ -154,6 +154,7 @@ class UserMissionResponse(BoundaryModel):
     season_id: int = Field(default=..., description="ID ветки миссий")
     category: str = Field(default=..., description="Категория миссии")
     is_completed: bool = Field(default=False, description="Показатель выполнения миссии")
+    is_approved: bool = Field(default=False, description="Показатель одобрения миссии")
     tasks: list["UserTaskResponse"] = Field(default_factory=list, description="Задачи миссии")
     reward_artifacts: list[ArtifactResponse] = Field(
         default_factory=list, description="Артефакты-награды"
@@ -177,6 +178,7 @@ class UserMissionResponse(BoundaryModel):
             season_id=mission.season_id,
             category=mission.category,
             is_completed=mission.is_completed,
+            is_approved=mission.is_approved,
             tasks=[
                 UserTaskResponse.from_schema(user_task=task) for task in (mission.user_tasks or [])
             ],
@@ -193,6 +195,16 @@ class UserMissionResponse(BoundaryModel):
                 for reward_skill in (mission.reward_skills or [])
             ],
         )
+
+
+class UserMissionsListResponse(BoundaryModel):
+    missions: list[UserMissionResponse] = Field(
+        default_factory=list, description="Список миссий пользователя"
+    )
+
+    @classmethod
+    def from_schema(cls, missions: list[Mission]) -> "UserMissionsListResponse":
+        return cls(missions=[UserMissionResponse.from_schema(mission) for mission in missions])
 
 
 class CompetencyRewardResponse(BoundaryModel):
@@ -217,3 +229,10 @@ class SkillRewardResponse(BoundaryModel):
             skill=SkillResponse.from_schema(skill_reward.skill),
             level_increase=skill_reward.level_increase,
         )
+
+
+class TaskCompleteRequest(BoundaryModel):
+    user_login: str = Field(default=..., description="Логин пользователя")
+
+    def to_schema(self, task_id: int) -> TaskApproveParams:
+        return TaskApproveParams(task_id=task_id, user_login=self.user_login)

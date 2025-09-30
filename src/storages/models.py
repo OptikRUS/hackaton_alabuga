@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, PrimaryKeyConstraint, String, UniqueConstraint
+from sqlalchemy import DateTime, ForeignKey, PrimaryKeyConstraint, String, UniqueConstraint, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 from src.core.artifacts.enums import ArtifactRarityEnum
@@ -306,6 +306,31 @@ class UserTaskRelationModel(Base):
             description=self.task.description,
             is_completed=self.is_completed,
         )
+
+
+class UserMissionApprovalModel(Base):
+    __tablename__ = "users_missions_approval"
+    __table_args__ = (
+        PrimaryKeyConstraint(
+            "mission_id",
+            "user_login",
+            name="pk_users_missions_approval",
+        ),
+    )
+
+    mission_id: Mapped[int] = mapped_column(
+        ForeignKey(MissionModel.id, ondelete="CASCADE"),
+        primary_key=True,
+    )
+    user_login: Mapped[str] = mapped_column(
+        ForeignKey(UserModel.login, ondelete="CASCADE"),
+        primary_key=True,
+    )
+    is_approved: Mapped[bool] = mapped_column(default=False, nullable=False)
+    approved_at: Mapped[datetime] = mapped_column(nullable=True, server_default=func.now())
+
+    mission: Mapped[MissionModel] = relationship("MissionModel", lazy="selectin")
+    user: Mapped[UserModel] = relationship("UserModel", lazy="selectin")
 
 
 class CompetencyModel(Base):

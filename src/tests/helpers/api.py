@@ -49,6 +49,12 @@ class APIHelper:
     def get_user_mission(self, mission_id: int) -> Response:
         return self.client.get(f"/users/missions/{mission_id}")
 
+    def get_user_missions(self) -> Response:
+        return self.client.get("/users/missions/list")
+
+    def approve_user_mission(self, mission_id: int, user_login: str) -> Response:
+        return self.client.post(f"/users/missions/{mission_id}/approve?user_login={user_login}")
+
     def create_season(self, name: str, start_date: str, end_date: str) -> Response:
         return self.client.post(
             url="/seasons",
@@ -179,9 +185,9 @@ class APIHelper:
     def delete_task(self, task_id: int) -> Response:
         return self.client.delete(f"/tasks/{task_id}")
 
-    def approve_task(self, task_id: int, user_login: str) -> Response:
+    def complete_user_task(self, task_id: int, user_login: str) -> Response:
         return self.client.post(
-            url=f"/tasks/{task_id}/approve",
+            url=f"/users/tasks/{task_id}/complete",
             json={"user_login": user_login},
         )
 

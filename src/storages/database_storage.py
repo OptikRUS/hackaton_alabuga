@@ -98,6 +98,7 @@ from src.storages.models import (
     SkillModel,
     StoreItemModel,
     UserCompetencyModel,
+    UserMissionApprovalModel,
     UserModel,
     UserSkillModel,
     UserTaskRelationModel,
@@ -558,6 +559,21 @@ class DatabaseStorage(
         )
         await self.session.execute(query)
 
+    async def get_competency_by_skill_id(self, skill_id: int) -> Competency:
+        query = (
+            select(CompetencyModel)
+            .join(
+                CompetencySkillRelationModel,
+                CompetencyModel.id == CompetencySkillRelationModel.competency_id,
+            )
+            .where(CompetencySkillRelationModel.skill_id == skill_id)
+            .options(selectinload(CompetencyModel.skills))
+        )
+        competency = await self.session.scalar(query)
+        if competency is None:
+            raise CompetencyNotFoundError
+        return competency.to_schema()
+
     async def add_competency_to_user(
         self, user_login: str, competency_id: int, level: int = 0
     ) -> None:
@@ -979,6 +995,97 @@ class DatabaseStorage(
         mission = mission_model.to_schema()
         mission.user_tasks = user_tasks
         return mission
+
+    async def get_user_missions(self, user_login: str) -> Missions:
+        missions_query = (
+            select(MissionModel)
+            .join(MissionTaskRelationModel, MissionModel.id == MissionTaskRelationModel.mission_id)
+            .join(
+                UserTaskRelationModel,
+                MissionTaskRelationModel.task_id == UserTaskRelationModel.task_id,
+            )
+            .where(UserTaskRelationModel.user_login == user_login)
+            .distinct()
+            .options(
+                selectinload(MissionModel.tasks),
+                selectinload(MissionModel.artifacts),
+                selectinload(MissionModel.competency_rewards).selectinload(
+                    MissionCompetencyRewardModel.competency
+                ),
+                selectinload(MissionModel.skill_rewards).selectinload(
+                    MissionSkillRewardModel.skill
+                ),
+            )
+            .execution_options(populate_existing=True)
+        )
+        missions = await self.session.scalars(missions_query)
+
+        missions_with_user_tasks = []
+        for mission_model in missions:
+            user_task_query = (
+                select(UserTaskRelationModel)
+                .join(
+                    MissionTaskRelationModel,
+                    UserTaskRelationModel.task_id == MissionTaskRelationModel.task_id,
+                )
+                .where(
+                    MissionTaskRelationModel.mission_id == mission_model.id,
+                    UserTaskRelationModel.user_login == user_login,
+                )
+                .options(selectinload(UserTaskRelationModel.task))
+            )
+            user_task_relations = await self.session.scalars(user_task_query)
+            user_task_relations_dict = {rel.task_id: rel for rel in user_task_relations}
+
+            user_tasks = []
+            if mission_model.tasks:
+                for task in mission_model.tasks:
+                    if task.id in user_task_relations_dict:
+                        user_task = user_task_relations_dict[task.id].to_schema()
+                    else:
+                        temp_relation = UserTaskRelationModel(
+                            task_id=task.id,
+                            user_login=user_login,
+                            is_completed=False,
+                        )
+                        temp_relation.task = task
+                        user_task = temp_relation.to_schema()
+                    user_tasks.append(user_task)
+
+            approval_query = select(UserMissionApprovalModel).where(
+                UserMissionApprovalModel.mission_id == mission_model.id,
+                UserMissionApprovalModel.user_login == user_login,
+            )
+            approval = await self.session.scalar(approval_query)
+            is_approved = approval.is_approved if approval else False
+
+            mission = mission_model.to_schema()
+            mission.user_tasks = user_tasks
+            mission.is_approved = is_approved
+            missions_with_user_tasks.append(mission)
+
+        return Missions(values=missions_with_user_tasks)
+
+    async def approve_user_mission(self, mission_id: int, user_login: str) -> None:
+        # Проверяем существование миссии и пользователя
+        await self.get_mission_by_id(mission_id=mission_id)
+        await self.get_user_by_login(login=user_login)
+
+        existing_approval_query = select(UserMissionApprovalModel).where(
+            UserMissionApprovalModel.mission_id == mission_id,
+            UserMissionApprovalModel.user_login == user_login,
+        )
+        existing_approval = await self.session.scalar(existing_approval_query)
+
+        if existing_approval:
+            existing_approval.is_approved = True
+        else:
+            new_approval = UserMissionApprovalModel(
+                mission_id=mission_id,
+                user_login=user_login,
+                is_approved=True,
+            )
+            self.session.add(new_approval)
 
     async def update_user_task_completion(self, task_id: int, user_login: str) -> None:
         query = (

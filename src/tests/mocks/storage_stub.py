@@ -7,7 +7,7 @@ from src.core.competencies.exceptions import (
     CompetencyNameAlreadyExistError,
     CompetencyNotFoundError,
 )
-from src.core.competencies.schemas import Competencies, Competency
+from src.core.competencies.schemas import Competencies, Competency, UserCompetency
 from src.core.mission_chains.exceptions import (
     MissionChainMissionAlreadyExistsError,
     MissionChainNameAlreadyExistError,
@@ -26,7 +26,7 @@ from src.core.ranks.schemas import Rank, RankCompetencyRequirement, Ranks
 from src.core.seasons.exceptions import SeasonNameAlreadyExistError, SeasonNotFoundError
 from src.core.seasons.schemas import Season, Seasons
 from src.core.skills.exceptions import SkillNameAlreadyExistError, SkillNotFoundError
-from src.core.skills.schemas import Skill, Skills
+from src.core.skills.schemas import Skill, Skills, UserSkill
 from src.core.storages import (
     ArtifactStorage,
     CompetencyStorage,
@@ -794,7 +794,37 @@ class StorageMock(
     # UserStorage methods for competencies and skills
     async def get_user_by_login_with_relations(self, login: str) -> User:
         try:
-            return self.user_table[login]
+            user = self.user_table[login]
+            # Populate competencies
+            user.competencies = []
+            if login in self.users_competencies_relations:
+                for competency_id, level in self.users_competencies_relations[login].items():
+                    competency = self.competencies_table[competency_id]
+                    user.competencies.append(
+                        UserCompetency(
+                            id=competency_id,
+                            name=competency.name,
+                            max_level=competency.max_level,
+                            user_level=level,
+                        )
+                    )
+            
+            # Populate skills
+            user.skills = []
+            if login in self.users_skills_relations:
+                for skill_id, competency_relations in self.users_skills_relations[login].items():
+                    skill = self.skill_table[skill_id]
+                    for competency_id, level in competency_relations.items():
+                        user.skills.append(
+                            UserSkill(
+                                id=skill_id,
+                                name=skill.name,
+                                max_level=skill.max_level,
+                                user_level=level,
+                            )
+                        )
+            
+            return user
         except KeyError as error:
             raise UserNotFoundError from error
 
@@ -943,3 +973,17 @@ class StorageMock(
                     mana=user.mana + mana_increase,
                 )
             self.user_table[user_login] = updated_user
+
+    async def get_user_missions(self, user_login: str) -> Missions:
+        # Простая реализация для тестов - возвращаем пустой список миссий
+        return Missions(values=[])
+
+    async def approve_user_mission(self, mission_id: int, user_login: str) -> None:
+        # Простая реализация для тестов - ничего не делаем
+        pass
+
+    async def get_competency_by_skill_id(self, skill_id: int) -> Competency:
+        # Простая реализация для тестов - возвращаем первую компетенцию
+        if not self.competencies_table:
+            raise CompetencyNotFoundError
+        return next(iter(self.competencies_table.values()))

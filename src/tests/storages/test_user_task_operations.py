@@ -2,7 +2,6 @@ import pytest
 
 from src.core.missions.enums import MissionCategoryEnum
 from src.core.missions.exceptions import MissionNotFoundError
-from src.core.tasks.exceptions import TaskNotFoundError
 from src.core.users.enums import UserRoleEnum
 from src.storages.database_storage import DatabaseStorage
 from src.tests.fixtures import FactoryFixture, StorageFixture
@@ -66,6 +65,7 @@ class TestUserTaskOperations(FactoryFixture, StorageFixture):
             mission_id=self.created_mission.id,
             user_login="test_user",
         )
+        assert user_mission.user_tasks is not None
         user_task = next(
             task for task in user_mission.user_tasks if task.id == self.created_task.id
         )
@@ -80,6 +80,7 @@ class TestUserTaskOperations(FactoryFixture, StorageFixture):
             mission_id=self.created_mission.id,
             user_login="test_user",
         )
+        assert user_mission.user_tasks is not None
         user_task = next(
             task for task in user_mission.user_tasks if task.id == self.created_task.id
         )
@@ -146,6 +147,7 @@ class TestUserTaskOperations(FactoryFixture, StorageFixture):
 
         mission = await self.storage.get_mission_by_task(task_id=self.created_task.id)
 
+        assert mission.tasks is not None
         assert len(mission.tasks) == 2
         assert mission.tasks[0].id == self.created_task.id
         assert mission.tasks[1].id == inserted_task2.id

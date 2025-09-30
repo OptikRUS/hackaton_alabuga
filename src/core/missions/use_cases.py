@@ -1,8 +1,12 @@
 from dataclasses import dataclass
 
-from src.core.missions.exceptions import MissionNameAlreadyExistError, MissionNotFoundError
+from src.core.missions.exceptions import (
+    MissionNameAlreadyExistError,
+    MissionNotCompletedError,
+    MissionNotFoundError,
+)
 from src.core.missions.schemas import Mission, Missions
-from src.core.storages import MissionStorage
+from src.core.storages import ArtifactStorage, CompetencyStorage, MissionStorage, UserStorage
 from src.core.use_case import UseCase
 
 
@@ -130,3 +134,70 @@ class GetMissionWithUserTasksUseCase(UseCase):
 
     async def execute(self, mission_id: int, user_login: str) -> Mission:
         return await self.storage.get_user_mission(mission_id=mission_id, user_login=user_login)
+
+
+@dataclass
+class GetUserMissionsUseCase(UseCase):
+    storage: MissionStorage
+
+    async def execute(self, user_login: str) -> Missions:
+        return await self.storage.get_user_missions(user_login=user_login)
+
+
+@dataclass
+class ApproveUserMissionUseCase(UseCase):
+    mission_storage: MissionStorage
+    artifact_storage: ArtifactStorage
+    user_storage: UserStorage
+    competency_storage: CompetencyStorage
+
+    async def execute(self, mission_id: int, user_login: str) -> None:
+        # Проверяем, что миссия выполнена (все задачи завершены)
+        user_mission = await self.mission_storage.get_user_mission(
+            mission_id=mission_id, user_login=user_login
+        )
+
+        if not user_mission.is_completed:
+            raise MissionNotCompletedError
+
+        # Одобряем миссию
+        await self.mission_storage.approve_user_mission(
+            mission_id=mission_id, user_login=user_login
+        )
+
+        # Начисляем награды
+        await self.mission_storage.update_user_exp_and_mana(
+            user_login=user_login,
+            exp_increase=user_mission.reward_xp,
+            mana_increase=user_mission.reward_mana,
+        )
+
+        # Начисляем артефакты
+        if user_mission.reward_artifacts:
+            for artifact in user_mission.reward_artifacts:
+                await self.artifact_storage.add_artifact_to_user(
+                    user_login=user_login, artifact_id=artifact.id
+                )
+
+        # Начисляем компетенции
+        if user_mission.reward_competencies:
+            for competency_reward in user_mission.reward_competencies:
+                await self.user_storage.add_competency_to_user(
+                    user_login=user_login,
+                    competency_id=competency_reward.competency.id,
+                    level=competency_reward.level_increase,
+                )
+
+        # Начисляем навыки
+        if user_mission.reward_skills:
+            for skill_reward in user_mission.reward_skills:
+                # Находим компетенцию для навыка
+                competency = await self.competency_storage.get_competency_by_skill_id(
+                    skill_reward.skill.id
+                )
+                await self.user_storage.add_skill_to_user(
+                    user_login=user_login,
+                    skill_id=skill_reward.skill.id,
+                    competency_id=competency.id,
+                    level=skill_reward.level_increase,
+                )

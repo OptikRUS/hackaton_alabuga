@@ -46,11 +46,13 @@ from src.core.missions.use_cases import (
     AddCompetencyRewardToMissionUseCase,
     AddSkillRewardToMissionUseCase,
     AddTaskToMissionUseCase,
+    ApproveUserMissionUseCase,
     CreateMissionUseCase,
     DeleteMissionUseCase,
     GetMissionDetailUseCase,
     GetMissionsUseCase,
     GetMissionWithUserTasksUseCase,
+    GetUserMissionsUseCase,
     RemoveCompetencyRewardFromMissionUseCase,
     RemoveSkillRewardFromMissionUseCase,
     RemoveTaskFromMissionUseCase,
@@ -329,6 +331,25 @@ class MissionProvider(Provider):
         self, storage: MissionStorage
     ) -> GetMissionWithUserTasksUseCase:
         return GetMissionWithUserTasksUseCase(storage=storage)
+
+    @provide
+    def build_get_user_missions_use_case(self, storage: MissionStorage) -> GetUserMissionsUseCase:
+        return GetUserMissionsUseCase(storage=storage)
+
+    @provide
+    def build_approve_user_mission_use_case(
+        self,
+        mission_storage: MissionStorage,
+        artifact_storage: ArtifactStorage,
+        user_storage: UserStorage,
+        competency_storage: CompetencyStorage,
+    ) -> ApproveUserMissionUseCase:
+        return ApproveUserMissionUseCase(
+            mission_storage=mission_storage,
+            artifact_storage=artifact_storage,
+            user_storage=user_storage,
+            competency_storage=competency_storage,
+        )
 
     @provide
     def build_task_approve_use_case(self, storage: MissionStorage) -> TaskApproveUseCase:
