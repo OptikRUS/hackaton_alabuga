@@ -104,6 +104,7 @@ from src.core.tasks.use_cases import (
     DeleteMissionTaskUseCase,
     GetMissionTaskDetailUseCase,
     GetMissionTasksUseCase,
+    TaskApproveUseCase,
     UpdateMissionTaskUseCase,
 )
 from src.core.users.enums import UserRoleEnum
@@ -319,6 +320,10 @@ class MissionProvider(Provider):
         self, storage: MissionStorage
     ) -> GetMissionWithUserTasksUseCase:
         return GetMissionWithUserTasksUseCase(storage=storage)
+
+    @provide
+    def build_task_approve_use_case(self, storage: MissionStorage) -> TaskApproveUseCase:
+        return TaskApproveUseCase(storage=storage)
 
 
 class MissionChainProvider(Provider):

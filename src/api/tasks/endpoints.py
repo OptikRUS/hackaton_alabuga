@@ -4,6 +4,7 @@ from fastapi import APIRouter, status
 from src.api.auth.schemas import JwtHRUser, JwtUser
 from src.api.openapi import openapi_extra
 from src.api.tasks.schemas import (
+    TaskApproveRequest,
     TaskCreateRequest,
     TaskResponse,
     TasksResponse,
@@ -14,6 +15,7 @@ from src.core.tasks.use_cases import (
     DeleteMissionTaskUseCase,
     GetMissionTaskDetailUseCase,
     GetMissionTasksUseCase,
+    TaskApproveUseCase,
     UpdateMissionTaskUseCase,
 )
 
@@ -102,3 +104,20 @@ async def delete_task(
 ) -> None:
     _ = user
     await use_case.execute(task_id=task_id)
+
+
+@router.post(
+    path="/tasks/{task_id}/approve",
+    openapi_extra=openapi_extra,
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Одобрить выполнение задачи",
+    description="Одобряет выполнение задачи пользователем",
+)
+async def approve_task(
+    task_id: int,
+    body: TaskApproveRequest,
+    user: FromDishka[JwtHRUser],
+    use_case: FromDishka[TaskApproveUseCase],
+) -> None:
+    _ = user
+    await use_case.execute(params=body.to_schema(task_id=task_id))

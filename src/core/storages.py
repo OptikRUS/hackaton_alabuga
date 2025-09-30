@@ -244,6 +244,23 @@ class MissionStorage(metaclass=ABCMeta):
     ) -> None:
         raise NotImplementedError
 
+    @abstractmethod
+    async def get_mission_by_task(self, task_id: int) -> Mission:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def update_user_task_completion(self, task_id: int, user_login: str) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def update_user_exp_and_mana(
+        self,
+        user_login: str,
+        exp_increase: int,
+        mana_increase: int,
+    ) -> None:
+        raise NotImplementedError
+
 
 class ArtifactStorage(metaclass=ABCMeta):
     @abstractmethod

@@ -91,6 +91,7 @@ from src.core.tasks.use_cases import (
     DeleteMissionTaskUseCase,
     GetMissionTaskDetailUseCase,
     GetMissionTasksUseCase,
+    TaskApproveUseCase,
     UpdateMissionTaskUseCase,
 )
 from src.core.users.enums import UserRoleEnum
@@ -253,6 +254,10 @@ class MissionProviderMock(Provider):
     @provide
     def override_get_mission_with_user_tasks_use_case(self) -> GetMissionWithUserTasksUseCase:
         return AsyncMock(spec=GetMissionWithUserTasksUseCase)
+
+    @provide
+    def override_task_approve_use_case(self) -> TaskApproveUseCase:
+        return AsyncMock(spec=TaskApproveUseCase)
 
 
 class ArtifactProviderMock(Provider):

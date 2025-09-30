@@ -179,6 +179,12 @@ class APIHelper:
     def delete_task(self, task_id: int) -> Response:
         return self.client.delete(f"/tasks/{task_id}")
 
+    def approve_task(self, task_id: int, user_login: str) -> Response:
+        return self.client.post(
+            url=f"/tasks/{task_id}/approve",
+            json={"user_login": user_login},
+        )
+
     def add_task_to_mission(self, mission_id: int, task_id: int) -> Response:
         return self.client.post(f"/missions/{mission_id}/tasks/{task_id}")
 
