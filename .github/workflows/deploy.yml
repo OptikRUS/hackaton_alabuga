@@ -36,5 +36,6 @@ jobs:
             export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
             export SERVER_HOST=${{ secrets.SERVER_HOST }}
 
+            docker compose -p "$PROJECT_NAME" -f "$COMPOSE_FILE" --profile api pull api || exit 1
             docker compose -p "$PROJECT_NAME" -f "$COMPOSE_FILE" --profile api up -d --force-recreate || exit 1
             docker compose -p "$PROJECT_NAME" -f "$COMPOSE_FILE" ps
