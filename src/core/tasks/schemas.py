@@ -16,3 +16,9 @@ class MissionTasks:
 @dataclass
 class UserTask(MissionTask):
     is_completed: bool = False
+
+
+@dataclass
+class TaskApproveParams:
+    task_id: int
+    user_login: str

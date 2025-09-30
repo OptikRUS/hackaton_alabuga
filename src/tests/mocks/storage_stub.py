@@ -898,3 +898,48 @@ class StorageMock(
         if user.login not in self.user_table:
             raise UserNotFoundError
         self.user_table[user.login] = user
+
+    async def get_mission_by_task(self, task_id: int) -> Mission:
+        for mission_id, task_ids in self.missions_tasks_relations.items():
+            if task_id in task_ids:
+                return await self.get_mission_by_id(mission_id)
+        raise MissionNotFoundError
+
+    async def update_user_task_completion(self, task_id: int, user_login: str) -> None:
+        if user_login not in self.users_tasks_relations:
+            self.users_tasks_relations[user_login] = {}
+        self.users_tasks_relations[user_login][task_id] = True
+
+    async def update_user_exp_and_mana(
+        self, user_login: str, exp_increase: int, mana_increase: int
+    ) -> None:
+        if user_login not in self.user_table:
+            raise UserNotFoundError
+
+        user = self.user_table[user_login]
+        if hasattr(user, "exp") and hasattr(user, "mana"):
+            if hasattr(user, "artifacts"):
+                updated_user = type(user)(
+                    login=user.login,
+                    first_name=user.first_name,
+                    last_name=user.last_name,
+                    password=user.password,
+                    role=user.role,
+                    rank_id=user.rank_id,
+                    exp=user.exp + exp_increase,
+                    mana=user.mana + mana_increase,
+                    artifacts=user.artifacts,
+                )
+            else:
+                # Для обычного User
+                updated_user = type(user)(
+                    login=user.login,
+                    first_name=user.first_name,
+                    last_name=user.last_name,
+                    password=user.password,
+                    role=user.role,
+                    rank_id=user.rank_id,
+                    exp=user.exp + exp_increase,
+                    mana=user.mana + mana_increase,
+                )
+            self.user_table[user_login] = updated_user

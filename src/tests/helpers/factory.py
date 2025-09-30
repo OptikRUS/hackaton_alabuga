@@ -23,6 +23,7 @@ from src.core.store.schemas import StoreItem, StoreItems, StorePurchase
 from src.core.tasks.schemas import (
     MissionTask,
     MissionTasks,
+    TaskApproveParams,
     UserTask,
 )
 from src.core.users.enums import UserRoleEnum
@@ -367,3 +368,11 @@ class FactoryHelper:
         store_item_id: int = 1,
     ) -> StorePurchase:
         return StorePurchase(user_login=user_login, store_item_id=store_item_id)
+
+    @classmethod
+    def task_approve_params(
+        cls,
+        task_id: int = 1,
+        user_login: str = "test_user",
+    ) -> TaskApproveParams:
+        return TaskApproveParams(task_id=task_id, user_login=user_login)

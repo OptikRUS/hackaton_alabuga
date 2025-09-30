@@ -5,7 +5,7 @@ from src.core.tasks.exceptions import (
     TaskNameAlreadyExistError,
     TaskNotFoundError,
 )
-from src.core.tasks.schemas import MissionTask, MissionTasks
+from src.core.tasks.schemas import MissionTask, MissionTasks, TaskApproveParams
 from src.core.use_case import UseCase
 
 
@@ -59,3 +59,29 @@ class DeleteMissionTaskUseCase(UseCase):
 
     async def execute(self, task_id: int) -> None:
         await self.storage.delete_mission_task(task_id=task_id)
+
+
+@dataclass
+class TaskApproveUseCase(UseCase):
+    storage: MissionStorage
+
+    async def execute(self, params: TaskApproveParams) -> None:
+        await self.storage.update_user_task_completion(
+            task_id=params.task_id,
+            user_login=params.user_login,
+        )
+
+        task = await self.storage.get_mission_task_by_id(task_id=params.task_id)
+        task_mission = await self.storage.get_mission_by_task(task_id=task.id)
+
+        user_mission = await self.storage.get_user_mission(
+            mission_id=task_mission.id,
+            user_login=params.user_login,
+        )
+
+        if user_mission.is_completed:
+            await self.storage.update_user_exp_and_mana(
+                user_login=params.user_login,
+                exp_increase=user_mission.reward_xp,
+                mana_increase=user_mission.reward_mana,
+            )

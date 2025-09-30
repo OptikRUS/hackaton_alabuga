@@ -3,11 +3,13 @@ from httpx import codes
 
 from src.core.exceptions import PermissionDeniedError
 from src.core.tasks.exceptions import TaskNameAlreadyExistError, TaskNotFoundError
+from src.core.users.exceptions import UserNotFoundError
 from src.core.tasks.use_cases import (
     CreateMissionTaskUseCase,
     DeleteMissionTaskUseCase,
     GetMissionTaskDetailUseCase,
     GetMissionTasksUseCase,
+    TaskApproveUseCase,
     UpdateMissionTaskUseCase,
 )
 from src.tests.fixtures import APIFixture, ContainerFixture, FactoryFixture
@@ -262,3 +264,56 @@ class TestDeleteTaskAPI(APIFixture, FactoryFixture, ContainerFixture):
         assert response.json() == {"detail": TaskNotFoundError.detail}
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(task_id=999)
+
+
+class TestApproveTaskAPI(APIFixture, FactoryFixture, ContainerFixture):
+    @pytest.fixture(autouse=True)
+    async def setup(self) -> None:
+        self.use_case = await self.container.override_use_case(TaskApproveUseCase)
+
+    def test_not_auth(self) -> None:
+        response = self.api.approve_task(task_id=1, user_login="test_user")
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_candidate_forbidden(self) -> None:
+        response = self.candidate_api.approve_task(task_id=1, user_login="test_user")
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": PermissionDeniedError.detail}
+
+    def test_approve_task(self) -> None:
+        self.use_case.execute.return_value = None
+
+        response = self.hr_api.approve_task(task_id=1, user_login="test_user")
+
+        assert response.status_code == codes.NO_CONTENT
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(
+            params=self.factory.task_approve_params(task_id=1, user_login="test_user")
+        )
+
+    def test_approve_task_not_found(self) -> None:
+        self.use_case.execute.side_effect = TaskNotFoundError
+
+        response = self.hr_api.approve_task(task_id=999, user_login="test_user")
+
+        assert response.status_code == codes.NOT_FOUND
+        assert response.json() == {"detail": TaskNotFoundError.detail}
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(
+            params=self.factory.task_approve_params(task_id=999, user_login="test_user")
+        )
+
+    def test_approve_task_user_not_found(self) -> None:
+        self.use_case.execute.side_effect = UserNotFoundError
+
+        response = self.hr_api.approve_task(task_id=1, user_login="nonexistent_user")
+
+        assert response.status_code == codes.NOT_FOUND
+        assert response.json() == {"detail": UserNotFoundError.detail}
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(
+            params=self.factory.task_approve_params(task_id=1, user_login="nonexistent_user")
+        )

@@ -262,6 +262,28 @@ class DatabaseStorage(
             raise MissionNotFoundError
         return mission.to_schema()
 
+    async def get_mission_by_task(self, task_id: int) -> Mission:
+        query = (
+            select(MissionModel)
+            .join(MissionTaskRelationModel, MissionModel.id == MissionTaskRelationModel.mission_id)
+            .where(MissionTaskRelationModel.task_id == task_id)
+            .options(
+                selectinload(MissionModel.tasks),
+                selectinload(MissionModel.artifacts),
+                selectinload(MissionModel.competency_rewards).selectinload(
+                    MissionCompetencyRewardModel.competency
+                ),
+                selectinload(MissionModel.skill_rewards).selectinload(
+                    MissionSkillRewardModel.skill
+                ),
+            )
+            .execution_options(populate_existing=True)
+        )
+        mission = await self.session.scalar(query)
+        if mission is None:
+            raise MissionNotFoundError
+        return mission.to_schema()
+
     async def list_missions(self) -> Missions:
         query = select(MissionModel).options(
             selectinload(MissionModel.tasks),
@@ -957,6 +979,33 @@ class DatabaseStorage(
         mission = mission_model.to_schema()
         mission.user_tasks = user_tasks
         return mission
+
+    async def update_user_task_completion(self, task_id: int, user_login: str) -> None:
+        query = (
+            update(UserTaskRelationModel)
+            .where(
+                UserTaskRelationModel.task_id == task_id,
+                UserTaskRelationModel.user_login == user_login,
+            )
+            .values(is_completed=True)
+        )
+        await self.session.execute(query)
+
+    async def update_user_exp_and_mana(
+        self,
+        user_login: str,
+        exp_increase: int,
+        mana_increase: int,
+    ) -> None:
+        query = (
+            update(UserModel)
+            .where(UserModel.login == user_login)
+            .values(
+                exp=UserModel.exp + exp_increase,
+                mana=UserModel.mana + mana_increase,
+            )
+        )
+        await self.session.execute(query)
 
     async def insert_mission_chain(self, mission_chain: MissionChain) -> None:
         query = (
