@@ -29,7 +29,53 @@ class UserStorage(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
+    async def get_user_by_login_with_relations(self, login: str) -> User:
+        raise NotImplementedError
+
+    @abstractmethod
     async def get_candidate_by_login(self, login: str) -> CandidateUser:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def list_users(self) -> list[User]:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def add_competency_to_user(
+        self, user_login: str, competency_id: int, level: int = 0
+    ) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def remove_competency_from_user(self, user_login: str, competency_id: int) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def update_user_competency_level(
+        self, user_login: str, competency_id: int, level: int
+    ) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def add_skill_to_user(
+        self, user_login: str, skill_id: int, competency_id: int, level: int = 0
+    ) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def remove_skill_from_user(
+        self, user_login: str, skill_id: int, competency_id: int
+    ) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def update_user_skill_level(
+        self, user_login: str, skill_id: int, competency_id: int, level: int
+    ) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def update_user(self, user: User) -> None:
         raise NotImplementedError
 
 
@@ -153,6 +199,14 @@ class MissionStorage(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
+    async def get_user_missions(self, user_login: str) -> Missions:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def approve_user_mission(self, mission_id: int, user_login: str) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
     async def insert_mission_chain(self, mission_chain: MissionChain) -> None:
         raise NotImplementedError
 
@@ -199,6 +253,23 @@ class MissionStorage(metaclass=ABCMeta):
     @abstractmethod
     async def update_mission_order_in_chain(
         self, chain_id: int, mission_id: int, new_order: int
+    ) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_mission_by_task(self, task_id: int) -> Mission:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def update_user_task_completion(self, task_id: int, user_login: str) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def update_user_exp_and_mana(
+        self,
+        user_login: str,
+        exp_increase: int,
+        mana_increase: int,
     ) -> None:
         raise NotImplementedError
 
@@ -276,6 +347,10 @@ class CompetencyStorage(metaclass=ABCMeta):
 
     @abstractmethod
     async def remove_skill_from_competency(self, competency_id: int, skill_id: int) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_competency_by_skill_id(self, skill_id: int) -> Competency:
         raise NotImplementedError
 
 

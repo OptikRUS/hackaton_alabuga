@@ -7,7 +7,7 @@ from src.core.competencies.exceptions import (
     CompetencyNameAlreadyExistError,
     CompetencyNotFoundError,
 )
-from src.core.competencies.schemas import Competencies, Competency
+from src.core.competencies.schemas import Competencies, Competency, UserCompetency
 from src.core.mission_chains.exceptions import (
     MissionChainMissionAlreadyExistsError,
     MissionChainNameAlreadyExistError,
@@ -26,7 +26,7 @@ from src.core.ranks.schemas import Rank, RankCompetencyRequirement, Ranks
 from src.core.seasons.exceptions import SeasonNameAlreadyExistError, SeasonNotFoundError
 from src.core.seasons.schemas import Season, Seasons
 from src.core.skills.exceptions import SkillNameAlreadyExistError, SkillNotFoundError
-from src.core.skills.schemas import Skill, Skills
+from src.core.skills.schemas import Skill, Skills, UserSkill
 from src.core.storages import (
     ArtifactStorage,
     CompetencyStorage,
@@ -75,6 +75,8 @@ class StorageMock(
     mission_dependencies: dict[int, set[tuple[int, int]]] = field(default_factory=dict)
     users_tasks_relations: dict[str, dict[int, bool]] = field(default_factory=dict)
     store_item_table: dict[int, StoreItem] = field(default_factory=dict)
+    users_competencies_relations: dict[str, dict[int, int]] = field(default_factory=dict)
+    users_skills_relations: dict[str, dict[int, dict[int, int]]] = field(default_factory=dict)
 
     async def insert_user(self, user: User) -> None:
         try:
@@ -788,3 +790,200 @@ class StorageMock(
                 artifacts=user.artifacts,
             )
             self.user_table[purchase.user_login] = updated_user
+
+    # UserStorage methods for competencies and skills
+    async def get_user_by_login_with_relations(self, login: str) -> User:
+        try:
+            user = self.user_table[login]
+            # Populate competencies
+            user.competencies = []
+            if login in self.users_competencies_relations:
+                for competency_id, level in self.users_competencies_relations[login].items():
+                    competency = self.competencies_table[competency_id]
+                    user.competencies.append(
+                        UserCompetency(
+                            id=competency_id,
+                            name=competency.name,
+                            max_level=competency.max_level,
+                            user_level=level,
+                        )
+                    )
+            
+            # Populate skills
+            user.skills = []
+            if login in self.users_skills_relations:
+                for skill_id, competency_relations in self.users_skills_relations[login].items():
+                    skill = self.skill_table[skill_id]
+                    for competency_id, level in competency_relations.items():
+                        user.skills.append(
+                            UserSkill(
+                                id=skill_id,
+                                name=skill.name,
+                                max_level=skill.max_level,
+                                user_level=level,
+                            )
+                        )
+            
+            return user
+        except KeyError as error:
+            raise UserNotFoundError from error
+
+    async def list_users(self) -> list[User]:
+        return list(self.user_table.values())
+
+    async def add_competency_to_user(
+        self, user_login: str, competency_id: int, level: int = 0
+    ) -> None:
+        if user_login not in self.user_table:
+            raise UserNotFoundError
+        if competency_id not in self.competencies_table:
+            raise CompetencyNotFoundError
+
+        if user_login not in self.users_competencies_relations:
+            self.users_competencies_relations[user_login] = {}
+        self.users_competencies_relations[user_login][competency_id] = level
+
+    async def remove_competency_from_user(self, user_login: str, competency_id: int) -> None:
+        if user_login not in self.user_table:
+            raise UserNotFoundError
+        if competency_id not in self.competencies_table:
+            raise CompetencyNotFoundError
+
+        if user_login in self.users_competencies_relations:
+            self.users_competencies_relations[user_login].pop(competency_id, None)
+            if not self.users_competencies_relations[user_login]:
+                del self.users_competencies_relations[user_login]
+
+    async def update_user_competency_level(
+        self, user_login: str, competency_id: int, level: int
+    ) -> None:
+        if user_login not in self.user_table:
+            raise UserNotFoundError
+        if competency_id not in self.competencies_table:
+            raise CompetencyNotFoundError
+
+        if user_login not in self.users_competencies_relations:
+            raise UserNotFoundError
+        if competency_id not in self.users_competencies_relations[user_login]:
+            raise UserNotFoundError
+
+        self.users_competencies_relations[user_login][competency_id] = level
+
+    async def add_skill_to_user(
+        self, user_login: str, skill_id: int, competency_id: int, level: int = 0
+    ) -> None:
+        if user_login not in self.user_table:
+            raise UserNotFoundError
+        if skill_id not in self.skill_table:
+            raise SkillNotFoundError
+        if competency_id not in self.competencies_table:
+            raise CompetencyNotFoundError
+
+        if user_login not in self.users_skills_relations:
+            self.users_skills_relations[user_login] = {}
+        if skill_id not in self.users_skills_relations[user_login]:
+            self.users_skills_relations[user_login][skill_id] = {}
+        self.users_skills_relations[user_login][skill_id][competency_id] = level
+
+    async def remove_skill_from_user(
+        self, user_login: str, skill_id: int, competency_id: int
+    ) -> None:
+        if user_login not in self.user_table:
+            raise UserNotFoundError
+        if skill_id not in self.skill_table:
+            raise SkillNotFoundError
+        if competency_id not in self.competencies_table:
+            raise CompetencyNotFoundError
+
+        if (
+            user_login in self.users_skills_relations
+            and skill_id in self.users_skills_relations[user_login]
+        ):
+            self.users_skills_relations[user_login][skill_id].pop(competency_id, None)
+            if not self.users_skills_relations[user_login][skill_id]:
+                del self.users_skills_relations[user_login][skill_id]
+            if not self.users_skills_relations[user_login]:
+                del self.users_skills_relations[user_login]
+
+    async def update_user_skill_level(
+        self, user_login: str, skill_id: int, competency_id: int, level: int
+    ) -> None:
+        if user_login not in self.user_table:
+            raise UserNotFoundError
+        if skill_id not in self.skill_table:
+            raise SkillNotFoundError
+        if competency_id not in self.competencies_table:
+            raise CompetencyNotFoundError
+
+        if user_login not in self.users_skills_relations:
+            raise UserNotFoundError
+        if skill_id not in self.users_skills_relations[user_login]:
+            raise UserNotFoundError
+        if competency_id not in self.users_skills_relations[user_login][skill_id]:
+            raise UserNotFoundError
+
+        self.users_skills_relations[user_login][skill_id][competency_id] = level
+
+    async def update_user(self, user: User) -> None:
+        if user.login not in self.user_table:
+            raise UserNotFoundError
+        self.user_table[user.login] = user
+
+    async def get_mission_by_task(self, task_id: int) -> Mission:
+        for mission_id, task_ids in self.missions_tasks_relations.items():
+            if task_id in task_ids:
+                return await self.get_mission_by_id(mission_id)
+        raise MissionNotFoundError
+
+    async def update_user_task_completion(self, task_id: int, user_login: str) -> None:
+        if user_login not in self.users_tasks_relations:
+            self.users_tasks_relations[user_login] = {}
+        self.users_tasks_relations[user_login][task_id] = True
+
+    async def update_user_exp_and_mana(
+        self, user_login: str, exp_increase: int, mana_increase: int
+    ) -> None:
+        if user_login not in self.user_table:
+            raise UserNotFoundError
+
+        user = self.user_table[user_login]
+        if hasattr(user, "exp") and hasattr(user, "mana"):
+            if hasattr(user, "artifacts"):
+                updated_user = type(user)(
+                    login=user.login,
+                    first_name=user.first_name,
+                    last_name=user.last_name,
+                    password=user.password,
+                    role=user.role,
+                    rank_id=user.rank_id,
+                    exp=user.exp + exp_increase,
+                    mana=user.mana + mana_increase,
+                    artifacts=user.artifacts,
+                )
+            else:
+                # Для обычного User
+                updated_user = type(user)(
+                    login=user.login,
+                    first_name=user.first_name,
+                    last_name=user.last_name,
+                    password=user.password,
+                    role=user.role,
+                    rank_id=user.rank_id,
+                    exp=user.exp + exp_increase,
+                    mana=user.mana + mana_increase,
+                )
+            self.user_table[user_login] = updated_user
+
+    async def get_user_missions(self, user_login: str) -> Missions:
+        # Простая реализация для тестов - возвращаем пустой список миссий
+        return Missions(values=[])
+
+    async def approve_user_mission(self, mission_id: int, user_login: str) -> None:
+        # Простая реализация для тестов - ничего не делаем
+        pass
+
+    async def get_competency_by_skill_id(self, skill_id: int) -> Competency:
+        # Простая реализация для тестов - возвращаем первую компетенцию
+        if not self.competencies_table:
+            raise CompetencyNotFoundError
+        return next(iter(self.competencies_table.values()))

@@ -2,7 +2,7 @@ from datetime import UTC, datetime
 
 from src.core.artifacts.enums import ArtifactRarityEnum
 from src.core.artifacts.schemas import Artifact, Artifacts
-from src.core.competencies.schemas import Competencies, Competency
+from src.core.competencies.schemas import Competencies, Competency, UserCompetency
 from src.core.mission_chains.schemas import (
     MissionChain,
     MissionChainMission,
@@ -23,6 +23,7 @@ from src.core.store.schemas import StoreItem, StoreItems, StorePurchase
 from src.core.tasks.schemas import (
     MissionTask,
     MissionTasks,
+    TaskApproveParams,
     UserTask,
 )
 from src.core.users.enums import UserRoleEnum
@@ -38,6 +39,9 @@ class FactoryHelper:
         last_name: str = "TEST",
         password: str = "TEST",  # noqa: S107
         role: UserRoleEnum = UserRoleEnum.HR,
+        rank_id: int = 1,
+        exp: int = 0,
+        mana: int = 0,
     ) -> User:
         return User(
             login=login,
@@ -45,6 +49,12 @@ class FactoryHelper:
             last_name=last_name,
             password=password,
             role=role,
+            rank_id=rank_id,
+            exp=exp,
+            mana=mana,
+            artifacts=[],
+            competencies=[],
+            skills=[],
         )
 
     @classmethod
@@ -71,10 +81,11 @@ class FactoryHelper:
         last_name: str = "TEST",
         password: str = "TEST",  # noqa: S107
         role: UserRoleEnum = UserRoleEnum.CANDIDATE,
-        rank_id: int = 0,
+        rank_id: int = 1,
         exp: int = 0,
         mana: int = 0,
         artifacts: list[Artifact] | None = None,
+        competencies: list[UserCompetency] | None = None,
     ) -> CandidateUser:
         return CandidateUser(
             login=login,
@@ -86,6 +97,7 @@ class FactoryHelper:
             exp=exp,
             mana=mana,
             artifacts=artifacts,
+            competencies=competencies,
         )
 
     @classmethod
@@ -356,3 +368,11 @@ class FactoryHelper:
         store_item_id: int = 1,
     ) -> StorePurchase:
         return StorePurchase(user_login=user_login, store_item_id=store_item_id)
+
+    @classmethod
+    def task_approve_params(
+        cls,
+        task_id: int = 1,
+        user_login: str = "test_user",
+    ) -> TaskApproveParams:
+        return TaskApproveParams(task_id=task_id, user_login=user_login)

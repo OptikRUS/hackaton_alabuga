@@ -97,7 +97,10 @@ from src.storages.models import (
     RankModel,
     SkillModel,
     StoreItemModel,
+    UserCompetencyModel,
+    UserMissionApprovalModel,
     UserModel,
+    UserSkillModel,
     UserTaskRelationModel,
 )
 
@@ -122,7 +125,7 @@ class DatabaseStorage(
                 "last_name": user.last_name,
                 "password": user.password,
                 "role": user.role,
-                "rank_id": 0,
+                "rank_id": 1,
                 "exp": 0,
                 "mana": 0,
             },
@@ -134,10 +137,21 @@ class DatabaseStorage(
             raise UserAlreadyExistError from error
 
     async def get_user_by_login(self, login: str) -> User:
+        query = select(UserModel).where(UserModel.login == login)
+        user = await self.session.scalar(query)
+        if user is None:
+            raise UserNotFoundError
+        return user.to_schema()
+
+    async def get_user_by_login_with_relations(self, login: str) -> User:
         query = (
             select(UserModel)
             .where(UserModel.login == login)
-            .options(selectinload(UserModel.artifacts))
+            .options(
+                selectinload(UserModel.artifacts),
+                selectinload(UserModel.competencies),
+                selectinload(UserModel.skills),
+            )
         )
         user = await self.session.scalar(query)
         if user is None:
@@ -148,12 +162,25 @@ class DatabaseStorage(
         query = (
             select(UserModel)
             .where(UserModel.login == login)
-            .options(selectinload(UserModel.artifacts))
+            .options(
+                selectinload(UserModel.artifacts),
+                selectinload(UserModel.competencies),
+                selectinload(UserModel.skills),
+            )
         )
         candidate = await self.session.scalar(query)
         if candidate is None:
             raise UserNotFoundError
         return candidate.to_candidate_schema()
+
+    async def list_users(self) -> list[User]:
+        query = select(UserModel).options(
+            selectinload(UserModel.artifacts),
+            selectinload(UserModel.competencies),
+            selectinload(UserModel.skills),
+        )
+        users = await self.session.scalars(query)
+        return [user.to_schema() for user in users]
 
     async def insert_season(self, season: Season) -> None:
         query = (
@@ -231,6 +258,28 @@ class DatabaseStorage(
 
     async def get_mission_by_title(self, title: str) -> Mission:
         query = select(MissionModel).where(MissionModel.title == title)
+        mission = await self.session.scalar(query)
+        if mission is None:
+            raise MissionNotFoundError
+        return mission.to_schema()
+
+    async def get_mission_by_task(self, task_id: int) -> Mission:
+        query = (
+            select(MissionModel)
+            .join(MissionTaskRelationModel, MissionModel.id == MissionTaskRelationModel.mission_id)
+            .where(MissionTaskRelationModel.task_id == task_id)
+            .options(
+                selectinload(MissionModel.tasks),
+                selectinload(MissionModel.artifacts),
+                selectinload(MissionModel.competency_rewards).selectinload(
+                    MissionCompetencyRewardModel.competency
+                ),
+                selectinload(MissionModel.skill_rewards).selectinload(
+                    MissionSkillRewardModel.skill
+                ),
+            )
+            .execution_options(populate_existing=True)
+        )
         mission = await self.session.scalar(query)
         if mission is None:
             raise MissionNotFoundError
@@ -507,6 +556,102 @@ class DatabaseStorage(
         query = delete(ArtifactUserRelationModel).where(
             ArtifactUserRelationModel.user_login == user_login,
             ArtifactUserRelationModel.artifact_id == artifact_id,
+        )
+        await self.session.execute(query)
+
+    async def get_competency_by_skill_id(self, skill_id: int) -> Competency:
+        query = (
+            select(CompetencyModel)
+            .join(
+                CompetencySkillRelationModel,
+                CompetencyModel.id == CompetencySkillRelationModel.competency_id,
+            )
+            .where(CompetencySkillRelationModel.skill_id == skill_id)
+            .options(selectinload(CompetencyModel.skills))
+        )
+        competency = await self.session.scalar(query)
+        if competency is None:
+            raise CompetencyNotFoundError
+        return competency.to_schema()
+
+    async def add_competency_to_user(
+        self, user_login: str, competency_id: int, level: int = 0
+    ) -> None:
+        query = insert(UserCompetencyModel).values({
+            "user_login": user_login,
+            "competency_id": competency_id,
+            "level": level,
+        })
+        await self.session.execute(query)
+
+    async def remove_competency_from_user(self, user_login: str, competency_id: int) -> None:
+        query = delete(UserCompetencyModel).where(
+            UserCompetencyModel.user_login == user_login,
+            UserCompetencyModel.competency_id == competency_id,
+        )
+        await self.session.execute(query)
+
+    async def update_user_competency_level(
+        self, user_login: str, competency_id: int, level: int
+    ) -> None:
+        query = (
+            update(UserCompetencyModel)
+            .where(
+                UserCompetencyModel.user_login == user_login,
+                UserCompetencyModel.competency_id == competency_id,
+            )
+            .values(level=level)
+        )
+        await self.session.execute(query)
+
+    async def add_skill_to_user(
+        self, user_login: str, skill_id: int, competency_id: int, level: int = 0
+    ) -> None:
+        query = insert(UserSkillModel).values({
+            "user_login": user_login,
+            "skill_id": skill_id,
+            "competency_id": competency_id,
+            "level": level,
+        })
+        await self.session.execute(query)
+
+    async def remove_skill_from_user(
+        self, user_login: str, skill_id: int, competency_id: int
+    ) -> None:
+        query = delete(UserSkillModel).where(
+            UserSkillModel.user_login == user_login,
+            UserSkillModel.skill_id == skill_id,
+            UserSkillModel.competency_id == competency_id,
+        )
+        await self.session.execute(query)
+
+    async def update_user_skill_level(
+        self, user_login: str, skill_id: int, competency_id: int, level: int
+    ) -> None:
+        query = (
+            update(UserSkillModel)
+            .where(
+                UserSkillModel.user_login == user_login,
+                UserSkillModel.skill_id == skill_id,
+                UserSkillModel.competency_id == competency_id,
+            )
+            .values(level=level)
+        )
+        await self.session.execute(query)
+
+    async def update_user(self, user: User) -> None:
+        query = (
+            update(UserModel)
+            .where(UserModel.login == user.login)
+            .values(
+                first_name=user.first_name,
+                last_name=user.last_name,
+                password=user.password,
+                role=user.role,
+                rank_id=user.rank_id,
+                exp=user.exp,
+                mana=user.mana,
+            )
         )
         await self.session.execute(query)
 
@@ -850,6 +995,124 @@ class DatabaseStorage(
         mission = mission_model.to_schema()
         mission.user_tasks = user_tasks
         return mission
+
+    async def get_user_missions(self, user_login: str) -> Missions:
+        missions_query = (
+            select(MissionModel)
+            .join(MissionTaskRelationModel, MissionModel.id == MissionTaskRelationModel.mission_id)
+            .join(
+                UserTaskRelationModel,
+                MissionTaskRelationModel.task_id == UserTaskRelationModel.task_id,
+            )
+            .where(UserTaskRelationModel.user_login == user_login)
+            .distinct()
+            .options(
+                selectinload(MissionModel.tasks),
+                selectinload(MissionModel.artifacts),
+                selectinload(MissionModel.competency_rewards).selectinload(
+                    MissionCompetencyRewardModel.competency
+                ),
+                selectinload(MissionModel.skill_rewards).selectinload(
+                    MissionSkillRewardModel.skill
+                ),
+            )
+            .execution_options(populate_existing=True)
+        )
+        missions = await self.session.scalars(missions_query)
+
+        missions_with_user_tasks = []
+        for mission_model in missions:
+            user_task_query = (
+                select(UserTaskRelationModel)
+                .join(
+                    MissionTaskRelationModel,
+                    UserTaskRelationModel.task_id == MissionTaskRelationModel.task_id,
+                )
+                .where(
+                    MissionTaskRelationModel.mission_id == mission_model.id,
+                    UserTaskRelationModel.user_login == user_login,
+                )
+                .options(selectinload(UserTaskRelationModel.task))
+            )
+            user_task_relations = await self.session.scalars(user_task_query)
+            user_task_relations_dict = {rel.task_id: rel for rel in user_task_relations}
+
+            user_tasks = []
+            if mission_model.tasks:
+                for task in mission_model.tasks:
+                    if task.id in user_task_relations_dict:
+                        user_task = user_task_relations_dict[task.id].to_schema()
+                    else:
+                        temp_relation = UserTaskRelationModel(
+                            task_id=task.id,
+                            user_login=user_login,
+                            is_completed=False,
+                        )
+                        temp_relation.task = task
+                        user_task = temp_relation.to_schema()
+                    user_tasks.append(user_task)
+
+            approval_query = select(UserMissionApprovalModel).where(
+                UserMissionApprovalModel.mission_id == mission_model.id,
+                UserMissionApprovalModel.user_login == user_login,
+            )
+            approval = await self.session.scalar(approval_query)
+            is_approved = approval.is_approved if approval else False
+
+            mission = mission_model.to_schema()
+            mission.user_tasks = user_tasks
+            mission.is_approved = is_approved
+            missions_with_user_tasks.append(mission)
+
+        return Missions(values=missions_with_user_tasks)
+
+    async def approve_user_mission(self, mission_id: int, user_login: str) -> None:
+        # Проверяем существование миссии и пользователя
+        await self.get_mission_by_id(mission_id=mission_id)
+        await self.get_user_by_login(login=user_login)
+
+        existing_approval_query = select(UserMissionApprovalModel).where(
+            UserMissionApprovalModel.mission_id == mission_id,
+            UserMissionApprovalModel.user_login == user_login,
+        )
+        existing_approval = await self.session.scalar(existing_approval_query)
+
+        if existing_approval:
+            existing_approval.is_approved = True
+        else:
+            new_approval = UserMissionApprovalModel(
+                mission_id=mission_id,
+                user_login=user_login,
+                is_approved=True,
+            )
+            self.session.add(new_approval)
+
+    async def update_user_task_completion(self, task_id: int, user_login: str) -> None:
+        query = (
+            update(UserTaskRelationModel)
+            .where(
+                UserTaskRelationModel.task_id == task_id,
+                UserTaskRelationModel.user_login == user_login,
+            )
+            .values(is_completed=True)
+        )
+        await self.session.execute(query)
+
+    async def update_user_exp_and_mana(
+        self,
+        user_login: str,
+        exp_increase: int,
+        mana_increase: int,
+    ) -> None:
+        query = (
+            update(UserModel)
+            .where(UserModel.login == user_login)
+            .values(
+                exp=UserModel.exp + exp_increase,
+                mana=UserModel.mana + mana_increase,
+            )
+        )
+        await self.session.execute(query)
 
     async def insert_mission_chain(self, mission_chain: MissionChain) -> None:
         query = (

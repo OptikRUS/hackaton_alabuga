@@ -73,6 +73,7 @@ class TestUserStorage(FactoryFixture, StorageFixture):
             last_name="TEST",
             password="TEST",
             artifacts=[artifact_1.to_schema(), artifact_2.to_schema()],
+            competencies=[],
         )
 
     async def test_insert_user(self) -> None:

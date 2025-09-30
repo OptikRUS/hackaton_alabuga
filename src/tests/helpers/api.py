@@ -49,6 +49,12 @@ class APIHelper:
     def get_user_mission(self, mission_id: int) -> Response:
         return self.client.get(f"/users/missions/{mission_id}")
 
+    def get_user_missions(self) -> Response:
+        return self.client.get("/users/missions/list")
+
+    def approve_user_mission(self, mission_id: int, user_login: str) -> Response:
+        return self.client.post(f"/users/missions/{mission_id}/approve?user_login={user_login}")
+
     def create_season(self, name: str, start_date: str, end_date: str) -> Response:
         return self.client.post(
             url="/seasons",
@@ -178,6 +184,12 @@ class APIHelper:
 
     def delete_task(self, task_id: int) -> Response:
         return self.client.delete(f"/tasks/{task_id}")
+
+    def complete_user_task(self, task_id: int, user_login: str) -> Response:
+        return self.client.post(
+            url=f"/users/tasks/{task_id}/complete",
+            json={"user_login": user_login},
+        )
 
     def add_task_to_mission(self, mission_id: int, task_id: int) -> Response:
         return self.client.post(f"/missions/{mission_id}/tasks/{task_id}")
@@ -436,3 +448,75 @@ class APIHelper:
 
     def purchase_store_item(self, store_item_id: int) -> Response:
         return self.client.post(url="/store/purchase", json={"store_item_id": store_item_id})
+
+    def list_users(self) -> Response:
+        return self.client.get("/users")
+
+    def get_user(self, user_login: str) -> Response:
+        return self.client.get(f"/users/{user_login}")
+
+    def update_user(
+        self,
+        user_login: str,
+        first_name: str | None = None,
+        last_name: str | None = None,
+        password: str | None = None,
+        mana: int | None = None,
+        rank_id: int | None = None,
+        exp: int | None = None,
+    ) -> Response:
+        json_data = {}
+        if first_name is not None:
+            json_data["first_name"] = first_name
+        if last_name is not None:
+            json_data["last_name"] = last_name
+        if password is not None:
+            json_data["password"] = password
+        if mana is not None:
+            json_data["mana"] = str(mana)
+        if rank_id is not None:
+            json_data["rank_id"] = str(rank_id)
+        if exp is not None:
+            json_data["exp"] = str(exp)
+
+        return self.client.put(f"/users/{user_login}", json=json_data)
+
+    def add_competency_to_user(
+        self, user_login: str, competency_id: int, level: int = 0
+    ) -> Response:
+        return self.client.post(
+            f"/users/{user_login}/competencies/{competency_id}", params={"level": level}
+        )
+
+    def update_user_competency_level(
+        self, user_login: str, competency_id: int, level: int
+    ) -> Response:
+        return self.client.put(
+            f"/users/{user_login}/competencies/{competency_id}", params={"level": level}
+        )
+
+    def remove_competency_from_user(self, user_login: str, competency_id: int) -> Response:
+        return self.client.delete(f"/users/{user_login}/competencies/{competency_id}")
+
+    def add_skill_to_user(
+        self, user_login: str, competency_id: int, skill_id: int, level: int = 0
+    ) -> Response:
+        return self.client.post(
+            f"/users/{user_login}/competencies/{competency_id}/skills/{skill_id}",
+            params={"level": level},
+        )
+
+    def update_user_skill_level(
+        self, user_login: str, competency_id: int, skill_id: int, level: int
+    ) -> Response:
+        return self.client.put(
+            f"/users/{user_login}/competencies/{competency_id}/skills/{skill_id}",
+            params={"level": level},
+        )
+
+    def remove_skill_from_user(
+        self, user_login: str, competency_id: int, skill_id: int
+    ) -> Response:
+        return self.client.delete(
+            f"/users/{user_login}/competencies/{competency_id}/skills/{skill_id}"
+        )

@@ -40,6 +40,7 @@ class Mission:
     reward_competencies: list[CompetencyReward] | None = None
     reward_skills: list[SkillReward] | None = None
     user_tasks: list[UserTask] | None = None
+    is_approved: bool = False
 
     @property
     def is_completed(self) -> bool:

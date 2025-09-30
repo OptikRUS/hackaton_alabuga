@@ -10,14 +10,33 @@ from src.core.artifacts.use_cases import (
 from src.core.exceptions import InvalidJWTTokenError, PermissionDeniedError
 from src.core.missions.enums import MissionCategoryEnum
 from src.core.missions.exceptions import MissionNotFoundError
-from src.core.missions.use_cases import GetMissionWithUserTasksUseCase
+from src.core.missions.schemas import Missions
+from src.core.missions.use_cases import (
+    ApproveUserMissionUseCase,
+    GetMissionWithUserTasksUseCase,
+    GetUserMissionsUseCase,
+)
+from src.core.tasks.exceptions import TaskNotFoundError
+from src.core.tasks.use_cases import TaskApproveUseCase
 from src.core.users.enums import UserRoleEnum
 from src.core.users.exceptions import (
     UserAlreadyExistError,
     UserIncorrectCredentialsError,
     UserNotFoundError,
 )
-from src.core.users.use_cases import CreateUserUseCase, GetUserUseCase, LoginUserUseCase
+from src.core.users.use_cases import (
+    AddCompetencyToUserUseCase,
+    AddSkillToUserUseCase,
+    CreateUserUseCase,
+    GetUserWithRelationsUseCase,
+    ListUsersUseCase,
+    LoginUserUseCase,
+    RemoveCompetencyFromUserUseCase,
+    RemoveSkillFromUserUseCase,
+    UpdateUserCompetencyLevelUseCase,
+    UpdateUserSkillLevelUseCase,
+    UpdateUserUseCase,
+)
 from src.tests.fixtures import APIFixture, ContainerFixture, FactoryFixture
 
 
@@ -172,7 +191,7 @@ class TestUserLoginAPI(APIFixture, FactoryFixture, ContainerFixture):
 class TestGetMeAPI(APIFixture, FactoryFixture, ContainerFixture):
     @pytest.fixture(autouse=True)
     async def setup(self) -> None:
-        self.use_case = await self.container.override_use_case(GetUserUseCase)
+        self.use_case = await self.container.override_use_case(GetUserWithRelationsUseCase)
 
     async def test_get_me_no_auth(self) -> None:
         response = self.api.get_me()
@@ -348,6 +367,7 @@ class TestGetUserMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             "seasonId": 1,
             "category": "quest",
             "isCompleted": False,
+            "isApproved": False,
             "tasks": [],
             "rewardArtifacts": [],
             "rewardCompetencies": [],
@@ -393,6 +413,7 @@ class TestGetUserMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             "seasonId": 1,
             "category": "quest",
             "isCompleted": True,
+            "isApproved": False,
             "tasks": [
                 {
                     "id": 1,
@@ -476,6 +497,7 @@ class TestGetUserMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
             "seasonId": 1,
             "category": "quest",
             "isCompleted": True,
+            "isApproved": False,
             "tasks": [
                 {
                     "id": 1,
@@ -520,3 +542,720 @@ class TestGetUserMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
         assert response.json() == {"detail": MissionNotFoundError.detail}
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(mission_id=999, user_login="candidate_user")
+
+
+class TestGetUserMissionsAPI(APIFixture, FactoryFixture, ContainerFixture):
+    @pytest.fixture(autouse=True)
+    async def setup(self) -> None:
+        self.use_case = await self.container.override_use_case(GetUserMissionsUseCase)
+
+    def test_not_auth(self) -> None:
+        response = self.api.get_user_missions()
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_get_user_missions_success(self) -> None:
+        self.use_case.execute.return_value = Missions(
+            values=[
+                self.factory.user_mission(
+                    mission_id=1,
+                    title="Test Mission 1",
+                    description="Test Description 1",
+                    reward_xp=100,
+                    reward_mana=50,
+                    rank_requirement=1,
+                    season_id=1,
+                    category=MissionCategoryEnum.QUEST,
+                    tasks=[],
+                    user_tasks=[],
+                    reward_artifacts=[],
+                    reward_competencies=[],
+                    reward_skills=[],
+                ),
+                self.factory.user_mission(
+                    mission_id=2,
+                    title="Test Mission 2",
+                    description="Test Description 2",
+                    reward_xp=200,
+                    reward_mana=100,
+                    rank_requirement=2,
+                    season_id=1,
+                    category=MissionCategoryEnum.QUEST,
+                    tasks=[],
+                    user_tasks=[],
+                    reward_artifacts=[],
+                    reward_competencies=[],
+                    reward_skills=[],
+                ),
+            ]
+        )
+
+        response = self.candidate_api.get_user_missions()
+
+        assert response.status_code == codes.OK
+        data = response.json()
+        assert len(data["missions"]) == 2
+        assert data["missions"][0]["id"] == 1
+        assert data["missions"][0]["title"] == "Test Mission 1"
+        assert data["missions"][1]["id"] == 2
+        assert data["missions"][1]["title"] == "Test Mission 2"
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(user_login="candidate_user")
+
+
+class TestApproveUserMissionAPI(APIFixture, FactoryFixture, ContainerFixture):
+    @pytest.fixture(autouse=True)
+    async def setup(self) -> None:
+        self.use_case = await self.container.override_use_case(ApproveUserMissionUseCase)
+
+    def test_not_auth(self) -> None:
+        response = self.api.approve_user_mission(mission_id=1, user_login="test_user")
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_candidate_cannot_approve(self) -> None:
+        response = self.candidate_api.approve_user_mission(mission_id=1, user_login="test_user")
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": PermissionDeniedError.detail}
+
+    def test_hr_can_approve_mission(self) -> None:
+        self.use_case.execute.return_value = None
+
+        response = self.hr_api.approve_user_mission(mission_id=1, user_login="test_user")
+
+        assert response.status_code == codes.OK
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(mission_id=1, user_login="test_user")
+
+
+class TestListUsersAPI(APIFixture, FactoryFixture, ContainerFixture):
+    @pytest.fixture(autouse=True)
+    async def setup(self) -> None:
+        self.use_case = await self.container.override_use_case(ListUsersUseCase)
+
+    def test_not_auth(self) -> None:
+        response = self.api.list_users()
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_candidate_forbidden(self) -> None:
+        response = self.candidate_api.list_users()
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": PermissionDeniedError.detail}
+
+    def test_list_users_success(self) -> None:
+        self.use_case.execute.return_value = [
+            self.factory.user(
+                login="user1",
+                password="password",
+                role=UserRoleEnum.CANDIDATE,
+            ),
+            self.factory.user(
+                login="user2",
+                password="password",
+                role=UserRoleEnum.HR,
+            ),
+        ]
+
+        response = self.hr_api.list_users()
+
+        assert response.status_code == codes.OK
+        assert response.json() == {
+            "users": [
+                {
+                    "login": "user1",
+                    "firstName": "TEST",
+                    "lastName": "TEST",
+                    "role": "candidate",
+                },
+                {
+                    "login": "user2",
+                    "firstName": "TEST",
+                    "lastName": "TEST",
+                    "role": "hr",
+                },
+            ]
+        }
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with()
+
+    def test_list_users_empty(self) -> None:
+        self.use_case.execute.return_value = []
+
+        response = self.hr_api.list_users()
+
+        assert response.status_code == codes.OK
+        assert response.json() == {"users": []}
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with()
+
+
+class TestGetUserAPI(APIFixture, FactoryFixture, ContainerFixture):
+    @pytest.fixture(autouse=True)
+    async def setup(self) -> None:
+        self.use_case = await self.container.override_use_case(GetUserWithRelationsUseCase)
+
+    def test_not_auth(self) -> None:
+        response = self.api.get_user(user_login="testuser")
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_candidate_forbidden(self) -> None:
+        response = self.candidate_api.get_user(user_login="testuser")
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": PermissionDeniedError.detail}
+
+    def test_get_user_success(self) -> None:
+        self.use_case.execute.return_value = self.factory.user(
+            login="testuser",
+            password="password",
+            role=UserRoleEnum.CANDIDATE,
+        )
+
+        response = self.hr_api.get_user(user_login="testuser")
+
+        assert response.status_code == codes.OK
+        assert response.json() == {
+            "login": "testuser",
+            "firstName": "TEST",
+            "lastName": "TEST",
+            "role": "candidate",
+            "rankId": 1,
+            "exp": 0,
+            "mana": 0,
+            "artifacts": [],
+            "competencies": [],
+        }
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(login="testuser")
+
+    def test_get_user_not_found(self) -> None:
+        self.use_case.execute.side_effect = UserNotFoundError
+
+        response = self.hr_api.get_user(user_login="nonexistent")
+
+        assert response.status_code == codes.NOT_FOUND
+        assert response.json() == {"detail": UserNotFoundError.detail}
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(login="nonexistent")
+
+
+class TestAddCompetencyToUserAPI(APIFixture, FactoryFixture, ContainerFixture):
+    @pytest.fixture(autouse=True)
+    async def setup(self) -> None:
+        self.use_case = await self.container.override_use_case(AddCompetencyToUserUseCase)
+
+    def test_not_auth(self) -> None:
+        response = self.api.add_competency_to_user(user_login="testuser", competency_id=1)
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_candidate_forbidden(self) -> None:
+        response = self.candidate_api.add_competency_to_user(user_login="testuser", competency_id=1)
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": PermissionDeniedError.detail}
+
+    def test_add_competency_to_user_success(self) -> None:
+        self.use_case.execute.return_value = None
+
+        response = self.hr_api.add_competency_to_user(
+            user_login="testuser", competency_id=1, level=5
+        )
+
+        assert response.status_code == codes.CREATED
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(
+            user_login="testuser", competency_id=1, level=5
+        )
+
+    def test_add_competency_to_user_default_level(self) -> None:
+        self.use_case.execute.return_value = None
+
+        response = self.hr_api.add_competency_to_user(user_login="testuser", competency_id=1)
+
+        assert response.status_code == codes.CREATED
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(
+            user_login="testuser", competency_id=1, level=0
+        )
+
+    def test_add_competency_to_user_user_not_found(self) -> None:
+        self.use_case.execute.side_effect = UserNotFoundError
+
+        response = self.hr_api.add_competency_to_user(user_login="testuser", competency_id=1)
+
+        assert response.status_code == codes.NOT_FOUND
+        assert response.json() == {"detail": UserNotFoundError.detail}
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(
+            user_login="testuser", competency_id=1, level=0
+        )
+
+
+class TestUpdateUserCompetencyLevelAPI(APIFixture, FactoryFixture, ContainerFixture):
+    @pytest.fixture(autouse=True)
+    async def setup(self) -> None:
+        self.use_case = await self.container.override_use_case(UpdateUserCompetencyLevelUseCase)
+
+    def test_not_auth(self) -> None:
+        response = self.api.update_user_competency_level(
+            user_login="testuser", competency_id=1, level=5
+        )
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_candidate_forbidden(self) -> None:
+        response = self.candidate_api.update_user_competency_level(
+            user_login="testuser", competency_id=1, level=5
+        )
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": PermissionDeniedError.detail}
+
+    def test_update_user_competency_level_success(self) -> None:
+        self.use_case.execute.return_value = None
+
+        response = self.hr_api.update_user_competency_level(
+            user_login="testuser", competency_id=1, level=10
+        )
+
+        assert response.status_code == codes.OK
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(
+            user_login="testuser", competency_id=1, level=10
+        )
+
+    def test_update_user_competency_level_user_not_found(self) -> None:
+        self.use_case.execute.side_effect = UserNotFoundError
+
+        response = self.hr_api.update_user_competency_level(
+            user_login="testuser", competency_id=1, level=5
+        )
+
+        assert response.status_code == codes.NOT_FOUND
+        assert response.json() == {"detail": UserNotFoundError.detail}
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(
+            user_login="testuser", competency_id=1, level=5
+        )
+
+
+class TestRemoveCompetencyFromUserAPI(APIFixture, FactoryFixture, ContainerFixture):
+    @pytest.fixture(autouse=True)
+    async def setup(self) -> None:
+        self.use_case = await self.container.override_use_case(RemoveCompetencyFromUserUseCase)
+
+    def test_not_auth(self) -> None:
+        response = self.api.remove_competency_from_user(user_login="testuser", competency_id=1)
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_candidate_forbidden(self) -> None:
+        response = self.candidate_api.remove_competency_from_user(
+            user_login="testuser", competency_id=1
+        )
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": PermissionDeniedError.detail}
+
+    def test_remove_competency_from_user_success(self) -> None:
+        self.use_case.execute.return_value = None
+
+        response = self.hr_api.remove_competency_from_user(user_login="testuser", competency_id=1)
+
+        assert response.status_code == codes.OK
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(user_login="testuser", competency_id=1)
+
+    def test_remove_competency_from_user_user_not_found(self) -> None:
+        self.use_case.execute.side_effect = UserNotFoundError
+
+        response = self.hr_api.remove_competency_from_user(user_login="testuser", competency_id=1)
+
+        assert response.status_code == codes.NOT_FOUND
+        assert response.json() == {"detail": UserNotFoundError.detail}
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(user_login="testuser", competency_id=1)
+
+
+class TestAddSkillToUserAPI(APIFixture, FactoryFixture, ContainerFixture):
+    @pytest.fixture(autouse=True)
+    async def setup(self) -> None:
+        self.use_case = await self.container.override_use_case(AddSkillToUserUseCase)
+
+    def test_not_auth(self) -> None:
+        response = self.api.add_skill_to_user(user_login="testuser", competency_id=1, skill_id=1)
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_candidate_forbidden(self) -> None:
+        response = self.candidate_api.add_skill_to_user(
+            user_login="testuser", competency_id=1, skill_id=1
+        )
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": PermissionDeniedError.detail}
+
+    def test_add_skill_to_user_success(self) -> None:
+        self.use_case.execute.return_value = None
+
+        response = self.hr_api.add_skill_to_user(
+            user_login="testuser", competency_id=1, skill_id=1, level=3
+        )
+
+        assert response.status_code == codes.CREATED
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(
+            user_login="testuser", skill_id=1, competency_id=1, level=3
+        )
+
+    def test_add_skill_to_user_default_level(self) -> None:
+        self.use_case.execute.return_value = None
+
+        response = self.hr_api.add_skill_to_user(user_login="testuser", competency_id=1, skill_id=1)
+
+        assert response.status_code == codes.CREATED
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(
+            user_login="testuser", skill_id=1, competency_id=1, level=0
+        )
+
+    def test_add_skill_to_user_user_not_found(self) -> None:
+        self.use_case.execute.side_effect = UserNotFoundError
+
+        response = self.hr_api.add_skill_to_user(user_login="testuser", competency_id=1, skill_id=1)
+
+        assert response.status_code == codes.NOT_FOUND
+        assert response.json() == {"detail": UserNotFoundError.detail}
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(
+            user_login="testuser", skill_id=1, competency_id=1, level=0
+        )
+
+
+class TestUpdateUserSkillLevelAPI(APIFixture, FactoryFixture, ContainerFixture):
+    @pytest.fixture(autouse=True)
+    async def setup(self) -> None:
+        self.use_case = await self.container.override_use_case(UpdateUserSkillLevelUseCase)
+
+    def test_not_auth(self) -> None:
+        response = self.api.update_user_skill_level(
+            user_login="testuser", competency_id=1, skill_id=1, level=5
+        )
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_candidate_forbidden(self) -> None:
+        response = self.candidate_api.update_user_skill_level(
+            user_login="testuser", competency_id=1, skill_id=1, level=5
+        )
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": PermissionDeniedError.detail}
+
+    def test_update_user_skill_level_success(self) -> None:
+        self.use_case.execute.return_value = None
+
+        response = self.hr_api.update_user_skill_level(
+            user_login="testuser", competency_id=1, skill_id=1, level=8
+        )
+
+        assert response.status_code == codes.OK
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(
+            user_login="testuser", skill_id=1, competency_id=1, level=8
+        )
+
+    def test_update_user_skill_level_user_not_found(self) -> None:
+        self.use_case.execute.side_effect = UserNotFoundError
+
+        response = self.hr_api.update_user_skill_level(
+            user_login="testuser", competency_id=1, skill_id=1, level=5
+        )
+
+        assert response.status_code == codes.NOT_FOUND
+        assert response.json() == {"detail": UserNotFoundError.detail}
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(
+            user_login="testuser", skill_id=1, competency_id=1, level=5
+        )
+
+
+class TestRemoveSkillFromUserAPI(APIFixture, FactoryFixture, ContainerFixture):
+    @pytest.fixture(autouse=True)
+    async def setup(self) -> None:
+        self.use_case = await self.container.override_use_case(RemoveSkillFromUserUseCase)
+
+    def test_not_auth(self) -> None:
+        response = self.api.remove_skill_from_user(
+            user_login="testuser", competency_id=1, skill_id=1
+        )
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_candidate_forbidden(self) -> None:
+        response = self.candidate_api.remove_skill_from_user(
+            user_login="testuser", competency_id=1, skill_id=1
+        )
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": PermissionDeniedError.detail}
+
+    def test_remove_skill_from_user_success(self) -> None:
+        self.use_case.execute.return_value = None
+
+        response = self.hr_api.remove_skill_from_user(
+            user_login="testuser", competency_id=1, skill_id=1
+        )
+
+        assert response.status_code == codes.OK
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(
+            user_login="testuser", skill_id=1, competency_id=1
+        )
+
+    def test_remove_skill_from_user_user_not_found(self) -> None:
+        self.use_case.execute.side_effect = UserNotFoundError
+
+        response = self.hr_api.remove_skill_from_user(
+            user_login="testuser", competency_id=1, skill_id=1
+        )
+
+        assert response.status_code == codes.NOT_FOUND
+        assert response.json() == {"detail": UserNotFoundError.detail}
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(
+            user_login="testuser", skill_id=1, competency_id=1
+        )
+
+
+class TestUpdateUserAPI(APIFixture, FactoryFixture, ContainerFixture):
+    @pytest.fixture(autouse=True)
+    async def setup(self) -> None:
+        self.get_user_use_case = await self.container.override_use_case(GetUserWithRelationsUseCase)
+        self.update_user_use_case = await self.container.override_use_case(UpdateUserUseCase)
+
+    def test_not_auth(self) -> None:
+        response = self.api.update_user(
+            user_login="testuser",
+            first_name="NewName",
+            last_name="NewLastName",
+        )
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_candidate_forbidden(self) -> None:
+        response = self.candidate_api.update_user(
+            user_login="testuser",
+            first_name="NewName",
+            last_name="NewLastName",
+        )
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": PermissionDeniedError.detail}
+
+    def test_update_user_success(self) -> None:
+        current_user = self.factory.user(
+            login="testuser",
+            password="old_password",
+            first_name="OldName",
+            last_name="OldLastName",
+            role=UserRoleEnum.CANDIDATE,
+            rank_id=1,
+            exp=100,
+            mana=50,
+        )
+        self.get_user_use_case.execute.return_value = current_user
+
+        updated_user = self.factory.user(
+            login="testuser",
+            password="new_password",
+            first_name="NewName",
+            last_name="NewLastName",
+            role=UserRoleEnum.CANDIDATE,
+            rank_id=2,
+            exp=200,
+            mana=100,
+        )
+        self.get_user_use_case.execute.side_effect = [current_user, updated_user]
+        self.update_user_use_case.execute.return_value = None
+
+        response = self.hr_api.update_user(
+            user_login="testuser",
+            first_name="NewName",
+            last_name="NewLastName",
+            password="new_password",
+            mana=100,
+            rank_id=2,
+            exp=200,
+        )
+
+        assert response.status_code == codes.OK
+        assert response.json() == {
+            "login": "testuser",
+            "firstName": "NewName",
+            "lastName": "NewLastName",
+            "role": "candidate",
+        }
+
+        assert self.get_user_use_case.execute.call_count == 2
+        self.get_user_use_case.execute.assert_awaited_with(login="testuser")
+
+        self.update_user_use_case.execute.assert_called_once()
+        self.update_user_use_case.execute.assert_awaited_once()
+
+    def test_update_user_partial_update(self) -> None:
+        current_user = self.factory.user(
+            login="testuser",
+            password="password",
+            first_name="OldName",
+            last_name="OldLastName",
+            role=UserRoleEnum.CANDIDATE,
+            rank_id=1,
+            exp=100,
+            mana=50,
+        )
+        self.get_user_use_case.execute.return_value = current_user
+
+        updated_user = self.factory.user(
+            login="testuser",
+            password="password",
+            first_name="NewName",
+            last_name="OldLastName",
+            role=UserRoleEnum.CANDIDATE,
+            rank_id=1,
+            exp=100,
+            mana=50,
+        )
+        self.get_user_use_case.execute.side_effect = [current_user, updated_user]
+        self.update_user_use_case.execute.return_value = None
+
+        response = self.hr_api.update_user(
+            user_login="testuser",
+            first_name="NewName",
+        )
+
+        assert response.status_code == codes.OK
+        assert response.json() == {
+            "login": "testuser",
+            "firstName": "NewName",
+            "lastName": "OldLastName",
+            "role": "candidate",
+        }
+
+    def test_update_user_not_found(self) -> None:
+        self.get_user_use_case.execute.side_effect = UserNotFoundError
+
+        response = self.hr_api.update_user(
+            user_login="nonexistent",
+            first_name="NewName",
+        )
+
+        assert response.status_code == codes.NOT_FOUND
+        assert response.json() == {"detail": UserNotFoundError.detail}
+        self.get_user_use_case.execute.assert_called_once()
+        self.get_user_use_case.execute.assert_awaited_once_with(login="nonexistent")
+
+    def test_update_user_empty_request(self) -> None:
+        current_user = self.factory.user(
+            login="testuser",
+            password="password",
+            first_name="OldName",
+            last_name="OldLastName",
+            role=UserRoleEnum.CANDIDATE,
+            rank_id=1,
+            exp=100,
+            mana=50,
+        )
+        self.get_user_use_case.execute.return_value = current_user
+
+        updated_user = self.factory.user(
+            login="testuser",
+            password="password",
+            first_name="OldName",
+            last_name="OldLastName",
+            role=UserRoleEnum.CANDIDATE,
+            rank_id=1,
+            exp=100,
+            mana=50,
+        )
+        self.get_user_use_case.execute.side_effect = [current_user, updated_user]
+        self.update_user_use_case.execute.return_value = None
+
+        response = self.hr_api.update_user(user_login="testuser")
+
+        assert response.status_code == codes.OK
+        assert response.json() == {
+            "login": "testuser",
+            "firstName": "OldName",
+            "lastName": "OldLastName",
+            "role": "candidate",
+        }
+
+
+class TestCompleteUserTaskAPI(APIFixture, FactoryFixture, ContainerFixture):
+    @pytest.fixture(autouse=True)
+    async def setup(self) -> None:
+        self.use_case = await self.container.override_use_case(TaskApproveUseCase)
+
+    def test_not_auth(self) -> None:
+        response = self.api.complete_user_task(task_id=1, user_login="test_user")
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": "Not authenticated"}
+
+    def test_candidate_forbidden(self) -> None:
+        response = self.candidate_api.complete_user_task(task_id=1, user_login="test_user")
+
+        assert response.status_code == codes.FORBIDDEN
+        assert response.json() == {"detail": PermissionDeniedError.detail}
+
+    def test_complete_user_task(self) -> None:
+        self.use_case.execute.return_value = None
+
+        response = self.hr_api.complete_user_task(task_id=1, user_login="test_user")
+
+        assert response.status_code == codes.NO_CONTENT
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(
+            params=self.factory.task_approve_params(task_id=1, user_login="test_user")
+        )
+
+    def test_complete_user_task_not_found(self) -> None:
+        self.use_case.execute.side_effect = TaskNotFoundError
+
+        response = self.hr_api.complete_user_task(task_id=999, user_login="test_user")
+
+        assert response.status_code == codes.NOT_FOUND
+        assert response.json() == {"detail": TaskNotFoundError.detail}
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(
+            params=self.factory.task_approve_params(task_id=999, user_login="test_user")
+        )
+
+    def test_complete_user_task_user_not_found(self) -> None:
+        self.use_case.execute.side_effect = UserNotFoundError
+
+        response = self.hr_api.complete_user_task(task_id=1, user_login="nonexistent_user")
+
+        assert response.status_code == codes.NOT_FOUND
+        assert response.json() == {"detail": UserNotFoundError.detail}
+        self.use_case.execute.assert_called_once()
+        self.use_case.execute.assert_awaited_once_with(
+            params=self.factory.task_approve_params(task_id=1, user_login="nonexistent_user")
+        )

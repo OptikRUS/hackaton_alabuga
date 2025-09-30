@@ -19,3 +19,7 @@ class MissionSkillRewardAlreadyExistsError(BaseExceptionError):
 
 class PrerequisiteMissionNotFoundError(BaseExceptionError):
     detail = "Prerequisite mission not found!"
+
+
+class MissionNotCompletedError(BaseExceptionError):
+    detail = "Mission is not completed yet"

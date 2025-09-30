@@ -1,8 +1,8 @@
 from pydantic import Field
 
 from src.api.boundary import BoundaryModel
-from src.api.skills.schemas import SkillResponse
-from src.core.competencies.schemas import Competencies, Competency
+from src.api.skills.schemas import SkillResponse, UserSkillResponse
+from src.core.competencies.schemas import Competencies, Competency, UserCompetencies, UserCompetency
 
 
 class CompetencyCreateRequest(BoundaryModel):
@@ -37,6 +37,26 @@ class CompetencyResponse(BoundaryModel):
         )
 
 
+class UserCompetencyResponse(BoundaryModel):
+    id: int = Field(default=..., description="Идентификатор компетенции")
+    name: str = Field(default=..., description="Название компетенции")
+    max_level: int = Field(default=..., description="Максимальный уровень")
+    user_level: int = Field(default=..., description="Уровень пользователя в компетенции")
+    skills: list[UserSkillResponse] = Field(
+        default_factory=list, description="Список скилов пользователя"
+    )
+
+    @classmethod
+    def from_schema(cls, competency: UserCompetency) -> "UserCompetencyResponse":
+        return cls(
+            id=competency.id,
+            name=competency.name,
+            max_level=competency.max_level,
+            user_level=competency.user_level,
+            skills=[UserSkillResponse.from_schema(skill=s) for s in (competency.skills or [])],
+        )
+
+
 class CompetenciesResponse(BoundaryModel):
     values: list[CompetencyResponse]
 
@@ -44,4 +64,14 @@ class CompetenciesResponse(BoundaryModel):
     def from_schema(cls, competencies: Competencies) -> "CompetenciesResponse":
         return cls(
             values=[CompetencyResponse.from_schema(competency=c) for c in competencies.values]
+        )
+
+
+class UserCompetenciesResponse(BoundaryModel):
+    values: list[UserCompetencyResponse]
+
+    @classmethod
+    def from_schema(cls, competencies: UserCompetencies) -> "UserCompetenciesResponse":
+        return cls(
+            values=[UserCompetencyResponse.from_schema(competency=c) for c in competencies.values]
         )

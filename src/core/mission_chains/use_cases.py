@@ -46,12 +46,15 @@ class UpdateMissionChainUseCase(UseCase):
     storage: MissionStorage
 
     async def execute(self, mission_chain: MissionChain) -> MissionChain:
+        await self.storage.get_mission_chain_by_id(chain_id=mission_chain.id)
         try:
-            await self.storage.get_mission_chain_by_name(name=mission_chain.name)
-            raise MissionChainNameAlreadyExistError
+            existing_chain = await self.storage.get_mission_chain_by_name(name=mission_chain.name)
+            if existing_chain.id != mission_chain.id:
+                raise MissionChainNameAlreadyExistError
         except MissionChainNotFoundError:
-            await self.storage.update_mission_chain(mission_chain=mission_chain)
-            return await self.storage.get_mission_chain_by_id(chain_id=mission_chain.id)
+            pass
+        await self.storage.update_mission_chain(mission_chain=mission_chain)
+        return await self.storage.get_mission_chain_by_id(chain_id=mission_chain.id)
 
 
 @dataclass

@@ -111,3 +111,12 @@ class RemoveArtifactFromUserUseCase(UseCase):
         await self.storage.get_artifact_by_id(artifact_id=artifact_id)
         await self.storage.remove_artifact_from_user(user_login=user_login, artifact_id=artifact_id)
         return await self.user_storage.get_user_by_login(login=user_login)
+
+
+@dataclass
+class GetUserArtifactsUseCase(UseCase):
+    user_storage: UserStorage
+
+    async def execute(self, user_login: str) -> list[Artifact]:
+        user = await self.user_storage.get_user_by_login_with_relations(login=user_login)
+        return user.artifacts or []
