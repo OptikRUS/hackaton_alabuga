@@ -235,6 +235,7 @@ class StorageHelper:
                 {
                     "name": rank.name,
                     "required_xp": rank.required_xp,
+                    "image_url": rank.image_url,
                 },
             )
             .returning(RankModel)

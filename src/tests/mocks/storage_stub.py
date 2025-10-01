@@ -483,6 +483,7 @@ class StorageMock(
             id=rank.id,
             name=rank.name,
             required_xp=rank.required_xp,
+            image_url=rank.image_url,
             required_missions=missions,
             required_competencies=reqs,
         )

@@ -315,10 +315,12 @@ class APIHelper:
     def remove_skill_from_competency(self, competency_id: int, skill_id: int) -> Response:
         return self.client.delete(f"/competencies/{competency_id}/skills/{skill_id}")
 
-    def create_rank(self, name: str, required_xp: int) -> Response:
+    def create_rank(
+        self, name: str, required_xp: int, image_url: str = "https://example.com/rank.jpg"
+    ) -> Response:
         return self.client.post(
             url="/ranks",
-            json={"name": name, "required_xp": required_xp},
+            json={"name": name, "required_xp": required_xp, "image_url": image_url},
         )
 
     def get_ranks(self) -> Response:
@@ -327,10 +329,16 @@ class APIHelper:
     def get_rank(self, rank_id: int) -> Response:
         return self.client.get(f"/ranks/{rank_id}")
 
-    def update_rank(self, rank_id: int, name: str, required_xp: int) -> Response:
+    def update_rank(
+        self,
+        rank_id: int,
+        name: str,
+        required_xp: int,
+        image_url: str = "https://example.com/rank.jpg",
+    ) -> Response:
         return self.client.put(
             url=f"/ranks/{rank_id}",
-            json={"name": name, "required_xp": required_xp},
+            json={"name": name, "required_xp": required_xp, "image_url": image_url},
         )
 
     def delete_rank(self, rank_id: int) -> Response:

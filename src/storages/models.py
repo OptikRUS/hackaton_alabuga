@@ -380,16 +380,20 @@ class RankModel(Base):
         lazy="selectin",
         cascade="all, delete-orphan",
     )
+    image_url: Mapped[str] = mapped_column(nullable=False)
 
     @classmethod
     def from_schema(cls, rank: Rank) -> "RankModel":
-        return cls(id=rank.id, name=rank.name, required_xp=rank.required_xp)
+        return cls(
+            id=rank.id, name=rank.name, required_xp=rank.required_xp, image_url=rank.image_url
+        )
 
     def to_schema(self) -> Rank:
         return Rank(
             id=self.id,
             name=self.name,
             required_xp=self.required_xp,
+            image_url=self.image_url,
             required_missions=[mission.to_schema() for mission in self.required_missions],
             required_competencies=[
                 RankCompetencyRequirement(

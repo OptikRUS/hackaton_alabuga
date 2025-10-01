@@ -53,6 +53,7 @@ class TestCreateRankAPI(APIFixture, FactoryFixture, ContainerFixture):
             "id": 1,
             "name": "Bronze",
             "requiredXp": 100,
+            "imageUrl": "https://example.com/rank.jpg",
             "requiredMissions": [],
             "requiredCompetencies": [],
         }
@@ -97,6 +98,7 @@ class TestGetRanksAPI(APIFixture, FactoryFixture, ContainerFixture):
                     "id": 1,
                     "name": "Bronze",
                     "requiredXp": 100,
+                    "imageUrl": "https://example.com/rank.jpg",
                     "requiredMissions": [],
                     "requiredCompetencies": [],
                 },
@@ -104,6 +106,7 @@ class TestGetRanksAPI(APIFixture, FactoryFixture, ContainerFixture):
                     "id": 2,
                     "name": "Silver",
                     "requiredXp": 200,
+                    "imageUrl": "https://example.com/rank.jpg",
                     "requiredMissions": [],
                     "requiredCompetencies": [],
                 },
@@ -141,6 +144,7 @@ class TestRankDetailAPI(APIFixture, FactoryFixture, ContainerFixture):
 
         assert response.status_code == codes.OK
         assert response.json()["requiredMissions"] == []
+        assert response.json()["imageUrl"] == "https://example.com/rank.jpg"
         self.use_case.execute.assert_awaited_once_with(rank_id=1)
 
     def test_get_rank_not_found(self) -> None:
@@ -178,6 +182,7 @@ class TestUpdateRankAPI(APIFixture, FactoryFixture, ContainerFixture):
         response = self.hr_api.update_rank(rank_id=1, name="Silver", required_xp=200)
 
         assert response.status_code == codes.OK
+        assert response.json()["imageUrl"] == "https://example.com/rank.jpg"
         self.use_case.execute.assert_awaited_once_with(
             rank=self.factory.rank(rank_id=1, name="Silver", required_xp=200)
         )

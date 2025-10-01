@@ -9,12 +9,14 @@ from src.core.ranks.schemas import Rank, RankCompetencyRequirement, Ranks
 class RankCreateRequest(BoundaryModel):
     name: str = Field(default=..., description="Название ранга")
     required_xp: int = Field(default=..., ge=0, description="Необходимый опыт")
+    image_url: str = Field(default=..., description="URL изображения ранга")
 
     def to_schema(self) -> Rank:
         return Rank(
             id=0,
             name=self.name,
             required_xp=self.required_xp,
+            image_url=self.image_url,
             required_missions=[],
             required_competencies=[],
         )
@@ -23,12 +25,14 @@ class RankCreateRequest(BoundaryModel):
 class RankUpdateRequest(BoundaryModel):
     name: str = Field(default=..., description="Название ранга")
     required_xp: int = Field(default=..., ge=0, description="Необходимый опыт")
+    image_url: str = Field(default=..., description="URL изображения ранга")
 
     def to_schema(self, rank_id: int) -> Rank:
         return Rank(
             id=rank_id,
             name=self.name,
             required_xp=self.required_xp,
+            image_url=self.image_url,
             required_missions=[],
             required_competencies=[],
         )
@@ -42,6 +46,7 @@ class RankResponse(BoundaryModel):
     id: int = Field(default=..., description="Идентификатор ранга")
     name: str = Field(default=..., description="Название ранга")
     required_xp: int = Field(default=..., description="Необходимый опыт")
+    image_url: str = Field(default=..., description="URL изображения ранга")
     required_missions: list[MissionResponse] = Field(
         default_factory=list, description="Требуемые миссии"
     )
@@ -55,6 +60,7 @@ class RankResponse(BoundaryModel):
             id=rank.id,
             name=rank.name,
             required_xp=rank.required_xp,
+            image_url=rank.image_url,
             required_missions=[
                 MissionResponse.from_schema(mission=m) for m in (rank.required_missions or [])
             ],
