@@ -409,3 +409,273 @@ class TestMissionStorage(FactoryFixture, StorageFixture):
     async def test_delete_mission_not_found(self) -> None:
         with pytest.raises(MissionNotFoundError):
             await self.storage.delete_mission(mission_id=999)
+
+    async def test_get_missions_by_rank(self) -> None:
+        rank_1 = await self.storage_helper.insert_rank(
+            rank=self.factory.rank(name="Bronze", required_xp=100)
+        )
+        rank_2 = await self.storage_helper.insert_rank(
+            rank=self.factory.rank(name="Silver", required_xp=200)
+        )
+        assert rank_1 is not None
+        assert rank_2 is not None
+        mission_1 = await self.storage_helper.insert_mission(
+            mission=self.factory.mission(
+                title="Bronze Mission 1",
+                description="Bronze mission description",
+                reward_xp=50,
+                reward_mana=25,
+                rank_requirement=rank_1.id,
+                season_id=self.created_branch.id,
+                category=MissionCategoryEnum.QUEST,
+            )
+        )
+        mission_2 = await self.storage_helper.insert_mission(
+            mission=self.factory.mission(
+                title="Bronze Mission 2",
+                description="Another bronze mission",
+                reward_xp=75,
+                reward_mana=30,
+                rank_requirement=rank_1.id,
+                season_id=self.created_branch.id,
+                category=MissionCategoryEnum.LECTURE,
+            )
+        )
+        mission_3 = await self.storage_helper.insert_mission(
+            mission=self.factory.mission(
+                title="Silver Mission",
+                description="Silver mission description",
+                reward_xp=100,
+                reward_mana=50,
+                rank_requirement=rank_2.id,
+                season_id=self.created_branch.id,
+                category=MissionCategoryEnum.QUEST,
+            )
+        )
+        assert mission_1 is not None
+        assert mission_2 is not None
+        assert mission_3 is not None
+
+        # Получаем миссии для первого ранга
+        bronze_missions = await self.storage.get_missions_by_rank(rank_id=rank_1.id)
+
+        assert len(bronze_missions.values) == 2
+        assert bronze_missions.values[0].title == "Bronze Mission 1"
+        assert bronze_missions.values[0].description == "Bronze mission description"
+        assert bronze_missions.values[0].reward_xp == 50
+        assert bronze_missions.values[0].reward_mana == 25
+        assert bronze_missions.values[0].rank_requirement == rank_1.id
+        assert bronze_missions.values[0].season_id == self.created_branch.id
+        assert bronze_missions.values[0].category == MissionCategoryEnum.QUEST
+        assert bronze_missions.values[1].title == "Bronze Mission 2"
+        assert bronze_missions.values[1].description == "Another bronze mission"
+        assert bronze_missions.values[1].reward_xp == 75
+        assert bronze_missions.values[1].reward_mana == 30
+        assert bronze_missions.values[1].rank_requirement == rank_1.id
+        assert bronze_missions.values[1].season_id == self.created_branch.id
+        assert bronze_missions.values[1].category == MissionCategoryEnum.LECTURE
+
+        silver_missions = await self.storage.get_missions_by_rank(rank_id=rank_2.id)
+
+        assert len(silver_missions.values) == 1
+        assert silver_missions.values[0].title == "Silver Mission"
+        assert silver_missions.values[0].description == "Silver mission description"
+        assert silver_missions.values[0].reward_xp == 100
+        assert silver_missions.values[0].reward_mana == 50
+        assert silver_missions.values[0].rank_requirement == rank_2.id
+        assert silver_missions.values[0].season_id == self.created_branch.id
+        assert silver_missions.values[0].category == MissionCategoryEnum.QUEST
+
+    async def test_get_missions_by_rank_empty_result(self) -> None:
+        rank = await self.storage_helper.insert_rank(
+            rank=self.factory.rank(name="Gold", required_xp=500)
+        )
+        assert rank is not None
+
+        missions = await self.storage.get_missions_by_rank(rank_id=rank.id)
+
+        assert len(missions.values) == 0
+
+    async def test_get_missions_by_rank_with_entities(self) -> None:
+        rank = await self.storage_helper.insert_rank(
+            rank=self.factory.rank(name="Test Rank", required_xp=100)
+        )
+        assert rank is not None
+        mission = await self.storage_helper.insert_mission(
+            mission=self.factory.mission(
+                title="Test Mission",
+                description="Test mission with entities",
+                reward_xp=100,
+                reward_mana=50,
+                rank_requirement=rank.id,
+                season_id=self.created_branch.id,
+                category=MissionCategoryEnum.QUEST,
+            )
+        )
+        assert mission is not None
+        task_1 = await self.storage_helper.insert_task(
+            task=self.factory.mission_task(title="Task 1", description="First task")
+        )
+        task_2 = await self.storage_helper.insert_task(
+            task=self.factory.mission_task(title="Task 2", description="Second task")
+        )
+        assert task_1 is not None
+        assert task_2 is not None
+        artifact_1 = await self.storage_helper.insert_artifact(
+            artifact=self.factory.artifact(
+                title="Artifact 1",
+                description="First artifact",
+                rarity=ArtifactRarityEnum.COMMON,
+                image_url="test1.jpg",
+            )
+        )
+        artifact_2 = await self.storage_helper.insert_artifact(
+            artifact=self.factory.artifact(
+                title="Artifact 2",
+                description="Second artifact",
+                rarity=ArtifactRarityEnum.RARE,
+                image_url="test2.jpg",
+            )
+        )
+        assert artifact_1 is not None
+        assert artifact_2 is not None
+        await self.storage.add_task_to_mission(mission_id=mission.id, task_id=task_1.id)
+        await self.storage.add_task_to_mission(mission_id=mission.id, task_id=task_2.id)
+        await self.storage.add_artifact_to_mission(mission_id=mission.id, artifact_id=artifact_1.id)
+        await self.storage.add_artifact_to_mission(mission_id=mission.id, artifact_id=artifact_2.id)
+        mission_by_id = await self.storage.get_mission_by_id(mission_id=mission.id)
+        assert mission_by_id.tasks is not None
+        assert mission_by_id.reward_artifacts is not None
+        assert len(mission_by_id.tasks) == 2
+        assert len(mission_by_id.reward_artifacts) == 2
+
+        missions = await self.storage.get_missions_by_rank(rank_id=rank.id)
+
+        assert len(missions.values) == 1
+        retrieved_mission = missions.values[0]
+        assert retrieved_mission.title == "Test Mission"
+        assert retrieved_mission.description == "Test mission with entities"
+        assert retrieved_mission.reward_xp == 100
+        assert retrieved_mission.reward_mana == 50
+        assert retrieved_mission.rank_requirement == rank.id
+        assert retrieved_mission.season_id == self.created_branch.id
+        assert retrieved_mission.category == MissionCategoryEnum.QUEST
+        assert retrieved_mission.tasks is not None
+        assert retrieved_mission.reward_artifacts is not None
+        assert len(retrieved_mission.tasks) == 2
+        assert retrieved_mission.tasks[0].title == "Task 1"
+        assert retrieved_mission.tasks[0].description == "First task"
+        assert retrieved_mission.tasks[1].title == "Task 2"
+        assert retrieved_mission.tasks[1].description == "Second task"
+        assert len(retrieved_mission.reward_artifacts) == 2
+        assert retrieved_mission.reward_artifacts[0].title == "Artifact 1"
+        assert retrieved_mission.reward_artifacts[0].description == "First artifact"
+        assert retrieved_mission.reward_artifacts[0].rarity == ArtifactRarityEnum.COMMON
+        assert retrieved_mission.reward_artifacts[0].image_url == "test1.jpg"
+        assert retrieved_mission.reward_artifacts[1].title == "Artifact 2"
+        assert retrieved_mission.reward_artifacts[1].description == "Second artifact"
+        assert retrieved_mission.reward_artifacts[1].rarity == ArtifactRarityEnum.RARE
+        assert retrieved_mission.reward_artifacts[1].image_url == "test2.jpg"
+
+    async def test_get_missions_by_rank_different_ranks_filtering(self) -> None:
+        rank_1 = await self.storage_helper.insert_rank(
+            rank=self.factory.rank(name="Novice", required_xp=0)
+        )
+        rank_2 = await self.storage_helper.insert_rank(
+            rank=self.factory.rank(name="Apprentice", required_xp=100)
+        )
+        rank_3 = await self.storage_helper.insert_rank(
+            rank=self.factory.rank(name="Expert", required_xp=500)
+        )
+        assert rank_1 is not None
+        assert rank_2 is not None
+        assert rank_3 is not None
+        novice_mission = await self.storage_helper.insert_mission(
+            mission=self.factory.mission(
+                title="Novice Mission",
+                description="For beginners",
+                reward_xp=25,
+                reward_mana=10,
+                rank_requirement=rank_1.id,
+                season_id=self.created_branch.id,
+                category=MissionCategoryEnum.QUEST,
+            )
+        )
+        apprentice_mission_1 = await self.storage_helper.insert_mission(
+            mission=self.factory.mission(
+                title="Apprentice Mission 1",
+                description="For apprentices",
+                reward_xp=50,
+                reward_mana=20,
+                rank_requirement=rank_2.id,
+                season_id=self.created_branch.id,
+                category=MissionCategoryEnum.LECTURE,
+            )
+        )
+        apprentice_mission_2 = await self.storage_helper.insert_mission(
+            mission=self.factory.mission(
+                title="Apprentice Mission 2",
+                description="Another apprentice mission",
+                reward_xp=75,
+                reward_mana=30,
+                rank_requirement=rank_2.id,
+                season_id=self.created_branch.id,
+                category=MissionCategoryEnum.QUEST,
+            )
+        )
+        expert_mission = await self.storage_helper.insert_mission(
+            mission=self.factory.mission(
+                title="Expert Mission",
+                description="For experts only",
+                reward_xp=200,
+                reward_mana=100,
+                rank_requirement=rank_3.id,
+                season_id=self.created_branch.id,
+                category=MissionCategoryEnum.QUEST,
+            )
+        )
+        assert novice_mission is not None
+        assert apprentice_mission_1 is not None
+        assert apprentice_mission_2 is not None
+        assert expert_mission is not None
+        novice_missions = await self.storage.get_missions_by_rank(rank_id=rank_1.id)
+        assert len(novice_missions.values) == 1
+        assert novice_missions.values[0].title == "Novice Mission"
+
+        apprentice_missions = await self.storage.get_missions_by_rank(rank_id=rank_2.id)
+
+        assert len(apprentice_missions.values) == 2
+        assert apprentice_missions.values[0].title == "Apprentice Mission 1"
+        assert apprentice_missions.values[0].description == "For apprentices"
+        assert apprentice_missions.values[0].reward_xp == 50
+        assert apprentice_missions.values[0].reward_mana == 20
+        assert apprentice_missions.values[0].rank_requirement == rank_2.id
+        assert apprentice_missions.values[0].season_id == self.created_branch.id
+        assert apprentice_missions.values[0].category == MissionCategoryEnum.LECTURE
+        assert apprentice_missions.values[1].title == "Apprentice Mission 2"
+        assert apprentice_missions.values[1].description == "Another apprentice mission"
+        assert apprentice_missions.values[1].reward_xp == 75
+        assert apprentice_missions.values[1].reward_mana == 30
+        assert apprentice_missions.values[1].rank_requirement == rank_2.id
+        assert apprentice_missions.values[1].season_id == self.created_branch.id
+        assert apprentice_missions.values[1].category == MissionCategoryEnum.QUEST
+
+        expert_missions = await self.storage.get_missions_by_rank(rank_id=rank_3.id)
+
+        assert len(expert_missions.values) == 1
+        assert expert_missions.values[0].title == "Expert Mission"
+        assert expert_missions.values[0].description == "For experts only"
+        assert expert_missions.values[0].reward_xp == 200
+        assert expert_missions.values[0].reward_mana == 100
+        assert expert_missions.values[0].rank_requirement == rank_3.id
+        assert expert_missions.values[0].season_id == self.created_branch.id
+        assert expert_missions.values[0].category == MissionCategoryEnum.QUEST
+        novice_titles = [mission.title for mission in novice_missions.values]
+        apprentice_titles = [mission.title for mission in apprentice_missions.values]
+        expert_titles = [mission.title for mission in expert_missions.values]
+        for novice_title in novice_titles:
+            assert novice_title not in apprentice_titles
+        for novice_title in novice_titles:
+            assert novice_title not in expert_titles
+        for apprentice_title in apprentice_titles:
+            assert apprentice_title not in expert_titles

@@ -7,7 +7,7 @@ from src.core.competencies.exceptions import (
     CompetencyNameAlreadyExistError,
     CompetencyNotFoundError,
 )
-from src.core.competencies.schemas import Competencies, Competency, UserCompetency
+from src.core.competencies.schemas import Competencies, Competency, UserCompetencies, UserCompetency
 from src.core.mission_chains.exceptions import (
     MissionChainMissionAlreadyExistsError,
     MissionChainNameAlreadyExistError,
@@ -26,7 +26,7 @@ from src.core.ranks.schemas import Rank, RankCompetencyRequirement, Ranks
 from src.core.seasons.exceptions import SeasonNameAlreadyExistError, SeasonNotFoundError
 from src.core.seasons.schemas import Season, Seasons
 from src.core.skills.exceptions import SkillNameAlreadyExistError, SkillNotFoundError
-from src.core.skills.schemas import Skill, Skills, UserSkill
+from src.core.skills.schemas import Skill, Skills, UserSkill, UserSkills
 from src.core.storages import (
     ArtifactStorage,
     CompetencyStorage,
@@ -141,6 +141,9 @@ class StorageMock(
                 season_id=mission.season_id,
                 category=mission.category,
                 tasks=tasks,
+                reward_artifacts=mission.reward_artifacts,
+                reward_competencies=mission.reward_competencies,
+                reward_skills=mission.reward_skills,
             )
         except KeyError as error:
             raise MissionNotFoundError from error
@@ -732,6 +735,9 @@ class StorageMock(
             season_id=mission.season_id,
             category=mission.category,
             user_tasks=user_tasks,
+            reward_artifacts=mission.reward_artifacts,
+            reward_competencies=mission.reward_competencies,
+            reward_skills=mission.reward_skills,
         )
 
     async def insert_store_item(self, store_item: StoreItem) -> None:
@@ -808,13 +814,12 @@ class StorageMock(
                             user_level=level,
                         )
                     )
-            
-            # Populate skills
+
             user.skills = []
             if login in self.users_skills_relations:
                 for skill_id, competency_relations in self.users_skills_relations[login].items():
                     skill = self.skill_table[skill_id]
-                    for competency_id, level in competency_relations.items():
+                    for level in competency_relations.values():
                         user.skills.append(
                             UserSkill(
                                 id=skill_id,
@@ -823,10 +828,11 @@ class StorageMock(
                                 user_level=level,
                             )
                         )
-            
-            return user
+
         except KeyError as error:
             raise UserNotFoundError from error
+        else:
+            return user
 
     async def list_users(self) -> list[User]:
         return list(self.user_table.values())
@@ -987,3 +993,75 @@ class StorageMock(
         if not self.competencies_table:
             raise CompetencyNotFoundError
         return next(iter(self.competencies_table.values()))
+
+    async def get_missions_by_rank(self, rank_id: int) -> Missions:
+        # Простая реализация для тестов - возвращаем миссии c указанным rank_requirement
+        missions = [
+            mission
+            for mission in self.mission_table.values()
+            if mission.rank_requirement == rank_id
+        ]
+        return Missions(values=missions)
+
+    async def get_user_artifacts(self, user_login: str) -> Artifacts:
+        # Простая реализация для тестов
+        artifacts: list[Artifact] = []
+        if user_login in self.users_artifacts_relations:
+            artifacts.extend(
+                self.artifact_table[artifact_id]
+                for artifact_id in self.users_artifacts_relations[user_login]
+                if artifact_id in self.artifact_table
+            )
+        return Artifacts(values=artifacts)
+
+    async def get_user_competencies(self, user_login: str) -> UserCompetencies:
+        # Простая реализация для тестов
+        competencies = []
+        if user_login in self.users_competencies_relations:
+            for competency_id, level in self.users_competencies_relations[user_login].items():
+                if competency_id in self.competencies_table:
+                    competency = self.competencies_table[competency_id]
+                    competencies.append(
+                        UserCompetency(
+                            id=competency_id,
+                            name=competency.name,
+                            max_level=competency.max_level,
+                            user_level=level,
+                        )
+                    )
+        return UserCompetencies(values=competencies)
+
+    async def get_user_skills(self, user_login: str) -> UserSkills:
+        # Простая реализация для тестов
+        skills: list[UserSkill] = []
+        if user_login in self.users_skills_relations:
+            for skill_id, competency_relations in self.users_skills_relations[user_login].items():
+                if skill_id in self.skill_table:
+                    skill = self.skill_table[skill_id]
+                    skills.extend(
+                        UserSkill(
+                            id=skill_id,
+                            name=skill.name,
+                            max_level=skill.max_level,
+                            user_level=level,
+                        )
+                        for level in competency_relations.values()
+                    )
+        return UserSkills(values=skills)
+
+    async def get_user_tasks(self, user_login: str) -> list[UserTask]:
+        # Простая реализация для тестов
+        tasks = []
+        if user_login in self.users_tasks_relations:
+            for task_id, is_completed in self.users_tasks_relations[user_login].items():
+                if task_id in self.task_table:
+                    task = self.task_table[task_id]
+                    tasks.append(
+                        UserTask(
+                            id=task_id,
+                            title=task.title,
+                            description=task.description,
+                            is_completed=is_completed,
+                        )
+                    )
+        return tasks
