@@ -1361,6 +1361,7 @@ class DatabaseStorage(
             "title": store_item.title,
             "price": store_item.price,
             "stock": store_item.stock,
+            "image_url": store_item.image_url,
         })
         try:
             await self.session.execute(query)
@@ -1395,6 +1396,7 @@ class DatabaseStorage(
                 "title": store_item.title,
                 "price": store_item.price,
                 "stock": store_item.stock,
+                "image_url": store_item.image_url,
             })
         )
         try:

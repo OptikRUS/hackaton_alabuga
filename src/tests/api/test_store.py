@@ -44,7 +44,9 @@ class TestCreateStoreItemAPI(APIFixture, FactoryFixture, ContainerFixture):
             stock=10,
         )
 
-        response = self.hr_api.create_store_item(title="Test Item", price=100, stock=10)
+        response = self.hr_api.create_store_item(
+            title="Test Item", price=100, stock=10, image_url="https://example.com/image.jpg"
+        )
 
         assert response.status_code == codes.CREATED
         assert response.json() == {
@@ -52,6 +54,7 @@ class TestCreateStoreItemAPI(APIFixture, FactoryFixture, ContainerFixture):
             "title": "Test Item",
             "price": 100,
             "stock": 10,
+            "imageUrl": "https://example.com/image.jpg",
         }
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(
@@ -60,13 +63,16 @@ class TestCreateStoreItemAPI(APIFixture, FactoryFixture, ContainerFixture):
                 title="Test Item",
                 price=100,
                 stock=10,
+                image_url="https://example.com/image.jpg",
             )
         )
 
     def test_create_store_item_title_already_exists(self) -> None:
         self.use_case.execute.side_effect = StoreItemTitleAlreadyExistError
 
-        response = self.hr_api.create_store_item(title="Test Item", price=100, stock=10)
+        response = self.hr_api.create_store_item(
+            title="Test Item", price=100, stock=10, image_url="https://example.com/image.jpg"
+        )
 
         assert response.status_code == codes.CONFLICT
         assert response.json() == {"detail": StoreItemTitleAlreadyExistError.detail}
@@ -77,6 +83,7 @@ class TestCreateStoreItemAPI(APIFixture, FactoryFixture, ContainerFixture):
                 title="Test Item",
                 price=100,
                 stock=10,
+                image_url="https://example.com/image.jpg",
             )
         )
 
@@ -118,12 +125,14 @@ class TestGetStoreItemsAPI(APIFixture, FactoryFixture, ContainerFixture):
                     "title": "Test Item 1",
                     "price": 100,
                     "stock": 10,
+                    "imageUrl": "https://example.com/image.jpg",
                 },
                 {
                     "id": 2,
                     "title": "Test Item 2",
                     "price": 200,
                     "stock": 5,
+                    "imageUrl": "https://example.com/image.jpg",
                 },
             ]
         }
@@ -168,6 +177,7 @@ class TestGetStoreItemAPI(APIFixture, FactoryFixture, ContainerFixture):
             "title": "Test Item",
             "price": 100,
             "stock": 10,
+            "imageUrl": "https://example.com/image.jpg",
         }
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(store_item_id=1)
@@ -223,6 +233,7 @@ class TestUpdateStoreItemAPI(APIFixture, FactoryFixture, ContainerFixture):
             title="Updated Item",
             price=150,
             stock=20,
+            image_url="https://example.com/image.jpg",
         )
 
         assert response.status_code == codes.OK
@@ -231,6 +242,7 @@ class TestUpdateStoreItemAPI(APIFixture, FactoryFixture, ContainerFixture):
             "title": "Updated Item",
             "price": 150,
             "stock": 20,
+            "imageUrl": "https://example.com/image.jpg",
         }
         self.use_case.execute.assert_called_once()
         self.use_case.execute.assert_awaited_once_with(
@@ -239,6 +251,7 @@ class TestUpdateStoreItemAPI(APIFixture, FactoryFixture, ContainerFixture):
                 title="Updated Item",
                 price=150,
                 stock=20,
+                image_url="https://example.com/image.jpg",
             )
         )
 
@@ -246,7 +259,11 @@ class TestUpdateStoreItemAPI(APIFixture, FactoryFixture, ContainerFixture):
         self.use_case.execute.side_effect = StoreItemNotFoundError
 
         response = self.hr_api.update_store_item(
-            store_item_id=999, title="Updated Item", price=150, stock=20
+            store_item_id=999,
+            title="Updated Item",
+            price=150,
+            stock=20,
+            image_url="https://example.com/image.jpg",
         )
 
         assert response.status_code == codes.NOT_FOUND
@@ -258,6 +275,7 @@ class TestUpdateStoreItemAPI(APIFixture, FactoryFixture, ContainerFixture):
                 title="Updated Item",
                 price=150,
                 stock=20,
+                image_url="https://example.com/image.jpg",
             )
         )
 
@@ -326,6 +344,7 @@ class TestPurchaseStoreItemAPI(APIFixture, FactoryFixture, ContainerFixture):
             "title": "Test Item",
             "price": 100,
             "stock": 9,
+            "imageUrl": "https://example.com/image.jpg",
         }
         self.use_case.execute.assert_called_once()
 

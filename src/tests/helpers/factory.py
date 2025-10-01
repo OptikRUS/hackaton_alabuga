@@ -349,12 +349,14 @@ class FactoryHelper:
         title: str = "TEST",
         price: int = 100,
         stock: int = 10,
+        image_url: str = "https://example.com/image.jpg",
     ) -> StoreItem:
         return StoreItem(
             id=store_item_id,
             title=title,
             price=price,
             stock=stock,
+            image_url=image_url,
         )
 
     @classmethod

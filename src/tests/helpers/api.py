@@ -210,7 +210,7 @@ class APIHelper:
                 "title": title,
                 "description": description,
                 "rarity": rarity,
-                "image_url": image_url,
+                "imageUrl": image_url,
             },
         )
 
@@ -234,7 +234,7 @@ class APIHelper:
                 "title": title,
                 "description": description,
                 "rarity": rarity,
-                "image_url": image_url,
+                "imageUrl": image_url,
             },
         )
 
@@ -425,10 +425,12 @@ class APIHelper:
             params={"new_order": new_order},
         )
 
-    def create_store_item(self, title: str, price: int, stock: int) -> Response:
+    def create_store_item(
+        self, title: str, price: int, stock: int, image_url: str = ""
+    ) -> Response:
         return self.client.post(
             url="/store",
-            json={"title": title, "price": price, "stock": stock},
+            json={"title": title, "price": price, "stock": stock, "image_url": image_url},
         )
 
     def get_store_items(self) -> Response:
@@ -437,10 +439,12 @@ class APIHelper:
     def get_store_item(self, store_item_id: int) -> Response:
         return self.client.get(f"/store/{store_item_id}")
 
-    def update_store_item(self, store_item_id: int, title: str, price: int, stock: int) -> Response:
+    def update_store_item(
+        self, store_item_id: int, title: str, price: int, stock: int, image_url: str = ""
+    ) -> Response:
         return self.client.put(
             url=f"/store/{store_item_id}",
-            json={"title": title, "price": price, "stock": stock},
+            json={"title": title, "price": price, "stock": stock, "image_url": image_url},
         )
 
     def delete_store_item(self, store_item_id: int) -> Response:

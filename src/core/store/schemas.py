@@ -7,6 +7,7 @@ class StoreItem:
     title: str
     price: int
     stock: int
+    image_url: str
 
 
 @dataclass

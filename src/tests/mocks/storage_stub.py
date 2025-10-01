@@ -779,6 +779,7 @@ class StorageMock(
             title=store_item.title,
             price=store_item.price,
             stock=store_item.stock - 1,
+            image_url=store_item.image_url,
         )
         self.store_item_table[purchase.store_item_id] = updated_store_item
 

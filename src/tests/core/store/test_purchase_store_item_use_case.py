@@ -27,6 +27,7 @@ class TestPurchaseStoreItemUseCase(FactoryFixture):
                 title="Test Item",
                 price=100,
                 stock=5,
+                image_url="https://example.com/image.jpg",
             )
         )
         await self.storage.insert_user(
@@ -48,6 +49,7 @@ class TestPurchaseStoreItemUseCase(FactoryFixture):
             title="Test Item",
             price=100,
             stock=4,  # Уменьшилось на 1
+            image_url="https://example.com/image.jpg",
         )
         updated_user = await self.storage.get_candidate_by_login(login="test_user")
         assert updated_user.mana == 100  # 200 - 100
@@ -142,6 +144,7 @@ class TestPurchaseStoreItemUseCase(FactoryFixture):
                 title="Test Item",
                 price=100,
                 stock=5,
+                image_url="https://example.com/image.jpg",
             )
         )
 
@@ -164,6 +167,7 @@ class TestPurchaseStoreItemUseCase(FactoryFixture):
             title="Test Item",
             price=100,
             stock=4,
+            image_url="https://example.com/image.jpg",
         )
         updated_user = await self.storage.get_candidate_by_login(login="test_user")
         assert updated_user.mana == 0

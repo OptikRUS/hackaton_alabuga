@@ -806,6 +806,7 @@ class StoreItemModel(Base):
     title: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     price: Mapped[int] = mapped_column(nullable=False)
     stock: Mapped[int] = mapped_column(nullable=False)
+    image_url: Mapped[str] = mapped_column(nullable=False)
 
     def to_schema(self) -> StoreItem:
         return StoreItem(
@@ -813,4 +814,5 @@ class StoreItemModel(Base):
             title=self.title,
             price=self.price,
             stock=self.stock,
+            image_url=self.image_url,
         )
