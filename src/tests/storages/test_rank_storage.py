@@ -20,6 +20,7 @@ class TestRankStorage(FactoryFixture, StorageFixture):
         rank = await self.storage.get_rank_by_id(rank_id=self.created.id)
         assert rank.name == "Bronze"
         assert rank.required_xp == 100
+        assert rank.image_url == "https://example.com/rank.jpg"
         assert rank.required_missions == []
         assert rank.required_competencies == []
 
@@ -43,6 +44,7 @@ class TestRankStorage(FactoryFixture, StorageFixture):
         updated = await self.storage.get_rank_by_id(rank_id=self.created.id)
         assert updated.name == "Bronze+"
         assert updated.required_xp == 150
+        assert updated.image_url == "https://example.com/rank.jpg"
 
     async def test_update_rank_duplicate_name(self) -> None:
         await self.storage.insert_rank(self.factory.rank(name="Silver", required_xp=200))

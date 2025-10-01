@@ -235,6 +235,7 @@ class StorageHelper:
                 {
                     "name": rank.name,
                     "required_xp": rank.required_xp,
+                    "image_url": rank.image_url,
                 },
             )
             .returning(RankModel)
@@ -350,6 +351,7 @@ class StorageHelper:
                     "title": store_item.title,
                     "price": store_item.price,
                     "stock": store_item.stock,
+                    "image_url": store_item.image_url,
                 },
             )
             .returning(StoreItemModel)

@@ -8,18 +8,28 @@ class StoreItemCreateRequest(BoundaryModel):
     title: str = Field(default=..., description="Название товара")
     price: int = Field(default=..., ge=0, description="Цена товара")
     stock: int = Field(default=..., ge=0, description="Количество на складе")
+    image_url: str = Field(default="", description="URL изображения товара")
 
     def to_schema(self) -> StoreItem:
-        return StoreItem(id=0, title=self.title, price=self.price, stock=self.stock)
+        return StoreItem(
+            id=0, title=self.title, price=self.price, stock=self.stock, image_url=self.image_url
+        )
 
 
 class StoreItemUpdateRequest(BoundaryModel):
     title: str = Field(default=..., description="Название товара")
     price: int = Field(default=..., ge=0, description="Цена товара")
     stock: int = Field(default=..., ge=0, description="Количество на складе")
+    image_url: str = Field(default="", description="URL изображения товара")
 
     def to_schema(self, store_item_id: int) -> StoreItem:
-        return StoreItem(id=store_item_id, title=self.title, price=self.price, stock=self.stock)
+        return StoreItem(
+            id=store_item_id,
+            title=self.title,
+            price=self.price,
+            stock=self.stock,
+            image_url=self.image_url,
+        )
 
 
 class StoreItemResponse(BoundaryModel):
@@ -27,6 +37,7 @@ class StoreItemResponse(BoundaryModel):
     title: str = Field(default=..., description="Название товара")
     price: int = Field(default=..., description="Цена товара")
     stock: int = Field(default=..., description="Количество на складе")
+    image_url: str = Field(default=..., description="URL изображения товара")
 
     @classmethod
     def from_schema(cls, store_item: StoreItem) -> "StoreItemResponse":
@@ -35,6 +46,7 @@ class StoreItemResponse(BoundaryModel):
             title=store_item.title,
             price=store_item.price,
             stock=store_item.stock,
+            image_url=store_item.image_url,
         )
 
 

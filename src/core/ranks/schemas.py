@@ -9,6 +9,7 @@ class Rank:
     id: int
     name: str
     required_xp: int
+    image_url: str
     required_missions: list[Mission] | None = None
     required_competencies: list["RankCompetencyRequirement"] | None = None
 

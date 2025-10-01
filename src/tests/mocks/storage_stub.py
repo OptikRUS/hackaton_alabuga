@@ -483,6 +483,7 @@ class StorageMock(
             id=rank.id,
             name=rank.name,
             required_xp=rank.required_xp,
+            image_url=rank.image_url,
             required_missions=missions,
             required_competencies=reqs,
         )
@@ -779,6 +780,7 @@ class StorageMock(
             title=store_item.title,
             price=store_item.price,
             stock=store_item.stock - 1,
+            image_url=store_item.image_url,
         )
         self.store_item_table[purchase.store_item_id] = updated_store_item
 

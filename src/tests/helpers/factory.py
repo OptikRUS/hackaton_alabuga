@@ -269,6 +269,7 @@ class FactoryHelper:
         rank_id: int = 0,
         name: str = "TEST",
         required_xp: int = 0,
+        image_url: str = "https://example.com/rank.jpg",
         required_missions: list[Mission] | None = None,
         required_competencies: list[RankCompetencyRequirement] | None = None,
     ) -> Rank:
@@ -276,6 +277,7 @@ class FactoryHelper:
             id=rank_id,
             name=name,
             required_xp=required_xp,
+            image_url=image_url,
             required_missions=required_missions or [],
             required_competencies=required_competencies or [],
         )
@@ -349,12 +351,14 @@ class FactoryHelper:
         title: str = "TEST",
         price: int = 100,
         stock: int = 10,
+        image_url: str = "https://example.com/image.jpg",
     ) -> StoreItem:
         return StoreItem(
             id=store_item_id,
             title=title,
             price=price,
             stock=stock,
+            image_url=image_url,
         )
 
     @classmethod
