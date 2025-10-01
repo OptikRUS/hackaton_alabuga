@@ -125,7 +125,7 @@ class DatabaseStorage(
                 "last_name": user.last_name,
                 "password": user.password,
                 "role": user.role,
-                "rank_id": 1,
+                "rank_id": user.rank_id,
                 "exp": 0,
                 "mana": 0,
             },
@@ -293,6 +293,24 @@ class DatabaseStorage(
                 MissionCompetencyRewardModel.competency
             ),
             selectinload(MissionModel.skill_rewards).selectinload(MissionSkillRewardModel.skill),
+        )
+        result = await self.session.scalars(query)
+        return Missions(values=[row.to_schema() for row in result])
+
+    async def get_missions_by_rank(self, rank_id: int) -> Missions:
+        query = (
+            select(MissionModel)
+            .where(MissionModel.rank_requirement == rank_id)
+            .options(
+                selectinload(MissionModel.tasks),
+                selectinload(MissionModel.artifacts),
+                selectinload(MissionModel.competency_rewards).selectinload(
+                    MissionCompetencyRewardModel.competency
+                ),
+                selectinload(MissionModel.skill_rewards).selectinload(
+                    MissionSkillRewardModel.skill
+                ),
+            )
         )
         result = await self.session.scalars(query)
         return Missions(values=[row.to_schema() for row in result])

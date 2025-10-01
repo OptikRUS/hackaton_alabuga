@@ -42,7 +42,10 @@ class UserStorage(metaclass=ABCMeta):
 
     @abstractmethod
     async def add_competency_to_user(
-        self, user_login: str, competency_id: int, level: int = 0
+        self,
+        user_login: str,
+        competency_id: int,
+        level: int = 0,
     ) -> None:
         raise NotImplementedError
 
@@ -52,25 +55,39 @@ class UserStorage(metaclass=ABCMeta):
 
     @abstractmethod
     async def update_user_competency_level(
-        self, user_login: str, competency_id: int, level: int
+        self,
+        user_login: str,
+        competency_id: int,
+        level: int,
     ) -> None:
         raise NotImplementedError
 
     @abstractmethod
     async def add_skill_to_user(
-        self, user_login: str, skill_id: int, competency_id: int, level: int = 0
+        self,
+        user_login: str,
+        skill_id: int,
+        competency_id: int,
+        level: int = 0,
     ) -> None:
         raise NotImplementedError
 
     @abstractmethod
     async def remove_skill_from_user(
-        self, user_login: str, skill_id: int, competency_id: int
+        self,
+        user_login: str,
+        skill_id: int,
+        competency_id: int,
     ) -> None:
         raise NotImplementedError
 
     @abstractmethod
     async def update_user_skill_level(
-        self, user_login: str, skill_id: int, competency_id: int, level: int
+        self,
+        user_login: str,
+        skill_id: int,
+        competency_id: int,
+        level: int,
     ) -> None:
         raise NotImplementedError
 
@@ -110,6 +127,10 @@ class MissionStorage(metaclass=ABCMeta):
 
     @abstractmethod
     async def list_missions(self) -> Missions:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_missions_by_rank(self, rank_id: int) -> Missions:
         raise NotImplementedError
 
     @abstractmethod
@@ -252,7 +273,10 @@ class MissionStorage(metaclass=ABCMeta):
 
     @abstractmethod
     async def update_mission_order_in_chain(
-        self, chain_id: int, mission_id: int, new_order: int
+        self,
+        chain_id: int,
+        mission_id: int,
+        new_order: int,
     ) -> None:
         raise NotImplementedError
 
@@ -389,7 +413,10 @@ class RankStorage(metaclass=ABCMeta):
 
     @abstractmethod
     async def add_required_competency_to_rank(
-        self, rank_id: int, competency_id: int, min_level: int
+        self,
+        rank_id: int,
+        competency_id: int,
+        min_level: int,
     ) -> None:
         raise NotImplementedError
 

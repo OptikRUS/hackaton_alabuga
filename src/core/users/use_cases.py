@@ -3,7 +3,8 @@ from dataclasses import dataclass
 from src.core.competencies.schemas import UserCompetency
 from src.core.password import PasswordService
 from src.core.skills.schemas import UserSkill
-from src.core.storages import UserStorage
+from src.core.storages import MissionStorage, RankStorage, UserStorage
+from src.core.tasks.schemas import UserTask
 from src.core.use_case import UseCase
 from src.core.users.exceptions import UserAlreadyExistError, UserNotFoundError
 from src.core.users.schemas import User
@@ -11,16 +12,37 @@ from src.core.users.schemas import User
 
 @dataclass
 class CreateUserUseCase(UseCase):
-    storage: UserStorage
+    user_storage: UserStorage
+    rank_storage: RankStorage
+    mission_storage: MissionStorage
     password_service: PasswordService
 
     async def execute(self, user: User) -> None:
         try:
-            await self.storage.get_user_by_login(login=user.login)
+            await self.user_storage.get_user_by_login(login=user.login)
             raise UserAlreadyExistError
         except UserNotFoundError:
             user.password = self.password_service.generate_password_hash(password=user.password)
-            await self.storage.insert_user(user=user)
+            ranks = await self.rank_storage.list_ranks()
+            new_rank = ranks.get_available_rank(exp=user.exp)
+            user.rank_id = new_rank.id
+            await self.user_storage.insert_user(user=user)
+            await self._add_new_rank_missions(user_login=user.login, rank_id=user.rank_id)
+
+    async def _add_new_rank_missions(self, user_login: str, rank_id: int) -> None:
+        available_missions = await self.mission_storage.get_missions_by_rank(rank_id=rank_id)
+        for mission in available_missions.values:
+            if mission.tasks is not None:
+                for task in mission.tasks:
+                    await self.mission_storage.add_user_task(
+                        user_login=user_login,
+                        user_task=UserTask(
+                            id=task.id,
+                            title=task.title,
+                            description=task.description,
+                            is_completed=False,
+                        ),
+                    )
 
 
 @dataclass

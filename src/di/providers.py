@@ -139,9 +139,16 @@ class UserProvider(Provider):
     def build_create_user_use_case(
         self,
         storage: UserStorage,
+        rank_storage: RankStorage,
+        mission_storage: MissionStorage,
         password_service: PasswordService,
     ) -> CreateUserUseCase:
-        return CreateUserUseCase(storage=storage, password_service=password_service)
+        return CreateUserUseCase(
+            user_storage=storage,
+            rank_storage=rank_storage,
+            mission_storage=mission_storage,
+            password_service=password_service,
+        )
 
     @provide
     def build_get_user_use_case(self, storage: UserStorage) -> GetUserUseCase:
@@ -343,12 +350,14 @@ class MissionProvider(Provider):
         artifact_storage: ArtifactStorage,
         user_storage: UserStorage,
         competency_storage: CompetencyStorage,
+        rank_storage: RankStorage,
     ) -> ApproveUserMissionUseCase:
         return ApproveUserMissionUseCase(
             mission_storage=mission_storage,
             artifact_storage=artifact_storage,
             user_storage=user_storage,
             competency_storage=competency_storage,
+            rank_storage=rank_storage,
         )
 
     @provide
