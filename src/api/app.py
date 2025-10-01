@@ -26,7 +26,12 @@ def create_app(lifespan: Lifespan[FastAPI] | None = None) -> FastAPI:
             "requestSnippetsEnabled": True,
         },
     )
-    app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"])
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
     container = build_container()
     setup_dishka(container=container, app=app)
     app.openapi = generate_custom_openapi(app=app)  # type: ignore[method-assign]

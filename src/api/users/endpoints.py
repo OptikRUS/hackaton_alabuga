@@ -391,7 +391,7 @@ async def remove_skill_from_user(
 async def complete_user_task(
     task_id: int,
     body: TaskCompleteRequest,
-    user: FromDishka[JwtHRUser],
+    user: FromDishka[JwtUser],
     use_case: FromDishka[TaskApproveUseCase],
 ) -> None:
     _ = user
