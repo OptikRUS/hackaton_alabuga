@@ -17,6 +17,10 @@ class Rank:
 class Ranks:
     values: list[Rank]
 
+    def get_available_rank(self, exp: int) -> Rank:
+        available_ranks = list(filter(lambda rank: rank.required_xp <= exp, self.values))
+        return max(available_ranks, key=lambda rank: rank.required_xp)
+
 
 @dataclass
 class RankCompetencyRequirement:
