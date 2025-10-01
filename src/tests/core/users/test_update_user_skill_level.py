@@ -80,4 +80,3 @@ class TestUpdateUserSkillLevelUseCase(FactoryFixture):
         # Act & Assert
         with pytest.raises(UserNotFoundError):
             await self.use_case.execute("test_user", 1, 1, level=3)
-

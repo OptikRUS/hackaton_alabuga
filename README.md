@@ -79,7 +79,7 @@
 
 ```bash
 # Клонирование репозитория
-git clone <repository-url>
+git clone https://github.com/OptikRUS/hackaton_alabuga.git
 cd hackaton_alabuga
 
 # Запуск через Docker Compose
@@ -119,9 +119,9 @@ SERVER_HOST=0.0.0.0
 
 После запуска приложения документация доступна по адресам:
 
-- **Swagger UI**: http://localhost/docs
-- **ReDoc**: http://localhost/redoc
-- **OpenAPI Schema**: http://localhost/openapi.json
+- **Swagger UI**: http://91.219.150.15//docs
+- **ReDoc**: http://91.219.150.15//redoc
+- **OpenAPI Schema**: http://91.219.150.15//openapi.json
 
 ---
 
@@ -212,27 +212,6 @@ graph TB
 
 ### Диаграммы взаимодействия
 
-#### 🔐 Аутентификация пользователя
-
-```mermaid
-sequenceDiagram
-    participant U as User
-    participant API as API Layer
-    participant UC as Auth Use Case
-    participant S as Storage
-    participant JWT as JWT Service
-
-    U->>API: POST /users/login
-    API->>UC: login_user(credentials)
-    UC->>S: get_user_by_login(login)
-    S-->>UC: user_data
-    UC->>UC: verify_password(password, hash)
-    UC->>JWT: create_access_token(user_id)
-    JWT-->>UC: access_token
-    UC-->>API: LoginResponse(token)
-    API-->>U: 200 OK + JWT Token
-```
-
 #### 🎯 Выполнение миссии пользователем
 
 ```mermaid
@@ -264,7 +243,6 @@ sequenceDiagram
     participant API as API Layer
     participant UC as Rank Use Case
     participant S as Storage
-    participant U as User Service
 
     HR->>API: POST /users/{login}/competencies/{id}
     API->>UC: add_competency_to_user(user_login, competency_id, level)
