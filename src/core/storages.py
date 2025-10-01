@@ -41,6 +41,10 @@ class UserStorage(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
+    async def get_users_by_rank(self, rank_id: int) -> list[User]:
+        raise NotImplementedError
+
+    @abstractmethod
     async def add_competency_to_user(
         self,
         user_login: str,

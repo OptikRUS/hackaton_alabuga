@@ -299,9 +299,9 @@ class MissionProvider(Provider):
 
     @provide
     def build_add_task_to_mission_use_case(
-        self, storage: MissionStorage
+        self, storage: MissionStorage, user_storage: UserStorage
     ) -> AddTaskToMissionUseCase:
-        return AddTaskToMissionUseCase(storage=storage)
+        return AddTaskToMissionUseCase(storage=storage, user_storage=user_storage)
 
     @provide
     def build_remove_task_from_mission_use_case(
