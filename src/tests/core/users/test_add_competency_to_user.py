@@ -60,3 +60,4 @@ class TestAddCompetencyToUserUseCase(FactoryFixture):
         # Act & Assert
         with pytest.raises(UserNotFoundError):
             await self.use_case.execute("nonexistent_user", 1)
+

@@ -32,3 +32,4 @@ class TestListUsersUseCase(FactoryFixture):
 
         # Assert
         assert result == []
+
