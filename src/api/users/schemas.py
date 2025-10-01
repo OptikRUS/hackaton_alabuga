@@ -60,7 +60,7 @@ class UsersListResponse(BoundaryModel):
 
     @classmethod
     def from_schema(cls, users: list[User]) -> "UsersListResponse":
-        return cls(users=[UserResponse.from_schema(user) for user in users])
+        return cls(users=[UserResponse.from_schema(user=user) for user in users])
 
 
 class UserDetailedResponse(BoundaryModel):
@@ -89,10 +89,11 @@ class UserDetailedResponse(BoundaryModel):
             exp=user.exp,
             mana=user.mana,
             artifacts=[
-                ArtifactResponse.from_schema(artifact) for artifact in (user.artifacts or [])
+                ArtifactResponse.from_schema(artifact=artifact)
+                for artifact in (user.artifacts or [])
             ],
             competencies=[
-                UserCompetencyResponse.from_schema(competency)
+                UserCompetencyResponse.from_schema(competency=competency)
                 for competency in (user.competencies or [])
             ],
         )
@@ -204,7 +205,9 @@ class UserMissionsListResponse(BoundaryModel):
 
     @classmethod
     def from_schema(cls, missions: list[Mission]) -> "UserMissionsListResponse":
-        return cls(missions=[UserMissionResponse.from_schema(mission) for mission in missions])
+        return cls(
+            missions=[UserMissionResponse.from_schema(mission=mission) for mission in missions]
+        )
 
 
 class CompetencyRewardResponse(BoundaryModel):
@@ -214,7 +217,7 @@ class CompetencyRewardResponse(BoundaryModel):
     @classmethod
     def from_schema(cls, competency_reward: CompetencyReward) -> "CompetencyRewardResponse":
         return cls(
-            competency=CompetencyResponse.from_schema(competency_reward.competency),
+            competency=CompetencyResponse.from_schema(competency=competency_reward.competency),
             level_increase=competency_reward.level_increase,
         )
 
@@ -226,7 +229,7 @@ class SkillRewardResponse(BoundaryModel):
     @classmethod
     def from_schema(cls, skill_reward: SkillReward) -> "SkillRewardResponse":
         return cls(
-            skill=SkillResponse.from_schema(skill_reward.skill),
+            skill=SkillResponse.from_schema(skill=skill_reward.skill),
             level_increase=skill_reward.level_increase,
         )
 
