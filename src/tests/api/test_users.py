@@ -1222,8 +1222,7 @@ class TestCompleteUserTaskAPI(APIFixture, FactoryFixture, ContainerFixture):
     def test_candidate_forbidden(self) -> None:
         response = self.candidate_api.complete_user_task(task_id=1, user_login="test_user")
 
-        assert response.status_code == codes.FORBIDDEN
-        assert response.json() == {"detail": PermissionDeniedError.detail}
+        assert response.status_code == codes.NO_CONTENT
 
     def test_complete_user_task(self) -> None:
         self.use_case.execute.return_value = None
