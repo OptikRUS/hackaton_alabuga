@@ -119,9 +119,9 @@ SERVER_HOST=0.0.0.0
 
 После запуска приложения документация доступна по адресам:
 
-- **Swagger UI**: http://91.219.150.15//docs
-- **ReDoc**: http://91.219.150.15//redoc
-- **OpenAPI Schema**: http://91.219.150.15//openapi.json
+- **Swagger UI**: http://91.219.150.15
+- **ReDoc**: http://91.219.150.15/redoc
+- **OpenAPI Schema**: http://91.219.150.15/openapi.json
 
 ---
 
