@@ -125,7 +125,7 @@ class DatabaseStorage(
                 "last_name": user.last_name,
                 "password": user.password,
                 "role": user.role,
-                "rank_id": 1,
+                "rank_id": user.rank_id,
                 "exp": 0,
                 "mana": 0,
             },

@@ -995,12 +995,11 @@ class StorageMock(
         return next(iter(self.competencies_table.values()))
 
     async def get_missions_by_rank(self, rank_id: int) -> Missions:
-        # Простая реализация для тестов - возвращаем миссии c указанным rank_requirement
-        missions = [
-            mission
-            for mission in self.mission_table.values()
-            if mission.rank_requirement == rank_id
-        ]
+        missions = []
+        for mission in self.mission_table.values():
+            if mission.rank_requirement == rank_id:
+                full_mission = await self.get_mission_by_id(mission.id)
+                missions.append(full_mission)
         return Missions(values=missions)
 
     async def get_user_artifacts(self, user_login: str) -> Artifacts:
