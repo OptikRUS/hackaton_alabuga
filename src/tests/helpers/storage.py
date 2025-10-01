@@ -16,6 +16,7 @@ from src.core.tasks.schemas import MissionTask, UserTask
 from src.core.users.schemas import User
 from src.storages.models import (
     ArtifactModel,
+    ArtifactUserRelationModel,
     CompetencyModel,
     MissionBranchModel,
     MissionChainModel,
@@ -26,7 +27,9 @@ from src.storages.models import (
     RankModel,
     SkillModel,
     StoreItemModel,
+    UserCompetencyModel,
     UserModel,
+    UserSkillModel,
     UserTaskRelationModel,
 )
 
@@ -368,3 +371,31 @@ class StorageHelper:
     async def get_store_item_stock(self, store_item_id: int) -> int | None:
         query = select(StoreItemModel.stock).where(StoreItemModel.id == store_item_id)
         return await self.session.scalar(query)  # type: ignore[no-any-return]
+
+    async def add_artifact_to_user(self, user_login: str, artifact_id: int) -> None:
+        query = insert(ArtifactUserRelationModel).values({
+            "user_login": user_login,
+            "artifact_id": artifact_id,
+        })
+        await self.session.execute(query)
+
+    async def add_competency_to_user(
+        self, user_login: str, competency_id: int, level: int = 0
+    ) -> None:
+        query = insert(UserCompetencyModel).values({
+            "user_login": user_login,
+            "competency_id": competency_id,
+            "level": level,
+        })
+        await self.session.execute(query)
+
+    async def add_skill_to_user(
+        self, user_login: str, skill_id: int, competency_id: int, level: int = 0
+    ) -> None:
+        query = insert(UserSkillModel).values({
+            "user_login": user_login,
+            "skill_id": skill_id,
+            "competency_id": competency_id,
+            "level": level,
+        })
+        await self.session.execute(query)

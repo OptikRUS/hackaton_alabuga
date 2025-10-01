@@ -13,7 +13,7 @@ from src.core.storages import (
     RankStorage,
     UserStorage,
 )
-from src.core.tasks.schemas import UserTask
+from src.core.tasks.schemas import MissionTask, UserTask
 from src.core.use_case import UseCase
 
 
@@ -72,12 +72,27 @@ class DeleteMissionUseCase(UseCase):
 @dataclass
 class AddTaskToMissionUseCase(UseCase):
     storage: MissionStorage
+    user_storage: UserStorage
 
     async def execute(self, mission_id: int, task_id: int) -> Mission:
-        await self.storage.get_mission_by_id(mission_id=mission_id)
-        await self.storage.get_mission_task_by_id(task_id=task_id)
+        mission = await self.storage.get_mission_by_id(mission_id=mission_id)
+        task = await self.storage.get_mission_task_by_id(task_id=task_id)
         await self.storage.add_task_to_mission(mission_id=mission_id, task_id=task_id)
+        await self._assign_task_to_users_by_rank(rank_id=mission.rank_requirement, task=task)
         return await self.storage.get_mission_by_id(mission_id=mission_id)
+
+    async def _assign_task_to_users_by_rank(self, rank_id: int, task: MissionTask) -> None:
+        users_with_rank = await self.user_storage.get_users_by_rank(rank_id=rank_id)
+        for user in users_with_rank:
+            await self.storage.add_user_task(
+                user_login=user.login,
+                user_task=UserTask(
+                    id=task.id,
+                    title=task.title,
+                    description=task.description,
+                    is_completed=False,
+                ),
+            )
 
 
 @dataclass

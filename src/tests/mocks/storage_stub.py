@@ -837,6 +837,9 @@ class StorageMock(
     async def list_users(self) -> list[User]:
         return list(self.user_table.values())
 
+    async def get_users_by_rank(self, rank_id: int) -> list[User]:
+        return [user for user in self.user_table.values() if user.rank_id == rank_id]
+
     async def add_competency_to_user(
         self, user_login: str, competency_id: int, level: int = 0
     ) -> None:

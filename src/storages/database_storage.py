@@ -182,6 +182,19 @@ class DatabaseStorage(
         users = await self.session.scalars(query)
         return [user.to_schema() for user in users]
 
+    async def get_users_by_rank(self, rank_id: int) -> list[User]:
+        query = (
+            select(UserModel)
+            .where(UserModel.rank_id == rank_id)
+            .options(
+                selectinload(UserModel.artifacts),
+                selectinload(UserModel.competencies),
+                selectinload(UserModel.skills),
+            )
+        )
+        users = await self.session.scalars(query)
+        return [user.to_schema() for user in users]
+
     async def insert_season(self, season: Season) -> None:
         query = (
             insert(MissionBranchModel)
