@@ -28,6 +28,16 @@
 
 ---
 
+## 📚 API Документация
+
+Документация приложения доступна по адресам:
+
+- **Swagger UI**: http://91.219.150.15
+- **ReDoc**: http://91.219.150.15/redoc
+- **OpenAPI Schema**: http://91.219.150.15/openapi.json
+
+---
+
 ## 🛠 Технологический стек
 
 ### 🚀 Backend
@@ -112,16 +122,6 @@ MINIO_CONSOLE_PORT=9001
 # Server
 SERVER_HOST=0.0.0.0
 ```
-
----
-
-## 📚 API Документация
-
-После запуска приложения документация доступна по адресам:
-
-- **Swagger UI**: http://91.219.150.15
-- **ReDoc**: http://91.219.150.15/redoc
-- **OpenAPI Schema**: http://91.219.150.15/openapi.json
 
 ---
 
@@ -220,7 +220,6 @@ sequenceDiagram
     participant API as API Layer
     participant UC as Mission Use Case
     participant S as Storage
-    participant R as Rewards Service
 
     U->>API: POST /users/tasks/{task_id}/complete
     API->>UC: complete_task(user_id, task_id)
@@ -228,8 +227,6 @@ sequenceDiagram
     S-->>UC: task_data
     UC->>S: mark_task_completed(user_id, task_id)
     UC->>UC: check_mission_completion(mission_id)
-    UC->>R: calculate_rewards(mission_id)
-    R-->>UC: rewards_data
     UC->>S: apply_rewards(user_id, rewards)
     UC-->>API: TaskCompletionResponse
     API-->>U: 200 OK + Rewards Info
