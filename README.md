@@ -16,6 +16,7 @@
 
 - [🎯 О проекте](#-о-проекте)
   - [✨ Ключевые возможности](#-ключевые-возможности)
+- [🔗 Репозитории проекта](#-репозитории-проекта)
 - [📚 Документация и интерфейсы](#-документация-и-интерфейсы)
 - [🛠 Технологический стек](#-технологический-стек)
   - [🚀 Backend](#-backend)
@@ -34,6 +35,7 @@
   - [Модульная структура](#модульная-структура)
   - [Архитектурная диаграмма](#архитектурная-диаграмма)
   - [Принципы архитектуры](#принципы-архитектуры)
+  - [ERD - Диаграмма базы данных](#erd---диаграмма-базы-данных)
   - [Диаграммы взаимодействия](#диаграммы-взаимодействия)
     - [🎯 Выполнение миссии пользователем](#-выполнение-миссии-пользователем)
     - [🏆 Система рангов и компетенций](#-система-рангов-и-компетенций)
@@ -75,6 +77,16 @@
 - 🛒 **Внутренний магазин** — покупка товаров за игровую валюту
 - 📱 **RESTful API** — современный интерфейс для интеграций
 - 🔒 **JWT аутентификация** — безопасный доступ к системе
+
+---
+
+## 🔗 Репозитории проекта
+
+Проект состоит из трех основных компонентов:
+
+- **📱 Мобильное приложение** (Kotlin) — [Ektomo/lct2025](https://github.com/Ektomo/lct2025)
+- **⚡ Backend API** (Python/FastAPI) — [OptikRUS/hackaton_alabuga](https://github.com/OptikRUS/hackaton_alabuga)
+- **🌐 Frontend** — [salyamii/lct2025-alabuga-app](https://github.com/salyamii/lct2025-alabuga-app)
 
 ---
 
@@ -260,6 +272,222 @@ graph TB
 - **Dependency Injection** — управление зависимостями через Dishka
 - **Repository Pattern** — абстракция доступа к данным
 - **Use Case Pattern** — инкапсуляция бизнес-логики
+
+### ERD - Диаграмма базы данных
+
+```mermaid
+erDiagram
+    %% Основные сущности
+    UserModel {
+        string login PK
+        string password
+        string role
+        int rank_id FK
+        int exp
+        int mana
+        string first_name
+        string last_name
+    }
+    
+    MissionBranchModel {
+        int id PK
+        string name UK
+        datetime start_date
+        datetime end_date
+    }
+    
+    MissionModel {
+        int id PK
+        string title UK
+        string description
+        int reward_xp
+        int reward_mana
+        int rank_requirement
+        string category
+        int branch_id FK
+    }
+    
+    MissionTaskModel {
+        int id PK
+        string title UK
+        string description
+    }
+    
+    CompetencyModel {
+        int id PK
+        string name UK
+        int max_level
+    }
+    
+    SkillModel {
+        int id PK
+        string name UK
+        int max_level
+    }
+    
+    RankModel {
+        int id PK
+        string name UK
+        int required_xp
+        string image_url
+    }
+    
+    ArtifactModel {
+        int id PK
+        string title UK
+        string description
+        string rarity
+        string image_url
+    }
+    
+    MissionChainModel {
+        int id PK
+        string name UK
+        string description
+        int reward_xp
+        int reward_mana
+    }
+    
+    StoreItemModel {
+        int id PK
+        string title UK
+        int price
+        int stock
+        string image_url
+    }
+    
+    %% Связи Many-to-Many
+    MissionTaskRelationModel {
+        int task_id PK,FK
+        int mission_id PK,FK
+    }
+    
+    ArtifactMissionRelationModel {
+        int artifact_id PK,FK
+        int mission_id PK,FK
+    }
+    
+    ArtifactUserRelationModel {
+        int artifact_id PK,FK
+        string user_login PK,FK
+    }
+    
+    RankMissionRelationModel {
+        int rank_id PK,FK
+        int mission_id PK,FK
+    }
+    
+    CompetencySkillRelationModel {
+        int competency_id PK,FK
+        int skill_id PK,FK
+    }
+    
+    MissionChainMissionRelationModel {
+        int mission_chain_id PK,FK
+        int mission_id PK,FK
+        int order
+    }
+    
+    %% Связи One-to-Many
+    UserTaskRelationModel {
+        int task_id PK,FK
+        string user_login PK,FK
+        boolean is_completed
+    }
+    
+    UserMissionApprovalModel {
+        int mission_id PK,FK
+        string user_login PK,FK
+        boolean is_approved
+        datetime approved_at
+    }
+    
+    UserSkillModel {
+        string user_login PK,FK
+        int skill_id PK,FK
+        int competency_id PK,FK
+        int level
+    }
+    
+    UserCompetencyModel {
+        string user_login PK,FK
+        int competency_id PK,FK
+        int level
+    }
+    
+    RankCompetencyRequirementModel {
+        int rank_id PK,FK
+        int competency_id PK,FK
+        int min_level
+    }
+    
+    MissionCompetencyRewardModel {
+        int mission_id PK,FK
+        int competency_id PK,FK
+        int level_increase
+    }
+    
+    MissionSkillRewardModel {
+        int mission_id PK,FK
+        int skill_id PK,FK
+        int level_increase
+    }
+    
+    MissionDependencyModel {
+        int mission_chain_id PK,FK
+        int mission_id PK,FK
+        int prerequisite_mission_id PK,FK
+    }
+    
+    %% Основные связи
+    MissionBranchModel ||--o{ MissionModel : "содержит"
+    UserModel }o--|| RankModel : "имеет ранг"
+    
+    %% Many-to-Many связи
+    MissionModel ||--o{ MissionTaskRelationModel : "связана с задачами"
+    MissionTaskModel ||--o{ MissionTaskRelationModel : "входит в миссии"
+    
+    MissionModel ||--o{ ArtifactMissionRelationModel : "награждает артефактами"
+    ArtifactModel ||--o{ ArtifactMissionRelationModel : "награда за миссии"
+    
+    UserModel ||--o{ ArtifactUserRelationModel : "владеет артефактами"
+    ArtifactModel ||--o{ ArtifactUserRelationModel : "принадлежит пользователям"
+    
+    RankModel ||--o{ RankMissionRelationModel : "требует миссии"
+    MissionModel ||--o{ RankMissionRelationModel : "требуется для ранга"
+    
+    CompetencyModel ||--o{ CompetencySkillRelationModel : "содержит навыки"
+    SkillModel ||--o{ CompetencySkillRelationModel : "входит в компетенции"
+    
+    MissionChainModel ||--o{ MissionChainMissionRelationModel : "содержит миссии"
+    MissionModel ||--o{ MissionChainMissionRelationModel : "входит в цепочки"
+    
+    %% One-to-Many связи
+    UserModel ||--o{ UserTaskRelationModel : "выполняет задачи"
+    MissionTaskModel ||--o{ UserTaskRelationModel : "выполняется пользователями"
+    
+    UserModel ||--o{ UserMissionApprovalModel : "одобряет миссии"
+    MissionModel ||--o{ UserMissionApprovalModel : "одобряется пользователями"
+    
+    UserModel ||--o{ UserSkillModel : "развивает навыки"
+    SkillModel ||--o{ UserSkillModel : "развивается пользователями"
+    CompetencyModel ||--o{ UserSkillModel : "группирует навыки"
+    
+    UserModel ||--o{ UserCompetencyModel : "развивает компетенции"
+    CompetencyModel ||--o{ UserCompetencyModel : "развивается пользователями"
+    
+    RankModel ||--o{ RankCompetencyRequirementModel : "требует компетенции"
+    CompetencyModel ||--o{ RankCompetencyRequirementModel : "требуется для ранга"
+    
+    MissionModel ||--o{ MissionCompetencyRewardModel : "награждает компетенциями"
+    CompetencyModel ||--o{ MissionCompetencyRewardModel : "награда за миссии"
+    
+    MissionModel ||--o{ MissionSkillRewardModel : "награждает навыками"
+    SkillModel ||--o{ MissionSkillRewardModel : "награда за миссии"
+    
+    MissionChainModel ||--o{ MissionDependencyModel : "содержит зависимости"
+    MissionModel ||--o{ MissionDependencyModel : "зависит от миссий"
+```
 
 ### Диаграммы взаимодействия
 
