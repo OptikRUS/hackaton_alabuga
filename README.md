@@ -84,10 +84,10 @@
 
 Проект состоит из трех основных компонентов:
 
-- **📱 Мобильное приложение** (Kotlin) — [Ektomo/lct2025](https://github.com/Ektomo/lct2025)
 - **⚡ Backend API** (Python/FastAPI) — [OptikRUS/hackaton_alabuga](https://github.com/OptikRUS/hackaton_alabuga)
 - **🌐 Frontend** (React) — [salyamii/lct2025-alabuga-app](https://github.com/salyamii/lct2025-alabuga-app)
-
+- **📱 Мобильное приложение** (Kotlin) — [Ektomo/lct2025](https://github.com/Ektomo/lct2025)
+- 
 ---
 
 ## 📚 Документация и интерфейсы
