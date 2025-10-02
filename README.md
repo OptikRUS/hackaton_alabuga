@@ -278,7 +278,7 @@ graph TB
 ```mermaid
 erDiagram
     %% Основные сущности
-    UserModel {
+    users_user {
         string login PK
         string password
         string role
@@ -289,14 +289,14 @@ erDiagram
         string last_name
     }
     
-    MissionBranchModel {
+    missions_branch {
         int id PK
         string name UK
         datetime start_date
         datetime end_date
     }
     
-    MissionModel {
+    missions_mission {
         int id PK
         string title UK
         string description
@@ -307,32 +307,32 @@ erDiagram
         int branch_id FK
     }
     
-    MissionTaskModel {
+    missions_mission_task {
         int id PK
         string title UK
         string description
     }
     
-    CompetencyModel {
+    competencies_competency {
         int id PK
         string name UK
         int max_level
     }
     
-    SkillModel {
+    skills_skill {
         int id PK
         string name UK
         int max_level
     }
     
-    RankModel {
+    ranks_rank {
         int id PK
         string name UK
         int required_xp
         string image_url
     }
     
-    ArtifactModel {
+    artifacts_artifact {
         int id PK
         string title UK
         string description
@@ -340,7 +340,7 @@ erDiagram
         string image_url
     }
     
-    MissionChainModel {
+    missions_chain {
         int id PK
         string name UK
         string description
@@ -348,7 +348,7 @@ erDiagram
         int reward_mana
     }
     
-    StoreItemModel {
+    store_item {
         int id PK
         string title UK
         int price
@@ -357,136 +357,136 @@ erDiagram
     }
     
     %% Связи Many-to-Many
-    MissionTaskRelationModel {
+    missions_missions_tasks {
         int task_id PK,FK
         int mission_id PK,FK
     }
     
-    ArtifactMissionRelationModel {
+    artifacts_missions_artifacts {
         int artifact_id PK,FK
         int mission_id PK,FK
     }
     
-    ArtifactUserRelationModel {
+    artifacts_users_artifacts {
         int artifact_id PK,FK
         string user_login PK,FK
     }
     
-    RankMissionRelationModel {
+    rank_required_mission {
         int rank_id PK,FK
         int mission_id PK,FK
     }
     
-    CompetencySkillRelationModel {
+    competencies_competencies_skills {
         int competency_id PK,FK
         int skill_id PK,FK
     }
     
-    MissionChainMissionRelationModel {
+    missions_chain_missions {
         int mission_chain_id PK,FK
         int mission_id PK,FK
         int order
     }
     
     %% Связи One-to-Many
-    UserTaskRelationModel {
+    users_tasks {
         int task_id PK,FK
         string user_login PK,FK
         boolean is_completed
     }
     
-    UserMissionApprovalModel {
+    users_missions_approval {
         int mission_id PK,FK
         string user_login PK,FK
         boolean is_approved
         datetime approved_at
     }
     
-    UserSkillModel {
+    users_skills {
         string user_login PK,FK
         int skill_id PK,FK
         int competency_id PK,FK
         int level
     }
     
-    UserCompetencyModel {
+    users_competencies {
         string user_login PK,FK
         int competency_id PK,FK
         int level
     }
     
-    RankCompetencyRequirementModel {
+    ranks_competencies_requirements {
         int rank_id PK,FK
         int competency_id PK,FK
         int min_level
     }
     
-    MissionCompetencyRewardModel {
+    missions_competencies_rewards {
         int mission_id PK,FK
         int competency_id PK,FK
         int level_increase
     }
     
-    MissionSkillRewardModel {
+    missions_skills_rewards {
         int mission_id PK,FK
         int skill_id PK,FK
         int level_increase
     }
     
-    MissionDependencyModel {
+    missions_dependency {
         int mission_chain_id PK,FK
         int mission_id PK,FK
         int prerequisite_mission_id PK,FK
     }
     
     %% Основные связи
-    MissionBranchModel ||--o{ MissionModel : "содержит"
-    UserModel }o--|| RankModel : "имеет ранг"
+    missions_branch ||--o{ missions_mission : "содержит"
+    users_user }o--|| ranks_rank : "имеет ранг"
     
     %% Many-to-Many связи
-    MissionModel ||--o{ MissionTaskRelationModel : "связана с задачами"
-    MissionTaskModel ||--o{ MissionTaskRelationModel : "входит в миссии"
+    missions_mission ||--o{ missions_missions_tasks : "связана с задачами"
+    missions_mission_task ||--o{ missions_missions_tasks : "входит в миссии"
     
-    MissionModel ||--o{ ArtifactMissionRelationModel : "награждает артефактами"
-    ArtifactModel ||--o{ ArtifactMissionRelationModel : "награда за миссии"
+    missions_mission ||--o{ artifacts_missions_artifacts : "награждает артефактами"
+    artifacts_artifact ||--o{ artifacts_missions_artifacts : "награда за миссии"
     
-    UserModel ||--o{ ArtifactUserRelationModel : "владеет артефактами"
-    ArtifactModel ||--o{ ArtifactUserRelationModel : "принадлежит пользователям"
+    users_user ||--o{ artifacts_users_artifacts : "владеет артефактами"
+    artifacts_artifact ||--o{ artifacts_users_artifacts : "принадлежит пользователям"
     
-    RankModel ||--o{ RankMissionRelationModel : "требует миссии"
-    MissionModel ||--o{ RankMissionRelationModel : "требуется для ранга"
+    ranks_rank ||--o{ rank_required_mission : "требует миссии"
+    missions_mission ||--o{ rank_required_mission : "требуется для ранга"
     
-    CompetencyModel ||--o{ CompetencySkillRelationModel : "содержит навыки"
-    SkillModel ||--o{ CompetencySkillRelationModel : "входит в компетенции"
+    competencies_competency ||--o{ competencies_competencies_skills : "содержит навыки"
+    skills_skill ||--o{ competencies_competencies_skills : "входит в компетенции"
     
-    MissionChainModel ||--o{ MissionChainMissionRelationModel : "содержит миссии"
-    MissionModel ||--o{ MissionChainMissionRelationModel : "входит в цепочки"
+    missions_chain ||--o{ missions_chain_missions : "содержит миссии"
+    missions_mission ||--o{ missions_chain_missions : "входит в цепочки"
     
     %% One-to-Many связи
-    UserModel ||--o{ UserTaskRelationModel : "выполняет задачи"
-    MissionTaskModel ||--o{ UserTaskRelationModel : "выполняется пользователями"
+    users_user ||--o{ users_tasks : "выполняет задачи"
+    missions_mission_task ||--o{ users_tasks : "выполняется пользователями"
     
-    UserModel ||--o{ UserMissionApprovalModel : "одобряет миссии"
-    MissionModel ||--o{ UserMissionApprovalModel : "одобряется пользователями"
+    users_user ||--o{ users_missions_approval : "одобряет миссии"
+    missions_mission ||--o{ users_missions_approval : "одобряется пользователями"
     
-    UserModel ||--o{ UserSkillModel : "развивает навыки"
-    SkillModel ||--o{ UserSkillModel : "развивается пользователями"
-    CompetencyModel ||--o{ UserSkillModel : "группирует навыки"
+    users_user ||--o{ users_skills : "развивает навыки"
+    skills_skill ||--o{ users_skills : "развивается пользователями"
+    competencies_competency ||--o{ users_skills : "группирует навыки"
     
-    UserModel ||--o{ UserCompetencyModel : "развивает компетенции"
-    CompetencyModel ||--o{ UserCompetencyModel : "развивается пользователями"
+    users_user ||--o{ users_competencies : "развивает компетенции"
+    competencies_competency ||--o{ users_competencies : "развивается пользователями"
     
-    RankModel ||--o{ RankCompetencyRequirementModel : "требует компетенции"
-    CompetencyModel ||--o{ RankCompetencyRequirementModel : "требуется для ранга"
+    ranks_rank ||--o{ ranks_competencies_requirements : "требует компетенции"
+    competencies_competency ||--o{ ranks_competencies_requirements : "требуется для ранга"
     
-    MissionModel ||--o{ MissionCompetencyRewardModel : "награждает компетенциями"
-    CompetencyModel ||--o{ MissionCompetencyRewardModel : "награда за миссии"
+    missions_mission ||--o{ missions_competencies_rewards : "награждает компетенциями"
+    competencies_competency ||--o{ missions_competencies_rewards : "награда за миссии"
     
-    MissionModel ||--o{ MissionSkillRewardModel : "награждает навыками"
-    SkillModel ||--o{ MissionSkillRewardModel : "награда за миссии"
+    missions_mission ||--o{ missions_skills_rewards : "награждает навыками"
+    skills_skill ||--o{ missions_skills_rewards : "награда за миссии"
     
-    MissionChainModel ||--o{ MissionDependencyModel : "содержит зависимости"
-    MissionModel ||--o{ MissionDependencyModel : "зависит от миссий"
+    missions_chain ||--o{ missions_dependency : "содержит зависимости"
+    missions_mission ||--o{ missions_dependency : "зависит от миссий"
 ```
 
 ### Диаграммы взаимодействия
