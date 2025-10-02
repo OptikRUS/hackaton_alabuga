@@ -86,7 +86,7 @@
 
 - **📱 Мобильное приложение** (Kotlin) — [Ektomo/lct2025](https://github.com/Ektomo/lct2025)
 - **⚡ Backend API** (Python/FastAPI) — [OptikRUS/hackaton_alabuga](https://github.com/OptikRUS/hackaton_alabuga)
-- **🌐 Frontend** — [salyamii/lct2025-alabuga-app](https://github.com/salyamii/lct2025-alabuga-app)
+- **🌐 Frontend** (React) — [salyamii/lct2025-alabuga-app](https://github.com/salyamii/lct2025-alabuga-app)
 
 ---
 
